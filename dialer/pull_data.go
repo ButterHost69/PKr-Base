@@ -1,11 +1,18 @@
 package dialer
 
 import (
-	"ButterHost69/PKr-base/encrypt"
-	"ButterHost69/PKr-base/filetracker"
-	"ButterHost69/PKr-base/logger"
-	"ButterHost69/PKr-base/models"
-	"ButterHost69/PKr-base/pb"
+	// "ButterHost69/PKr-base/encrypt"
+	// "ButterHost69/PKr-base/filetracker"
+	// "ButterHost69/PKr-base/logger"
+	// "ButterHost69/PKr-base/models"
+	// "ButterHost69/PKr-base/pb"
+
+	"github.com/ButterHost69/PKr-Base/encrypt"
+	"github.com/ButterHost69/PKr-Base/filetracker"
+	"github.com/ButterHost69/PKr-Base/logger"
+	"github.com/ButterHost69/PKr-Base/models"
+	"github.com/ButterHost69/PKr-Base/pb"
+
 	"context"
 	"fmt"
 	"io/ioutil"

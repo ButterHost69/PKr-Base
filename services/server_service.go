@@ -1,7 +1,9 @@
 package services
 
 import (
-	"ButterHost69/PKr-base/models"
+	
+	"github.com/ButterHost69/PKr-Base/models"
+
 	"bytes"
 	"encoding/json"
 	"fmt"

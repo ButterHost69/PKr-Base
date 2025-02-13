@@ -10,8 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"ButterHost69/PKr-base/encrypt"
-	"ButterHost69/PKr-base/models"
+	"github.com/ButterHost69/PKr-Base/encrypt"
+	"github.com/ButterHost69/PKr-Base/models"
+	
 )
 
 // I dont Know if this works. Check it later

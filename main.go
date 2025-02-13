@@ -5,17 +5,17 @@
 package main
 
 import (
-	"ButterHost69/PKr-base/dialer"
-	"ButterHost69/PKr-base/logger"
-	"ButterHost69/PKr-base/models"
-	"ButterHost69/PKr-base/pb"
-	"ButterHost69/PKr-base/services"
 	"flag"
 	"fmt"
 	"net"
 	"os"
 	"time"
 
+	"github.com/ButterHost69/PKr-Base/dialer"
+	"github.com/ButterHost69/PKr-Base/logger"
+	"github.com/ButterHost69/PKr-Base/models"
+	"github.com/ButterHost69/PKr-Base/pb"
+	"github.com/ButterHost69/PKr-Base/services"
 	"google.golang.org/grpc"
 )
 
