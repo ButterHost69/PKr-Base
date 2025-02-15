@@ -1,4 +1,4 @@
-package services
+package servicestemp
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 
 	"github.com/ButterHost69/PKr-Base/dialer"
 	"github.com/ButterHost69/PKr-Base/encrypt"
-	"github.com/ButterHost69/PKr-Base/models"
+	"github.com/ButterHost69/PKr-Base/config"
 	"github.com/ButterHost69/PKr-Base/pb"
 	"github.com/ButterHost69/PKr-Base/logger"
 

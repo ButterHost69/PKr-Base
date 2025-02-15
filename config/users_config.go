@@ -1,4 +1,4 @@
-package models
+package config
 
 import (
 	// "ButterHost69/PKr-client/encrypt"
@@ -13,49 +13,6 @@ import (
 	// "github.com/go-delve/delve/cmd/dlv/cmds"
 )
 
-type Connections struct {
-	ConnectionSlug string `json:"connection_slug"`
-	// Password       string `json:"password"`
-	CurrentIP   string `json:"current_ip"`
-	CurrentPort string `json:"current_port"`
-}
-
-type ConnectionInfo struct {
-	// ConnectionSlug string `json:"connection_slug"`
-	Username    string `json:"username"`
-	CurrentIP   string `json:"current_ip"`
-	CurrentPort string `json:"current_port"`
-}
-
-type WorkspaceFolder struct {
-	WorkspaceName     string `json:"workspace_name"`
-	WorkspacePath     string `json:"workspace_path"`
-	WorkSpacePassword string `json:"workspace_password"`
-	// ConnectionSlugs []string `json:"connection_slug"`
-}
-
-type Files struct {
-	FileName string `json:"file_name"`
-	FileLoc  string `json:"file_loc"`
-	FileSize string `json:"file_size"`
-}
-
-type GetWorkspaceFolder struct {
-	WorkspaceName string `json:"workspace_name"`
-	WorkspacePath string `json:"workspace_path"`
-	WorkspcaceIP  string `json:"workspace_ip"`
-	LastHash      string `json:"last_hash"`
-}
-
-type UsersConfig struct {
-	User           string        `json:"user"`
-	BasePort       string        `json:"base_port"`
-	AllConnections []Connections `json:"all_connections"`
-
-	Sendworkspaces []WorkspaceFolder    `json:"send_workspace"`
-	GetWorkspaces  []GetWorkspaceFolder `json:"get_workspace"`
-}
-
 const (
 	ROOT_DIR     = "tmp"
 	MY_KEYS_PATH = ROOT_DIR + "\\mykeys"
@@ -67,18 +24,14 @@ var (
 	MY_USERNAME string
 )
 
-func CreateUserIfNotExists(username string) {
+// FIXME: NOT IMPORTANT : Remove Prints - return stuff
+
+func CreateUserIfNotExists() {
 	if _, err := os.Stat(ROOT_DIR + "/userConfig.json"); os.IsNotExist(err) {
 		fmt.Println("!! 'tmp' No such DIR exists ")
 
-		// var username string
-		// fmt.Println(" [*] Register [*]")
-		// fmt.Print(" > Username: ")
-		// fmt.Scanln(&username)
-		MY_USERNAME = username
-
 		usconf := UsersConfig{
-			User: username,
+			User: "temporary",
 		}
 
 		jsonbytes, err := json.Marshal(usconf)
@@ -111,36 +64,39 @@ func CreateUserIfNotExists(username string) {
 			panic(err.Error())
 		}
 
-		fmt.Printf(" ~ Created User : %s\n", username)
 		return
 	}
 
 	fmt.Println("It Seems PKr is Already Installed...")
 }
 
-func AddConnection(connection_slug string, password string) {
-
-}
-
-func RegisterNewSendWorkspace(workspace_name string, workspace_path string, workspace_password string) error {
+// Send Workspaces are workspaces you create
+// This workspaces will be broadcasted to other users
+func RegisterNewSendWorkspace(server_alias, workspace_name, workspace_path, workspace_password string) error {
 	userConfig, err := ReadFromUserConfigFile()
 	if err != nil {
 		fmt.Println("Error in reading From the UserConfig File...")
 		return err
 	}
 
-	workspaceFolder := WorkspaceFolder{
+	workspaceFolder := SendWorkspaceFolder{
 		WorkspaceName:     workspace_name,
 		WorkspacePath:     workspace_path,
 		WorkSpacePassword: workspace_password,
 	}
-	userConfig.Sendworkspaces = append(userConfig.Sendworkspaces, workspaceFolder)
 
-	if err := writeToUserConfigFile(userConfig); err != nil {
-		fmt.Println("Error Occured in Writing To the UserConfig File")
-		return err
+	for _, server := range userConfig.ServerLists {
+		if server.ServerAlias == server_alias {
+			server.SendWorkspaces = append(server.SendWorkspaces, workspaceFolder)
+			if err := writeToUserConfigFile(userConfig); err != nil {
+				fmt.Println("Error Occured in Writing To the UserConfig File")
+				return err
+			}
+			return nil
+		}
 	}
 
+	fmt.Println("No Such Server Alias Exists...")
 	return nil
 }
 
@@ -402,7 +358,6 @@ func UpdateGetWorkspaceFolderToUserConfig(workspace_name, workspace_path, worksp
 	return nil
 }
 
-
 func GetAllGetWorkspaces() ([]GetWorkspaceFolder, error) {
 	file, err := ReadFromUserConfigFile()
 	if err != nil {
@@ -410,4 +365,38 @@ func GetAllGetWorkspaces() ([]GetWorkspaceFolder, error) {
 	}
 
 	return file.GetWorkspaces, err
+}
+
+func AddNewServerToConfig(server_alias, server_ip, username, password string) error {
+	// serverConfig, err := readFromServerConfigFile()
+
+	userConfig, err := ReadFromUserConfigFile()
+	if err != nil {
+		fmt.Println("Error in reading From the UserConfig File...")
+		return err
+	}
+
+	sconf := ServerConfig{
+		Username:    username,
+		Password:    password,
+		ServerAlias: server_alias,
+		ServerIP:    server_ip,
+	}
+
+	userConfig.ServerLists = append(userConfig.ServerLists, sconf)
+	if err := writeToUserConfigFile(userConfig); err != nil {
+		fmt.Println("Error Occured in Writing To the UserConfigr File")
+		return err
+	}
+
+	return nil
+}
+
+func GetAllServers() ([]ServerConfig, error) {
+	serverConfig, err := ReadFromUserConfigFile()
+	if err != nil {
+		return serverConfig.ServerLists, fmt.Errorf("error in reading From the ServerConfig File...\nError: %v",err)
+	}
+
+	return serverConfig.ServerLists, nil
 }

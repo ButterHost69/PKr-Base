@@ -1,8 +1,8 @@
-package services
+package servicestemp
 
 import (
 	
-	"github.com/ButterHost69/PKr-Base/models"
+	"github.com/ButterHost69/PKr-Base/config"
 
 	"bytes"
 	"encoding/json"

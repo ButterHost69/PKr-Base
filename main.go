@@ -7,16 +7,17 @@ package main
 import (
 	"flag"
 	"fmt"
-	"net"
+	"log"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
+	"github.com/ButterHost69/PKr-Base/config"
 	"github.com/ButterHost69/PKr-Base/dialer"
 	"github.com/ButterHost69/PKr-Base/logger"
-	"github.com/ButterHost69/PKr-Base/models"
-	"github.com/ButterHost69/PKr-Base/pb"
 	"github.com/ButterHost69/PKr-Base/services"
-	"google.golang.org/grpc"
+	// "github.com/ButterHost69/PKr-Base/servicestemp"
 )
 
 const (
@@ -29,6 +30,7 @@ const (
 
 var (
 	IP_ADDR 			string
+	PORT				int
 	LOG_IN_TERMINAL		bool
 	LOG_LEVEL			int
 )
@@ -37,6 +39,7 @@ var (
 var (
 	workspace_logger	*logger.WorkspaceLogger
 	userconfing_logger	*logger.UserLogger
+	serverRpcHandler 	*dialer.CallHandler
 )
 
 func Init() {
@@ -55,7 +58,7 @@ func Init() {
 	workspace_logger.SetPrintToTerminal(LOG_IN_TERMINAL)
 	userconfing_logger.SetPrintToTerminal(LOG_IN_TERMINAL)
 
-	workspaces, err := models.GetAllGetWorkspaces()
+	workspaces, err := config.GetAllGetWorkspaces()
 	if err != nil {
 		userconfing_logger.Critical(fmt.Sprintf("could not get all get workspaces.\nError: %v", err))
 		return
@@ -72,29 +75,28 @@ func Init() {
 	if IP_ADDR == "" {
 		IP_ADDR = os.Getenv("PKR-IP")
 		if IP_ADDR == "" {
-			IP_ADDR = ":9000"
+			IP_ADDR = ":9069"
+			PORT = 9069
+		}
+	} else {
+		
+		PORT, err = strconv.Atoi(strings.Split(IP_ADDR, ":")[1])
+		if err != nil {
+			log.Panic("Error: ", err)
 		}
 	}
 
-	models.UpdateBasePort(IP_ADDR)
+	serverRpcHandler = &dialer.CallHandler{
+		Lipaddr: "0.0.0.0:9091",
+		WorkspaceLogger: workspace_logger,
+		UserConfingLogger: userconfing_logger,
+	}
+	config.UpdateBasePort(IP_ADDR)
+
 }
 
 func main() {
 	Init()
-
-	lis, err := net.Listen("tcp", IP_ADDR)
-	if err != nil {
-		userconfing_logger.Critical(fmt.Sprintf("Error: %v\n", err))
-	}
-
-	grpcServer := grpc.NewServer()
-	backgroundService := services.BackgroundServer{
-		WorkspaceLogger: workspace_logger,
-		UserConfingLogger: userconfing_logger,
-	}
-
-	pb.RegisterBackgroundServiceServer(grpcServer, &backgroundService)
-	userconfing_logger.Info(fmt.Sprintf("Base Service Running on Port: %s" , IP_ADDR))
 
 	// TODO: [ ] Test this code, neither human test nor code test done....
 	// All The functions written with it are not tested
@@ -102,7 +104,7 @@ func main() {
 		userconfing_logger.Info("Update me Service Started")
 		for {
 			// Read Each Time... So can automatically detect changes without manual anything....
-			serverList, err := models.GetAllServers()
+			serverList, err := config.GetAllServers()
 			if err != nil {
 				userconfing_logger.Debug(fmt.Sprintf("Could Get Server List.\nError: %v", err))
 			}
@@ -112,9 +114,17 @@ func main() {
 				break
 			}
 
+			myPublicIPPort, err := dialer.GetMyPublicIP(PORT)
+			myPublicIp := strings.Split(myPublicIPPort, ":")[0]
+			myPublicPort := strings.Split(myPublicIPPort, ":")[1]
+
+			if err != nil {
+				log.Panic("Error in getting Public IP: ", err)
+			}
 			for _, server := range serverList {
-				// [ ] Log this
-				services.SendUpdateMeRequest(server.ServerIP, server.Username, server.Password)
+				if err := serverRpcHandler.CallPing(server.ServerIP, server.Username, server.Password, myPublicIp, myPublicPort); err != nil {
+					userconfing_logger.Critical(err)
+				}
 			}
 			time.Sleep(5 * time.Minute)
 		}
@@ -125,9 +135,10 @@ func main() {
 		userconfing_logger.Critical(fmt.Sprintf("Error in Scan For Updates on Start.\nError: %v", err))
 	}
 
-	if err := grpcServer.Serve(lis); err != nil {
-		userconfing_logger.Critical(fmt.Sprintf("Error Listening gRPC Server.\nError: %v", err))
-		userconfing_logger.Critical("Closing Server...")
-		os.Exit(1)
+	err := server.InitServer(IP_ADDR, workspace_logger, userconfing_logger)
+	if err != nil {
+		userconfing_logger.Critical(fmt.Sprintf("Error: %v\n", err))
 	}
+
+	userconfing_logger.Info(fmt.Sprintf("Base Service Running on Port: %s" , IP_ADDR))
 }

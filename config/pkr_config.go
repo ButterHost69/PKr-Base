@@ -1,4 +1,4 @@
-package models
+package config
 
 import (
 	// "ButterHost69/PKr-base/services"
@@ -11,19 +11,6 @@ import (
 
 	fake "github.com/brianvoe/gofakeit/v7"
 )
-
-type PKRConfig struct {
-	WorkspaceName  string       `json:"workspace_name"`
-	AllConnections []Connection `json:"all_connections"`
-	LastHash       string       `json:"last_hash"`
-}
-
-type Connection struct {
-	Username      string `json:"username"`
-	CurrentIP     string `json:"current_ip"`
-	CurrentPort   string `json:"current_port"`
-	PublicKeyPath string `json:"public_key_path"`
-}
 
 const (
 	WORKSPACE_PKR_DIR          = ".PKr"
