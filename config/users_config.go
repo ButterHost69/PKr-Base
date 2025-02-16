@@ -400,3 +400,20 @@ func GetAllServers() ([]ServerConfig, error) {
 
 	return serverConfig.ServerLists, nil
 }
+
+// Returns - ServerIp, ServerUsername, ServerPassword
+func GetServerDetails(server_alias string) (string, string, string, error) {
+	// var username, password string
+	serverConfig, err := ReadFromUserConfigFile()
+	if err != nil {
+		return "", "", "", fmt.Errorf("error in reading From the ServerConfig File...\nError: %v",err)
+	}
+
+	for _, server := range serverConfig.ServerLists {
+		if server.ServerAlias == server_alias {
+			return server.ServerIP, server.Username, server.Password , nil
+		}
+	}
+
+	return "", "", "", fmt.Errorf("server with the server alias - %s not found", server_alias)
+}
