@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ButterHost69/PKr-Base/config"
 	"github.com/ButterHost69/PKr-Base/encrypt"
-	"github.com/ButterHost69/PKr-Base/models"
-	
+	// "github.com/ButterHost69/PKr-Base/models"
 )
 
 // I dont Know if this works. Check it later
@@ -149,7 +149,7 @@ func ZipData(workspace_path string) (string, error) {
 
 	if err = os.Rename(fullZipPath, fullHashFilePath); err != nil {
 		logdata := fmt.Sprintf("could rename zip file to new hash name: %s | zipped file path: %s.\nError: %v", fullHashFilePath, fullZipPath, err)
-		models.AddLogEntry(workspace_name, logdata)
+		config.AddLogEntry(workspace_name, logdata)
 		return "", err
 	}
 

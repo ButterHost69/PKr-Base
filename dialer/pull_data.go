@@ -7,10 +7,12 @@ import (
 	// "ButterHost69/PKr-base/models"
 	// "ButterHost69/PKr-base/pb"
 
+	"github.com/ButterHost69/PKr-Base/config"
 	"github.com/ButterHost69/PKr-Base/encrypt"
 	"github.com/ButterHost69/PKr-Base/filetracker"
 	"github.com/ButterHost69/PKr-Base/logger"
-	"github.com/ButterHost69/PKr-Base/models"
+
+	// "github.com/ButterHost69/PKr-Base/models"
 	"github.com/ButterHost69/PKr-Base/pb"
 
 	"context"
@@ -136,7 +138,7 @@ func getData(workspace_ip, workspace_path, workspace_name string) error {
 		return err
 	}
 
-	if err = models.UpdateGetWorkspaceFolderToUserConfig(workspace_name, workspace_path, workspace_ip, last_hash); err != nil {
+	if err = config.UpdateGetWorkspaceFolderToUserConfig(workspace_name, workspace_path, workspace_ip, last_hash); err != nil {
 		return fmt.Errorf("error in adding GetConnection to the Main User Config Folder.\nerror:%v", err)
 	}
 	// fmt.Println("Data Transfer Completed ...") // [ ] Debug
@@ -145,7 +147,7 @@ func getData(workspace_ip, workspace_path, workspace_name string) error {
 
 func PullData(userConfig_log *logger.UserLogger, workspace_name string) error {
 	fmt.Println("Sending Pull Data Request ...") // [ ]: Debug
-	user_config, err := models.ReadFromUserConfigFile()
+	user_config, err := config.ReadFromUserConfigFile()
 	if err != nil {
 		log_entry := fmt.Sprintf("cannot read from user config\nError: %s\nSource: PullData() Dialer", err.Error())
 		// models.AddUsersLogEntry(log_entry)

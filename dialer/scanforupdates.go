@@ -1,8 +1,9 @@
 package dialer
 
 import (
+	"github.com/ButterHost69/PKr-Base/config"
 	"github.com/ButterHost69/PKr-Base/logger"
-	"github.com/ButterHost69/PKr-Base/models"
+	// "github.com/ButterHost69/PKr-Base/models"
 	"github.com/ButterHost69/PKr-Base/pb"
 
 	"context"
@@ -18,7 +19,7 @@ func ScanForUpdatesOnStart(userConfig_log *logger.UserLogger) error {
 	// Read all Get Workspaces from User Config & send request to check
 	// whether there's new update or not
 
-	user_config, err := models.ReadFromUserConfigFile()
+	user_config, err := config.ReadFromUserConfigFile()
 	if err != nil {
 		log_entry := "cannot read from workspace config file\nError: " + err.Error() + "\nSource: ScanForUpdatesOnStart() Dialer\n"
 		fmt.Println(log_entry) // [ ]: Debugging
