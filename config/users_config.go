@@ -262,7 +262,7 @@ func CreateNewWorkspace(serverAlias, wName, wPassword, wPath string) error {
 		}
 	}
 	
-	return errors.New(fmt.Sprintf("server with the alias - %s Not Found !!", serverAlias))
+	return fmt.Errorf("server with the alias - %s Not Found", serverAlias)
 }
 
 // TODO: See what this func is used for and rewrite a better one
@@ -352,6 +352,21 @@ func UpdateGetWorkspaceFolderToUserConfig(workspace_name, workspace_path, worksp
 }
 
 func GetAllGetWorkspaces() ([]GetWorkspaceFolder, error) {
+	userConfig, err := ReadFromUserConfigFile()
+	if err != nil {
+		return []GetWorkspaceFolder{}, err
+	}
+
+	allGetWorkspaces := make([]GetWorkspaceFolder, 0)
+
+	for _, server := range userConfig.ServerLists {
+		allGetWorkspaces = append(allGetWorkspaces, server.GetWorkspaces...)
+	}
+
+	return allGetWorkspaces, nil
+}
+
+func GetAllSendWorkspaces() ([]GetWorkspaceFolder, error) {
 	userConfig, err := ReadFromUserConfigFile()
 	if err != nil {
 		return []GetWorkspaceFolder{}, err
