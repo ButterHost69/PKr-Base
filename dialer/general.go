@@ -1,6 +1,13 @@
 package dialer
 
-import "github.com/ccding/go-stun/stun"
+import (
+	"github.com/ButterHost69/kcp-go"
+	"github.com/ccding/go-stun/stun"
+)
+
+const (
+	PUNCH_ATTEMPTS = 5
+)
 
 func GetMyPublicIP (port int) (string, error){
 	stunClient := stun.NewClient()
@@ -13,4 +20,18 @@ func GetMyPublicIP (port int) (string, error){
   	}
 
 	return myExtAddr.String(), err
+}
+
+func PuchToIP(senderIP, privateIP string) error {
+	conn, err := kcp.Dial(senderIP, privateIP)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	for i := 0; i < PUNCH_ATTEMPTS; i++ {
+		conn.Write([]byte("Punch"))
+	}
+
+	return nil
 }

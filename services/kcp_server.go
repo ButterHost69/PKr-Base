@@ -1,4 +1,4 @@
-package server
+package services
 
 import (
 	"fmt"
@@ -8,14 +8,9 @@ import (
 	"github.com/ButterHost69/kcp-go"
 )
 
-type Handler struct {
-	WorkspaceLogger   *logger.WorkspaceLogger
-	UserConfingLogger *logger.UserLogger
-}
+func InitKCPServer(port string, workspace_logger *logger.WorkspaceLogger, userconfing_logger *logger.UserLogger) error {
 
-func InitServer(port string, workspace_logger *logger.WorkspaceLogger, userconfing_logger *logger.UserLogger) error {
-
-	handler := Handler{
+	handler := KCPHandler{
 		WorkspaceLogger: workspace_logger,
 		UserConfingLogger: userconfing_logger,
 	}
