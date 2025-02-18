@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 
 	"github.com/ButterHost69/PKr-cli/encrypt"
 	// "github.com/go-delve/delve/cmd/dlv/cmds"
@@ -106,10 +105,12 @@ func GetWorkspaceFilePath(workspace_name string) (string, error) {
 		return "", err
 	}
 
-	workspaces := userConfig.Sendworkspaces
-	for _, workspace := range workspaces {
-		if workspace.WorkspaceName == workspace_name {
-			return workspace.WorkspacePath, nil
+	servers := userConfig.ServerLists
+	for _, server := range servers{
+		for _, workspace := range server.GetWorkspaces {
+			if workspace.WorkspaceName == workspace_name {
+				return workspace.WorkspacePath, nil
+			}
 		}
 	}
 
@@ -123,11 +124,12 @@ func AuthenticateWorkspaceInfo(workspace_name string, workspace_password string)
 		return ""
 	}
 
-	for _, workspace := range userConfig.Sendworkspaces {
-		if workspace.WorkspaceName == workspace_name {
-			if workspace.WorkSpacePassword == workspace_password {
+	servers := userConfig.ServerLists
+	for _, server := range servers{
+		for _, workspace := range server.SendWorkspaces {
+			if workspace.WorkspaceName == workspace_name && workspace.WorkSpacePassword == workspace_password{
 				return workspace.WorkspacePath
-			}
+			}	
 		}
 	}
 
@@ -174,82 +176,73 @@ func writeToUserConfigFile(newUserConfig UsersConfig) error {
 	return nil
 }
 
-func AddConnectionInUserConfig(connection_slug string, password string, connectionIP string, cmdPort int) error {
-	userConfig, err := ReadFromUserConfigFile()
-	if err != nil {
-		return err
-	}
+// FIXME: This is an Old Function, the caller passes connection_slug
+// func AddConnectionInUserConfig(connection_slug string, password string, connectionIP string, cmdPort int) error {
+// 	userConfig, err := ReadFromUserConfigFile()
+// 	if err != nil {
+// 		return err
+// 	}
 
-	connection := Connections{
-		ConnectionSlug: connection_slug,
-		// Password:       password,
-		CurrentIP:   connectionIP,
-		CurrentPort: strconv.Itoa(cmdPort),
-	}
+// 	connection := Connections{
+// 		ConnectionSlug: connection_slug,
+// 		// Password:       password,
+// 		CurrentIP:   connectionIP,
+// 		CurrentPort: strconv.Itoa(cmdPort),
+// 	}
 
-	userConfig.AllConnections = append(userConfig.AllConnections, connection)
-	newUserConfig := UsersConfig{
-		User:           userConfig.User,
-		AllConnections: userConfig.AllConnections,
-		Sendworkspaces: userConfig.Sendworkspaces,
-		GetWorkspaces:  userConfig.GetWorkspaces,
-	}
+// 	userConfig.AllConnections = append(userConfig.AllConnections, connection)
+// 	newUserConfig := UsersConfig{
+// 		User:           userConfig.User,
+// 		AllConnections: userConfig.AllConnections,
+// 		Sendworkspaces: userConfig.Sendworkspaces,
+// 		GetWorkspaces:  userConfig.GetWorkspaces,
+// 	}
 
-	if err := writeToUserConfigFile(newUserConfig); err != nil {
-		return err
-	}
-	return nil
-}
-
-func UpdateWorkSpaceFolders() {
-
-}
-
-// func SetWorkSpaceFolders () error {
-
+// 	if err := writeToUserConfigFile(newUserConfig); err != nil {
+// 		return err
+// 	}
+// 	return nil
 // }
 
-func AddNewConnectionToTheWorkspace(wName string, connectionSlug string) error {
-	userConfig, err := ReadFromUserConfigFile()
-	if err != nil {
-		return err
-	}
+// This old function doesnt do anyting ??
+// func AddNewConnectionToTheWorkspace(wName string, connectionSlug string) error {
+// 	userConfig, err := ReadFromUserConfigFile()
+// 	if err != nil {
+// 		return err
+// 	}
 
-	wFound := false
-	for _, newSWork := range userConfig.Sendworkspaces {
-		if wName == newSWork.WorkspaceName {
-			wFound = true
-			// newSWork.ConnectionSlugs = append(newSWork.ConnectionSlugs, connectionSlug)
-			break
-		}
-	}
+// 	wFound := false
+// 	for _, server := range userConfig.ServerLists {
+// 		for _, newSWork := range server.SendWorkspaces {
+// 			if wName == newSWork.WorkspaceName {
+// 				wFound = true
+// 				break
+// 			}
+// 		}
+// 	}
+	
+// 	if !wFound {
+// 		fmt.Println(" No Such Workspace Exists !!")
+// 		return nil
+// 	}
 
-	if !wFound {
-		fmt.Println(" No Such Workspace Exists !!")
-		return nil
-	}
+// 	if err := writeToUserConfigFile(userConfig); err != nil {
+// 		fmt.Println("error in writting to the user config file ...")
+// 		return err
+// 	}
 
-	if err := writeToUserConfigFile(userConfig); err != nil {
-		fmt.Println("error in writting to the user config file ...")
-		return err
-	}
-
-	fmt.Printf(" New Connection Added To %s Workspace \n", wName)
-	return nil
-}
+// 	fmt.Printf(" New Connection Added To %s Workspace \n", wName)
+// 	return nil
+// }
 
 // This CODE Might Be Useless.
 // This Function Doesnt Seem to be Used Anywhere
 // Please Delete this Future ME
-func CreateNewWorkspace(wName string, wPath string, connectionSlug string) error {
-	//connectionSlugs := make([]string, 1)
-	var connectionSlugs []string
-	connectionSlugs = append(connectionSlugs, connectionSlug)
-	fmt.Println(connectionSlugs)
-	wfolder := WorkspaceFolder{
+func CreateNewWorkspace(serverAlias, wName, wPassword, wPath string) error {
+	wfolder := SendWorkspaceFolder{
 		WorkspaceName: wName,
+		WorkSpacePassword: wPassword,
 		WorkspacePath: wPath,
-		// ConnectionSlugs: connectionSlugs,
 	}
 
 	userConfig, err := ReadFromUserConfigFile()
@@ -257,34 +250,31 @@ func CreateNewWorkspace(wName string, wPath string, connectionSlug string) error
 		return err
 	}
 
-	fmt.Println(userConfig.Sendworkspaces)
+	for _, server := range userConfig.ServerLists {
+		if server.ServerAlias == serverAlias {
+			server.SendWorkspaces = append(server.SendWorkspaces, wfolder)
+			if err := writeToUserConfigFile(userConfig); err != nil {
+				fmt.Println("error: could not write to userconfig file")
+				return err
+			}
 
-	userConfig.Sendworkspaces = append(userConfig.Sendworkspaces, wfolder)
-
-	// fmt.Println(userConfig.Sendworkspaces)
-	// jj, _ := json.MarshalIndent(userConfig, "", "	")
-	// fmt.Println(string(jj))
-
-	if err := writeToUserConfigFile(userConfig); err != nil {
-		fmt.Println("error: could not write to userconfig file")
-		return err
+			return nil
+		}
 	}
-
-	return nil
+	
+	return errors.New(fmt.Sprintf("server with the alias - %s Not Found !!", serverAlias))
 }
 
-func GetAllConnections() []Connections {
-	userConfigFile, err := ReadFromUserConfigFile()
-	if err != nil {
-		fmt.Println("error in reading from the userConfig File")
-	}
+// TODO: See what this func is used for and rewrite a better one
+// func GetAllConnections() []Connections {
+// 	userConfigFile, err := ReadFromUserConfigFile()
+// 	if err != nil {
+// 		fmt.Println("error in reading from the userConfig File")
+// 	}
 
-	return userConfigFile.AllConnections
-}
-
-// func GetAllSendWorkspaceList() []string {
-
+// 	return userConfigFile.AllConnections
 // }
+
 
 // func ValidateConnection(connSlug string, connPassword string) bool {
 // 	userConfigFile, err := readFromUserConfigFile()
@@ -320,17 +310,18 @@ func AddUsersLogEntry(log_entry any) error {
 	return nil
 }
 
-func UpdateBasePort(port string) error {
-	file, err := ReadFromUserConfigFile()
-	if err != nil {
-		return err
-	}
-
-	file.BasePort = port
-	err = writeToUserConfigFile(file)
-
-	return err
-}
+// FIXME: This code is not needed... Fix the Caller and remove it
+// func UpdateBasePort(port string) error {
+// 	file, err := ReadFromUserConfigFile()
+// 	if err != nil {
+// 		return err
+// 	}
+//
+// 	file.BasePort = port
+// 	err = writeToUserConfigFile(file)
+//
+// 	return err
+// }
 
 // Update Last Hash (Used during Pulls)
 func UpdateGetWorkspaceFolderToUserConfig(workspace_name, workspace_path, workspace_ip string, last_hash string) error {
@@ -344,11 +335,13 @@ func UpdateGetWorkspaceFolderToUserConfig(workspace_name, workspace_path, worksp
 		return err
 	}
 
-	for idx := range userConfig.GetWorkspaces {
-		if userConfig.GetWorkspaces[idx].WorkspaceName == workspace_name {
-			userConfig.GetWorkspaces[idx].LastHash = last_hash
-			break
-		}
+	for _, server := range userConfig.ServerLists {
+		for _, workspace := range server.GetWorkspaces {
+			if workspace.WorkspaceName == workspace_name {
+				workspace.LastHash = last_hash
+				break
+			}
+		} 
 	}
 
 	if err := writeToUserConfigFile(userConfig); err != nil {
@@ -359,12 +352,18 @@ func UpdateGetWorkspaceFolderToUserConfig(workspace_name, workspace_path, worksp
 }
 
 func GetAllGetWorkspaces() ([]GetWorkspaceFolder, error) {
-	file, err := ReadFromUserConfigFile()
+	userConfig, err := ReadFromUserConfigFile()
 	if err != nil {
 		return []GetWorkspaceFolder{}, err
 	}
 
-	return file.GetWorkspaces, err
+	allGetWorkspaces := make([]GetWorkspaceFolder, 0)
+
+	for _, server := range userConfig.ServerLists {
+		allGetWorkspaces = append(allGetWorkspaces, server.GetWorkspaces...)
+	}
+
+	return allGetWorkspaces, nil
 }
 
 func AddNewServerToConfig(server_alias, server_ip, username, password string) error {

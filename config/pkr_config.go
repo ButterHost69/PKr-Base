@@ -70,19 +70,19 @@ func CreateSlug() string {
 	return gamerTag[g]
 }
 
-func GetConnectionsPublicKeyUsingIP(workspace_path, ipaddr string) (string, error) {
+func GetConnectionsPublicKeyUsingUsername(workspace_path, username string) (string, error) {
 	pkrconfig, err := ReadFromPKRConfigFile(workspace_path + "\\" + WORKSPACE_CONFIG_FILE_PATH)
 	if err != nil {
 		return "", err
 	}
 
 	for _, connection := range pkrconfig.AllConnections {
-		if connection.CurrentIP == ipaddr {
+		if connection.Username == username {
 			return connection.PublicKeyPath, nil
 		}
 	}
 
-	return "", fmt.Errorf("no such ip exists : %v", ipaddr)
+	return "", fmt.Errorf("no such ip exists : %v", username)
 }
 
 func StorePublicKeys(workspace_keys_path string, key string) (string, error) {
