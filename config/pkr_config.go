@@ -192,3 +192,12 @@ func AddNewPushToConfig(workspace_name, zipfile_path string) error {
 	}
 	return nil
 }
+
+func ReadPublicKey() (string, error) {
+	keyData, err := os.ReadFile(MY_KEYS_PATH + "\\publickey.pem")
+	if err != nil {
+		return "", err
+	}
+
+	return string(keyData), nil
+}

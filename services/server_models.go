@@ -2,7 +2,8 @@ package services
 
 import "github.com/ButterHost69/PKr-Base/logger"
 
-type KCPHandler struct {
+// Handlers Requests from Server
+type ServerHandler struct {
 	WorkspaceLogger   *logger.WorkspaceLogger
 	UserConfingLogger *logger.UserLogger
 }
@@ -13,10 +14,9 @@ type NotifyToPunchRequest struct {
 	SendersPort     string
 }
 
-type NotifyToPunchResponse struct{
-	RecieversPublicIP	string
-	RecieversPublicPort	int
+type NotifyToPunchResponse struct {
+	RecieversPublicIP   string
+	RecieversPublicPort int
 
 	Response int
 }
-

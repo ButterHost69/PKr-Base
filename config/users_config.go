@@ -118,22 +118,25 @@ func GetWorkspaceFilePath(workspace_name string) (string, error) {
 }
 
 // Returns Workspace Path if Username and Password Correct
-func AuthenticateWorkspaceInfo(workspace_name string, workspace_password string) string {
+func AuthenticateWorkspaceInfo(workspace_name string, workspace_password string) (string, error) {
 	userConfig, err := ReadFromUserConfigFile()
 	if err != nil {
-		return ""
+		return "", err
 	}
 
 	servers := userConfig.ServerLists
 	for _, server := range servers{
 		for _, workspace := range server.SendWorkspaces {
-			if workspace.WorkspaceName == workspace_name && workspace.WorkSpacePassword == workspace_password{
-				return workspace.WorkspacePath
+			if workspace.WorkspaceName == workspace_name {
+				if workspace.WorkSpacePassword == workspace_password {
+					return workspace.WorkspacePath, nil
+				}
+				return "", errors.New("incorrect password")
 			}	
 		}
 	}
 
-	return ""
+	return "", errors.New("could not find workspace")
 }
 
 func ReadFromUserConfigFile() (UsersConfig, error) {
@@ -335,10 +338,10 @@ func UpdateGetWorkspaceFolderToUserConfig(workspace_name, workspace_path, worksp
 		return err
 	}
 
-	for _, server := range userConfig.ServerLists {
-		for _, workspace := range server.GetWorkspaces {
+	for idx, server := range userConfig.ServerLists {
+		for widx, workspace := range server.GetWorkspaces {
 			if workspace.WorkspaceName == workspace_name {
-				workspace.LastHash = last_hash
+				userConfig.ServerLists[idx].GetWorkspaces[widx].LastHash = last_hash
 				break
 			}
 		} 
