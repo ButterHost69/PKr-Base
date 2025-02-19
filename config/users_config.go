@@ -449,3 +449,18 @@ func GetServerIPThroughAlias(server_alias string) (string, error) {
 
 	return "", errors.New("no such server alias found")
 }
+
+func GetServerDetailsUsingServerAlias(server_alias string)(ServerConfig, error) {
+	serverConfig, err := ReadFromUserConfigFile()
+	if err != nil {
+		return ServerConfig{}, fmt.Errorf("error in reading From the ServerConfig File...\nError: %v",err)
+	}
+
+	for _, server := range serverConfig.ServerLists{
+		if server.ServerAlias == server_alias {
+			return server, nil
+		}
+	}
+
+	return ServerConfig{}, errors.New("no such server alias found")
+}
