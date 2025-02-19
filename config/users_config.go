@@ -434,3 +434,18 @@ func GetServerDetails(server_alias string) (string, string, string, error) {
 
 	return "", "", "", fmt.Errorf("server with the server alias - %s not found", server_alias)
 }
+
+func GetServerIPThroughAlias(server_alias string) (string, error) {
+	serverConfig, err := ReadFromUserConfigFile()
+	if err != nil {
+		return "", fmt.Errorf("error in reading From the ServerConfig File...\nError: %v",err)
+	}
+
+	for _, server := range serverConfig.ServerLists{
+		if server.ServerAlias == server_alias {
+			return server.ServerIP, nil
+		}
+	}
+
+	return "", errors.New("no such server alias found")
+}
