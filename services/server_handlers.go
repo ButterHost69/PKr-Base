@@ -40,6 +40,7 @@ func (h *ServerHandler) NotifyToPunch(req NotifyToPunchRequest, res *NotifyToPun
 	res.RecieversPublicPort = i_publicPort
 
 	// TODO Start Reciever on private ip
+	// TODO Pass context to close server in 5min
 	go StartNewNewServer(strconv.Itoa(dialPort), h.WorkspaceLogger, h.UserConfingLogger)
 	return nil
 }
