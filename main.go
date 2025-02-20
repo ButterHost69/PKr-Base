@@ -91,7 +91,7 @@ func Init() {
 		WorkspaceLogger: workspace_logger,
 		UserConfingLogger: userconfing_logger,
 	}
-	config.UpdateBasePort(IP_ADDR)
+	// config.UpdateBasePort(IP_ADDR)
 
 }
 
@@ -131,9 +131,9 @@ func main() {
 	}()
 
 	// [ ] Look for a better way to call this function instead of using go-routines
-	if err := dialer.ScanForUpdatesOnStart(userconfing_logger); err != nil {
-		userconfing_logger.Critical(fmt.Sprintf("Error in Scan For Updates on Start.\nError: %v", err))
-	}
+	// if err := dialer.ScanForUpdatesOnStart(userconfing_logger); err != nil {
+	// 	userconfing_logger.Critical(fmt.Sprintf("Error in Scan For Updates on Start.\nError: %v", err))
+	// }
 
 	err := services.InitKCPServer(IP_ADDR, workspace_logger, userconfing_logger)
 	if err != nil {

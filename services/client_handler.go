@@ -55,7 +55,7 @@ func (h *Handler) InitNewWorkSpaceConnection(req InitWorkspaceConnectionRequest,
 	file_path, err := config.AuthenticateWorkspaceInfo(req.WorkspaceName, password)
 	if err != nil {
 		if errors.Is(err, ErrIncorrectPassword) {
-			h.WorkspaceLogger.Debug(req.WorkspaceName, fmt.Sprintf("Incorrect Credentials for Workspace - %s, By User - %s, Server: %s",  req.MyUsername, req.ServerIP))
+			h.WorkspaceLogger.Debug(req.WorkspaceName, fmt.Sprintf("Incorrect Credentials for Workspace - %s, By User - %s, Server: %s",  req.MyUsername,req.MyUsername, req.ServerIP))
 		} else{
 			h.UserConfingLogger.Debug(fmt.Sprintf("could not init workspace for user %s, server %s ", req.MyUsername, req.ServerIP))
 		}
@@ -67,7 +67,7 @@ func (h *Handler) InitNewWorkSpaceConnection(req InitWorkspaceConnectionRequest,
 	server, err := config.GetServerDetailsUsingServerIP(req.ServerIP)
 	if err != nil {
 		if errors.Is(err, ErrServerNotFound) {
-			h.WorkspaceLogger.Debug(req.WorkspaceName, fmt.Sprintf("Unable to find Server with such IP: %s", ))
+			h.WorkspaceLogger.Debug(req.WorkspaceName, fmt.Sprintf("Unable to find Server with such IP: %s", req.ServerIP))
 		} else{
 			h.UserConfingLogger.Debug(fmt.Sprintf("could not init workspace for user %s, server %s ", req.MyUsername, req.ServerIP))
 		}
@@ -118,13 +118,16 @@ func (h *Handler) InitNewWorkSpaceConnection(req InitWorkspaceConnectionRequest,
 }
 
 func (h *Handler) GetData(req GetDataRequest, res *GetDataResponse) error {
-	// TODO Compare Hash ..
+	// FIXME AUTH req.workspace_name, req.workspace_password
+	// FIXME Store Keys when called GetPublicKey in cli and reuse it
+
+	// TODO Compare Hash ...
 	// TODO - If Hash == "" : Send Entire File
 	// TODO - If Hash == Last_Hash : Do Nothing
 	
 	// TODO Maintain 3 Last Hash object files, and Send Files Accordingly
 
-	h.WorkspaceLogger.Info(req.WorkspaceName, fmt.Sprintf("Data Requested For Workspace: ", req.WorkspaceName))
+	h.WorkspaceLogger.Info(req.WorkspaceName, fmt.Sprintf("Data Requested For Workspace: %s", req.WorkspaceName))
 	workspacePath, err := config.GetWorkspaceFilePath(req.WorkspaceName)
 	if err != nil {
 		log_entry := fmt.Sprintf("cannot get workspace's file path\nError: %s\nSource: PullData() Handler", err.Error())
