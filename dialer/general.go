@@ -9,15 +9,15 @@ const (
 	PUNCH_ATTEMPTS = 5
 )
 
-func GetMyPublicIP (port int) (string, error){
+func GetMyPublicIP(port int) (string, error) {
 	stunClient := stun.NewClient()
-  	stunClient.SetServerAddr("stun.l.google.com:19302")
-  	stunClient.SetLocalPort(port)
+	stunClient.SetServerAddr("stun.l.google.com:19302")
+	stunClient.SetLocalPort(port)
 
-	  _, myExtAddr, err := stunClient.Discover()
-  	if err != nil {
+	_, myExtAddr, err := stunClient.Discover()
+	if err != nil {
 		return "", err
-  	}
+	}
 
 	return myExtAddr.String(), err
 }

@@ -41,13 +41,13 @@ func (h *CallHandler) CallPing(server_ip, username, password, public_ip, public_
 	req.PublicIP = public_ip
 	req.PublicPort = public_port
 
-	if err := call(HANDLER_NAME + ".Ping", req, &res, server_ip, ""); err != nil{
+	if err := call(HANDLER_NAME+".Ping", req, &res, server_ip, ""); err != nil {
 
-		return fmt.Errorf("Error in Calling RPC...\nError: %v", err)
+		return fmt.Errorf("error in Calling RPC...\nError: %v", err)
 	}
 
 	if res.Response != 200 {
-		return fmt.Errorf("Calling Ping Method was not Successful.\nReturn Code - %d", res.Response)
+		return fmt.Errorf("calling Ping Method was not Successful.\nReturn Code - %d", res.Response)
 	}
 
 	return nil

@@ -127,13 +127,13 @@ func EncryptData(data string, publicPemBock string) (string, error) {
 	if err != nil {
 		fmt.Println("error in encypting the messgae...")
 		fmt.Println(err.Error())
-		return "",err
+		return "", err
 	}
 
 	// fmt.Printf("[Log] : Encryped Message: %s\n", string(result))
 
 	base64Encrypted := base64.StdEncoding.EncodeToString(result)
-    return base64Encrypted, nil
+	return base64Encrypted, nil
 	// return string(result), nil
 }
 

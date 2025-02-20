@@ -202,7 +202,7 @@ func ReadPublicKey() (string, error) {
 	return string(keyData), nil
 }
 
-func GetWorkspaceConnectionsUsingPath(workspace_path string) ([]Connection, error){
+func GetWorkspaceConnectionsUsingPath(workspace_path string) ([]Connection, error) {
 	workspace_json, err := ReadFromPKRConfigFile(workspace_path)
 	if err != nil {
 		return []Connection{}, fmt.Errorf("could not read from config file.\nError: %v", err)

@@ -34,9 +34,9 @@ func InitKCPServer(port string, workspace_logger *logger.WorkspaceLogger, userco
 }
 
 // TODO Close Server if no Connections in 5 Min... IDK How ??
-func StartNewNewServer(port string, workspace_logger *logger.WorkspaceLogger, userconfing_logger *logger.UserLogger){
+func StartNewNewServer(port string, workspace_logger *logger.WorkspaceLogger, userconfing_logger *logger.UserLogger) {
 	err := rpc.Register(&Handler{
-		WorkspaceLogger:  workspace_logger,
+		WorkspaceLogger:   workspace_logger,
 		UserConfingLogger: userconfing_logger,
 	})
 	if err != nil {
@@ -47,10 +47,10 @@ func StartNewNewServer(port string, workspace_logger *logger.WorkspaceLogger, us
 	lis, err := kcp.Listen(port)
 	if err != nil {
 		userconfing_logger.Critical(fmt.Sprintf("Could Not Start the Client Server...\nError: %v", err))
-		return 
+		return
 	}
 
 	userconfing_logger.Info("Started KCP Server...")
 	rpc.Accept(lis)
-	
+
 }

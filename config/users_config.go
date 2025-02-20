@@ -106,7 +106,7 @@ func GetWorkspaceFilePath(workspace_name string) (string, error) {
 	}
 
 	servers := userConfig.ServerLists
-	for _, server := range servers{
+	for _, server := range servers {
 		for _, workspace := range server.GetWorkspaces {
 			if workspace.WorkspaceName == workspace_name {
 				return workspace.WorkspacePath, nil
@@ -125,14 +125,14 @@ func AuthenticateWorkspaceInfo(workspace_name string, workspace_password string)
 	}
 
 	servers := userConfig.ServerLists
-	for _, server := range servers{
+	for _, server := range servers {
 		for _, workspace := range server.SendWorkspaces {
 			if workspace.WorkspaceName == workspace_name {
 				if workspace.WorkSpacePassword == workspace_password {
 					return workspace.WorkspacePath, nil
 				}
 				return "", errors.New("incorrect password")
-			}	
+			}
 		}
 	}
 
@@ -223,7 +223,7 @@ func writeToUserConfigFile(newUserConfig UsersConfig) error {
 // 			}
 // 		}
 // 	}
-	
+
 // 	if !wFound {
 // 		fmt.Println(" No Such Workspace Exists !!")
 // 		return nil
@@ -243,9 +243,9 @@ func writeToUserConfigFile(newUserConfig UsersConfig) error {
 // Please Delete this Future ME
 func CreateNewWorkspace(serverAlias, wName, wPassword, wPath string) error {
 	wfolder := SendWorkspaceFolder{
-		WorkspaceName: wName,
+		WorkspaceName:     wName,
 		WorkSpacePassword: wPassword,
-		WorkspacePath: wPath,
+		WorkspacePath:     wPath,
 	}
 
 	userConfig, err := ReadFromUserConfigFile()
@@ -264,7 +264,7 @@ func CreateNewWorkspace(serverAlias, wName, wPassword, wPath string) error {
 			return nil
 		}
 	}
-	
+
 	return fmt.Errorf("server with the alias - %s Not Found", serverAlias)
 }
 
@@ -277,7 +277,6 @@ func CreateNewWorkspace(serverAlias, wName, wPassword, wPath string) error {
 
 // 	return userConfigFile.AllConnections
 // }
-
 
 // func ValidateConnection(connSlug string, connPassword string) bool {
 // 	userConfigFile, err := readFromUserConfigFile()
@@ -344,7 +343,7 @@ func UpdateGetWorkspaceFolderToUserConfig(workspace_name, workspace_path, worksp
 				userConfig.ServerLists[idx].GetWorkspaces[widx].LastHash = last_hash
 				break
 			}
-		} 
+		}
 	}
 
 	if err := writeToUserConfigFile(userConfig); err != nil {
@@ -412,7 +411,7 @@ func AddNewServerToConfig(server_alias, server_ip, username, password string) er
 func GetAllServers() ([]ServerConfig, error) {
 	serverConfig, err := ReadFromUserConfigFile()
 	if err != nil {
-		return serverConfig.ServerLists, fmt.Errorf("error in reading From the ServerConfig File...\nError: %v",err)
+		return serverConfig.ServerLists, fmt.Errorf("error in reading From the ServerConfig File...\nError: %v", err)
 	}
 
 	return serverConfig.ServerLists, nil
@@ -423,12 +422,12 @@ func GetServerDetails(server_alias string) (string, string, string, error) {
 	// var username, password string
 	serverConfig, err := ReadFromUserConfigFile()
 	if err != nil {
-		return "", "", "", fmt.Errorf("error in reading From the ServerConfig File...\nError: %v",err)
+		return "", "", "", fmt.Errorf("error in reading From the ServerConfig File...\nError: %v", err)
 	}
 
 	for _, server := range serverConfig.ServerLists {
 		if server.ServerAlias == server_alias {
-			return server.ServerIP, server.Username, server.Password , nil
+			return server.ServerIP, server.Username, server.Password, nil
 		}
 	}
 
@@ -438,10 +437,10 @@ func GetServerDetails(server_alias string) (string, string, string, error) {
 func GetServerIPThroughAlias(server_alias string) (string, error) {
 	serverConfig, err := ReadFromUserConfigFile()
 	if err != nil {
-		return "", fmt.Errorf("error in reading From the ServerConfig File...\nError: %v",err)
+		return "", fmt.Errorf("error in reading From the ServerConfig File...\nError: %v", err)
 	}
 
-	for _, server := range serverConfig.ServerLists{
+	for _, server := range serverConfig.ServerLists {
 		if server.ServerAlias == server_alias {
 			return server.ServerIP, nil
 		}
@@ -450,13 +449,13 @@ func GetServerIPThroughAlias(server_alias string) (string, error) {
 	return "", errors.New("no such server alias found")
 }
 
-func GetServerDetailsUsingServerAlias(server_alias string)(ServerConfig, error) {
+func GetServerDetailsUsingServerAlias(server_alias string) (ServerConfig, error) {
 	serverConfig, err := ReadFromUserConfigFile()
 	if err != nil {
-		return ServerConfig{}, fmt.Errorf("error in reading From the ServerConfig File...\nError: %v",err)
+		return ServerConfig{}, fmt.Errorf("error in reading From the ServerConfig File...\nError: %v", err)
 	}
 
-	for _, server := range serverConfig.ServerLists{
+	for _, server := range serverConfig.ServerLists {
 		if server.ServerAlias == server_alias {
 			return server, nil
 		}
@@ -465,14 +464,13 @@ func GetServerDetailsUsingServerAlias(server_alias string)(ServerConfig, error) 
 	return ServerConfig{}, errors.New("no such server alias found")
 }
 
-
-func GetServerDetailsUsingServerIP(server_ip string)(ServerConfig, error) {
+func GetServerDetailsUsingServerIP(server_ip string) (ServerConfig, error) {
 	serverConfig, err := ReadFromUserConfigFile()
 	if err != nil {
-		return ServerConfig{}, fmt.Errorf("error in reading From the ServerConfig File...\nError: %v",err)
+		return ServerConfig{}, fmt.Errorf("error in reading From the ServerConfig File...\nError: %v", err)
 	}
 
-	for _, server := range serverConfig.ServerLists{
+	for _, server := range serverConfig.ServerLists {
 		if server.ServerIP == server_ip {
 			return server, nil
 		}

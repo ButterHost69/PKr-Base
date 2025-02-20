@@ -7,7 +7,7 @@ type PKRConfig struct {
 }
 
 type Connection struct {
-	ServerAlias    string `json:"server_alias"`
+	ServerAlias   string `json:"server_alias"`
 	Username      string `json:"username"`
 	PublicKeyPath string `json:"public_key_path"`
 }

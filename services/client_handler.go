@@ -9,7 +9,6 @@ import (
 	"os"
 	"strings"
 
-
 	"github.com/ButterHost69/PKr-Base/config"
 	"github.com/ButterHost69/PKr-Base/encrypt"
 	"github.com/ButterHost69/PKr-Base/filetracker"
@@ -17,7 +16,7 @@ import (
 
 var (
 	ErrIncorrectPassword = errors.New("incorrect password")
-	ErrServerNotFound = errors.New("server not found in config")
+	ErrServerNotFound    = errors.New("server not found in config")
 )
 
 func (h *Handler) GetPublicKey(req PublicKeyRequest, res *PublicKeyResponse) error {
@@ -26,7 +25,7 @@ func (h *Handler) GetPublicKey(req PublicKeyRequest, res *PublicKeyResponse) err
 		logentry := fmt.Sprintf("Could Not Provide Public Key To IP. Error: %v", keyData)
 		h.UserConfingLogger.Debug(logentry)
 	}
-	
+
 	logentry := "Successfully Provided Public Key to a Client "
 	h.UserConfingLogger.Info(logentry)
 
@@ -34,7 +33,7 @@ func (h *Handler) GetPublicKey(req PublicKeyRequest, res *PublicKeyResponse) err
 	return nil
 }
 
-func (h *Handler) InitNewWorkSpaceConnection(req InitWorkspaceConnectionRequest, res *InitWorkspaceConnectionResponse) (error) {
+func (h *Handler) InitNewWorkSpaceConnection(req InitWorkspaceConnectionRequest, res *InitWorkspaceConnectionResponse) error {
 	// 1. Decrypt password [X]
 	// 2. Authenticate Request [X]
 	// 3. Add the New Connection to the .PKr Config File [X]
@@ -47,7 +46,7 @@ func (h *Handler) InitNewWorkSpaceConnection(req InitWorkspaceConnectionRequest,
 		h.UserConfingLogger.Debug(fmt.Sprintf("Failed to Init Workspace Connection for User - %s from Server %s: ", req.MyUsername, req.ServerIP))
 		h.UserConfingLogger.Debug(err)
 
-		res.Response = 4000 
+		res.Response = 4000
 		return nil
 	}
 
@@ -55,8 +54,8 @@ func (h *Handler) InitNewWorkSpaceConnection(req InitWorkspaceConnectionRequest,
 	file_path, err := config.AuthenticateWorkspaceInfo(req.WorkspaceName, password)
 	if err != nil {
 		if errors.Is(err, ErrIncorrectPassword) {
-			h.WorkspaceLogger.Debug(req.WorkspaceName, fmt.Sprintf("Incorrect Credentials for Workspace - %s, By User - %s, Server: %s",  req.MyUsername,req.MyUsername, req.ServerIP))
-		} else{
+			h.WorkspaceLogger.Debug(req.WorkspaceName, fmt.Sprintf("Incorrect Credentials for Workspace - %s, By User - %s, Server: %s", req.MyUsername, req.MyUsername, req.ServerIP))
+		} else {
 			h.UserConfingLogger.Debug(fmt.Sprintf("could not init workspace for user %s, server %s ", req.MyUsername, req.ServerIP))
 		}
 
@@ -68,7 +67,7 @@ func (h *Handler) InitNewWorkSpaceConnection(req InitWorkspaceConnectionRequest,
 	if err != nil {
 		if errors.Is(err, ErrServerNotFound) {
 			h.WorkspaceLogger.Debug(req.WorkspaceName, fmt.Sprintf("Unable to find Server with such IP: %s", req.ServerIP))
-		} else{
+		} else {
 			h.UserConfingLogger.Debug(fmt.Sprintf("could not init workspace for user %s, server %s ", req.MyUsername, req.ServerIP))
 		}
 
@@ -83,18 +82,18 @@ func (h *Handler) InitNewWorkSpaceConnection(req InitWorkspaceConnectionRequest,
 	// Save Public Key
 	publicKey, err := base64.StdEncoding.DecodeString(string(req.MyPublicKey))
 	if err != nil {
-		h.WorkspaceLogger.Debug(req.WorkspaceName, "Failed to convert key to Base64 for User: "+ req.MyUsername)
+		h.WorkspaceLogger.Debug(req.WorkspaceName, "Failed to convert key to Base64 for User: "+req.MyUsername)
 		h.WorkspaceLogger.Debug(req.WorkspaceName, err)
-		
+
 		res.Response = 4000
 		return err
 	}
 
 	keysPath, err := config.StorePublicKeys(file_path+"\\.PKr\\keys\\", string(publicKey))
 	if err != nil {
-		h.WorkspaceLogger.Debug(req.WorkspaceName, "Failed to Init Workspace Connection for User: " + req.MyUsername)
+		h.WorkspaceLogger.Debug(req.WorkspaceName, "Failed to Init Workspace Connection for User: "+req.MyUsername)
 		h.WorkspaceLogger.Debug(req.WorkspaceName, err)
-		
+
 		res.Response = 4000
 		return err
 	}
@@ -102,9 +101,9 @@ func (h *Handler) InitNewWorkSpaceConnection(req InitWorkspaceConnectionRequest,
 	// Store the New Connection in the .PKr Config file
 	connection.PublicKeyPath = keysPath
 	if err := config.AddConnectionToPKRConfigFile(file_path+"\\.PKr\\workspaceConfig.json", connection); err != nil {
-		h.WorkspaceLogger.Debug(req.WorkspaceName, "Failed to Init Workspace Connection for User IP: " + req.MyUsername)
+		h.WorkspaceLogger.Debug(req.WorkspaceName, "Failed to Init Workspace Connection for User IP: "+req.MyUsername)
 		h.WorkspaceLogger.Debug(req.WorkspaceName, err)
-		
+
 		res.Response = 4000
 		return nil
 	}
@@ -112,7 +111,7 @@ func (h *Handler) InitNewWorkSpaceConnection(req InitWorkspaceConnectionRequest,
 	h.WorkspaceLogger.Info(req.WorkspaceName, fmt.Sprintf("Added User IP: %v of Server %s to the Connection List", req.MyUsername, server.ServerAlias))
 
 	// TODO The Client Will make another new Request Entirely through the entire server process to retrieve the workspace data
-	// TODO Create a RPC Reciever for GetData -> if Last Hash "" than send entire zip 
+	// TODO Create a RPC Reciever for GetData -> if Last Hash "" than send entire zip
 	res.Response = 200
 	return nil
 }
@@ -124,7 +123,7 @@ func (h *Handler) GetData(req GetDataRequest, res *GetDataResponse) error {
 	// TODO Compare Hash ...
 	// TODO - If Hash == "" : Send Entire File
 	// TODO - If Hash == Last_Hash : Do Nothing
-	
+
 	// TODO Maintain 3 Last Hash object files, and Send Files Accordingly
 
 	h.WorkspaceLogger.Info(req.WorkspaceName, fmt.Sprintf("Data Requested For Workspace: %s", req.WorkspaceName))
@@ -134,7 +133,7 @@ func (h *Handler) GetData(req GetDataRequest, res *GetDataResponse) error {
 		h.WorkspaceLogger.Debug(req.WorkspaceName, log_entry)
 		return err
 	}
-	
+
 	zipped_file_name, err := filetracker.ZipData(workspacePath)
 	zipped_hash := strings.Split(zipped_file_name, ".")[0]
 	fmt.Println("Data Service Hash File Name: " + zipped_file_name)

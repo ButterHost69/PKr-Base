@@ -21,25 +21,25 @@ import (
 )
 
 const (
-	ROOT_DIR     = "..\\tmp"
-	MY_KEYS_PATH = ROOT_DIR + "\\mykeys"
-	CONFIG_FILE  = ROOT_DIR + "\\userConfig.json"
-	LOG_FILE = ROOT_DIR + "\\logs.txt"
+	ROOT_DIR        = "..\\tmp"
+	MY_KEYS_PATH    = ROOT_DIR + "\\mykeys"
+	CONFIG_FILE     = ROOT_DIR + "\\userConfig.json"
+	LOG_FILE        = ROOT_DIR + "\\logs.txt"
 	SERVER_LOG_FILE = ROOT_DIR + "\\serverlogs.txt"
 )
 
 var (
-	IP_ADDR 			string
-	PORT				int
-	LOG_IN_TERMINAL		bool
-	LOG_LEVEL			int
+	IP_ADDR         string
+	PORT            int
+	LOG_IN_TERMINAL bool
+	LOG_LEVEL       int
 )
 
 // Loggers
 var (
-	workspace_logger	*logger.WorkspaceLogger
-	userconfing_logger	*logger.UserLogger
-	serverRpcHandler 	*dialer.CallHandler
+	workspace_logger   *logger.WorkspaceLogger
+	userconfing_logger *logger.UserLogger
+	serverRpcHandler   *dialer.CallHandler
 )
 
 func Init() {
@@ -47,7 +47,7 @@ func Init() {
 	flag.BoolVar(&LOG_IN_TERMINAL, "lt", false, "Log Events in Terminal.")
 	flag.IntVar(&LOG_LEVEL, "ll", 4, "Set Log Levels.") // 4 -> No Logs
 	flag.Parse()
-	
+
 	// Create and Initialize Loggers
 	workspace_logger = logger.InitWorkspaceLogger()
 	userconfing_logger = logger.InitUserLogger(LOG_FILE)
@@ -79,7 +79,7 @@ func Init() {
 			PORT = 9069
 		}
 	} else {
-		
+
 		PORT, err = strconv.Atoi(strings.Split(IP_ADDR, ":")[1])
 		if err != nil {
 			log.Panic("Error: ", err)
@@ -87,8 +87,8 @@ func Init() {
 	}
 
 	serverRpcHandler = &dialer.CallHandler{
-		Lipaddr: "0.0.0.0:9091",
-		WorkspaceLogger: workspace_logger,
+		Lipaddr:           "0.0.0.0:9091",
+		WorkspaceLogger:   workspace_logger,
 		UserConfingLogger: userconfing_logger,
 	}
 	// config.UpdateBasePort(IP_ADDR)
@@ -140,5 +140,5 @@ func main() {
 		userconfing_logger.Critical(fmt.Sprintf("Error: %v\n", err))
 	}
 
-	userconfing_logger.Info(fmt.Sprintf("Base Service Running on Port: %s" , IP_ADDR))
+	userconfing_logger.Info(fmt.Sprintf("Base Service Running on Port: %s", IP_ADDR))
 }

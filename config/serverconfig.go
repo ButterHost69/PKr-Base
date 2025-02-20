@@ -77,4 +77,3 @@ package config
 // 	}
 // 	return "", "", fmt.Errorf("error could not find server with ip: %s", server_ip)
 // }
-
