@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	ROOT_DIR        = "..\\tmp"
+	ROOT_DIR        = ".\\tmp"
 	MY_KEYS_PATH    = ROOT_DIR + "\\mykeys"
 	CONFIG_FILE     = ROOT_DIR + "\\userConfig.json"
 	LOG_FILE        = ROOT_DIR + "\\logs.txt"
@@ -42,7 +42,7 @@ var (
 	serverRpcHandler   *dialer.CallHandler
 )
 
-func Init() {
+func init() {
 	flag.StringVar(&IP_ADDR, "ip", "", "Use Application in TUI Mode.")
 	flag.BoolVar(&LOG_IN_TERMINAL, "lt", false, "Log Events in Terminal.")
 	flag.IntVar(&LOG_LEVEL, "ll", 4, "Set Log Levels.") // 4 -> No Logs
@@ -96,10 +96,17 @@ func Init() {
 }
 
 func main() {
-	Init()
-
 	// TODO: [ ] Test this code, neither human test nor code test done....
 	// All The functions written with it are not tested
+
+	myPublicIPPort, err := dialer.GetMyPublicIP(PORT)
+	if err != nil {
+		log.Panic("Error in getting Public IP: ", err)
+	}
+
+	myPublicIp := strings.Split(myPublicIPPort, ":")[0]
+	myPublicPort := strings.Split(myPublicIPPort, ":")[1]
+
 	go func() {
 		userconfing_logger.Info("Update me Service Started")
 		for {
@@ -114,13 +121,6 @@ func main() {
 				break
 			}
 
-			myPublicIPPort, err := dialer.GetMyPublicIP(PORT)
-			myPublicIp := strings.Split(myPublicIPPort, ":")[0]
-			myPublicPort := strings.Split(myPublicIPPort, ":")[1]
-
-			if err != nil {
-				log.Panic("Error in getting Public IP: ", err)
-			}
 			for _, server := range serverList {
 				if err := serverRpcHandler.CallPing(server.ServerIP, server.Username, server.Password, myPublicIp, myPublicPort); err != nil {
 					userconfing_logger.Critical(err)
@@ -135,7 +135,7 @@ func main() {
 	// 	userconfing_logger.Critical(fmt.Sprintf("Error in Scan For Updates on Start.\nError: %v", err))
 	// }
 
-	err := services.InitKCPServer(IP_ADDR, workspace_logger, userconfing_logger)
+	err = services.InitKCPServer(IP_ADDR, workspace_logger, userconfing_logger)
 	if err != nil {
 		userconfing_logger.Critical(fmt.Sprintf("Error: %v\n", err))
 	}

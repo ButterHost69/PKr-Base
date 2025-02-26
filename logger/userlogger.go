@@ -34,7 +34,7 @@ func (ul *UserLogger) Info(log any) {
 	}
 
 	if ul.acceptedLevel >= InfoLevel {
-		if err := logToFile(ul.userConfigFilePath+USER_LOG_FILE_PATH, slog); err != nil {
+		if err := logToFile(ul.userConfigFilePath, slog); err != nil {
 			fmt.Println("Could Not Log To File.\nError: ", err)
 		}
 	}
@@ -47,7 +47,7 @@ func (ul *UserLogger) Debug(log any) {
 	}
 
 	if ul.acceptedLevel >= DebugLevel {
-		if err := logToFile(ul.userConfigFilePath+USER_LOG_FILE_PATH, slog); err != nil {
+		if err := logToFile(ul.userConfigFilePath, slog); err != nil {
 			fmt.Println("Could Not Log To File.\nError: ", err)
 		}
 	}
@@ -60,7 +60,7 @@ func (ul *UserLogger) Critical(log any) {
 	}
 
 	if ul.acceptedLevel >= CriticalLevel {
-		if err := logToFile(ul.userConfigFilePath+USER_LOG_FILE_PATH, slog); err != nil {
+		if err := logToFile(ul.userConfigFilePath, slog); err != nil {
 			fmt.Println("Could Not Log To File.\nError: ", err)
 		}
 	}

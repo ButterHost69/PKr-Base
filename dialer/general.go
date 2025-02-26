@@ -15,11 +15,10 @@ func GetMyPublicIP(port int) (string, error) {
 	stunClient.SetLocalPort(port)
 
 	_, myExtAddr, err := stunClient.Discover()
-	if err != nil {
+	if err != nil && err.Error() != "Server error: no changed address" {
 		return "", err
 	}
-
-	return myExtAddr.String(), err
+	return myExtAddr.String(), nil
 }
 
 func PuchToIP(senderIP, privateIP string) error {
