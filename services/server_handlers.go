@@ -10,6 +10,8 @@ import (
 )
 
 func (h *ServerHandler) NotifyToPunch(req NotifyToPunchRequest, res *NotifyToPunchResponse) error {
+	fmt.Println("Notify To Punch Called ...")
+
 	dialPort := rand.Intn(16384) + 16384
 
 	publicIPAddr, err := dialer.GetMyPublicIP(dialPort)
