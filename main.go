@@ -8,6 +8,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"strconv"
 	"strings"
@@ -87,7 +88,7 @@ func init() {
 	}
 
 	serverRpcHandler = &dialer.CallHandler{
-		Lipaddr:           "0.0.0.0:9091",
+		Lipaddr:           "0.0.0.0:9091", // FIXME: Depreacate This
 		WorkspaceLogger:   workspace_logger,
 		UserConfingLogger: userconfing_logger,
 	}
@@ -107,6 +108,20 @@ func main() {
 	myPublicIp := strings.Split(myPublicIPPort, ":")[0]
 	myPublicPort := strings.Split(myPublicIPPort, ":")[1]
 
+	userconfing_logger.Info("Starting UDP Connection on Port: " + IP_ADDR)
+	
+	udpaddr, err := net.ResolveUDPAddr("udp", IP_ADDR)
+	if err != nil {
+		log.Fatal(err)
+	}
+	
+	conn, err := net.ListenUDP("udp", udpaddr)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	serverRpcHandler.Conn = conn
+
 	go func() {
 		userconfing_logger.Info("Update me Service Started")
 		for {
@@ -122,9 +137,11 @@ func main() {
 			}
 
 			for _, server := range serverList {
+				userconfing_logger.Info(fmt.Sprintf("Calling Ping Method For: %s", server.ServerAlias))
 				if err := serverRpcHandler.CallPing(server.ServerIP, server.Username, server.Password, myPublicIp, myPublicPort); err != nil {
 					userconfing_logger.Critical(err)
 				}
+				userconfing_logger.Info(fmt.Sprintf("Ping Method Called Successful for : %s", server.ServerAlias))
 			}
 			time.Sleep(5 * time.Minute)
 		}
@@ -135,10 +152,10 @@ func main() {
 	// 	userconfing_logger.Critical(fmt.Sprintf("Error in Scan For Updates on Start.\nError: %v", err))
 	// }
 
-	err = services.InitKCPServer(IP_ADDR, workspace_logger, userconfing_logger)
+	userconfing_logger.Info(fmt.Sprintf("Starting Base Service on Port: %s", IP_ADDR))
+	err = services.InitKCPServer(conn, workspace_logger, userconfing_logger)
 	if err != nil {
 		userconfing_logger.Critical(fmt.Sprintf("Error: %v\n", err))
 	}
 
-	userconfing_logger.Info(fmt.Sprintf("Base Service Running on Port: %s", IP_ADDR))
 }

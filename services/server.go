@@ -2,13 +2,14 @@ package services
 
 import (
 	"fmt"
+	"net"
 	"net/rpc"
 
 	"github.com/ButterHost69/PKr-Base/logger"
 	"github.com/ButterHost69/kcp-go"
 )
 
-func InitKCPServer(port string, workspace_logger *logger.WorkspaceLogger, userconfing_logger *logger.UserLogger) error {
+func InitKCPServer(conn *net.UDPConn, workspace_logger *logger.WorkspaceLogger, userconfing_logger *logger.UserLogger) error {
 
 	handler := ServerHandler{
 		WorkspaceLogger:   workspace_logger,
@@ -21,16 +22,28 @@ func InitKCPServer(port string, workspace_logger *logger.WorkspaceLogger, userco
 		return err
 	}
 
-	lis, err := kcp.Listen(port)
+	lis, err := kcp.ServeConn(nil, 0,0, conn)
 	if err != nil {
 		userconfing_logger.Critical(fmt.Sprintf("Could Not Start the KCP Server...\nError: %v", err))
 		return err
 	}
 
-	userconfing_logger.Info("Started KCP Server...")
-	rpc.Accept(lis)
+	userconfing_logger.Info("Started KCP Server at Port: ")
+	for {
+		session, err := lis.AcceptKCP()
+			if err != nil {
+				userconfing_logger.Critical(fmt.Sprint("Error accepting KCP connection: ", err))
+				continue
+			}
+			remoteAddr := session.RemoteAddr().String()
+			userconfing_logger.Info("New incoming connection from "+ remoteAddr)
 
-	return nil
+			// Wrap connection and pass it to RPC
+			go rpc.ServeConn(session)
+		
+	}
+
+	// return nil
 }
 
 // TODO Close Server if no Connections in 5 Min... IDK How ??

@@ -1,9 +1,14 @@
 package dialer
 
-import "github.com/ButterHost69/PKr-Base/logger"
+import (
+	"net"
+
+	"github.com/ButterHost69/PKr-Base/logger"
+)
 
 type CallHandler struct {
 	Lipaddr string
+	Conn	*net.UDPConn
 
 	WorkspaceLogger   *logger.WorkspaceLogger
 	UserConfingLogger *logger.UserLogger
