@@ -19,7 +19,7 @@ require (
 )
 
 require (
-	github.com/ButterHost69/kcp-go v1.0.6
+	github.com/ButterHost69/kcp-go v1.0.8
 	golang.org/x/net v0.32.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect
 )

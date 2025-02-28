@@ -31,15 +31,15 @@ func InitKCPServer(conn *net.UDPConn, workspace_logger *logger.WorkspaceLogger, 
 	userconfing_logger.Info("Started KCP Server at Port: ")
 	for {
 		session, err := lis.AcceptKCP()
-			if err != nil {
-				userconfing_logger.Critical(fmt.Sprint("Error accepting KCP connection: ", err))
-				continue
-			}
-			remoteAddr := session.RemoteAddr().String()
-			userconfing_logger.Info("New incoming connection from "+ remoteAddr)
-
-			// Wrap connection and pass it to RPC
-			go rpc.ServeConn(session)
+		if err != nil {
+			userconfing_logger.Critical(fmt.Sprint("Error accepting KCP connection: ", err))
+			continue
+		}
+		remoteAddr := session.RemoteAddr().String()
+		userconfing_logger.Info("New incoming connection from "+ remoteAddr)
+		// userconfing_logger.Info(session.Read())
+		// Wrap connection and pass it to RPC
+		go rpc.ServeConn(session)
 		
 	}
 
