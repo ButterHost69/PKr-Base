@@ -19,7 +19,9 @@ var (
 	ErrServerNotFound    = errors.New("server not found in config")
 )
 
-func (h *Handler) GetPublicKey(req PublicKeyRequest, res *PublicKeyResponse) error {
+func (h *ClientHandler) GetPublicKey(req PublicKeyRequest, res *PublicKeyResponse) error {
+	h.UserConfingLogger.Info("Get Public Key Called ...")
+
 	keyData, err := config.ReadPublicKey()
 	if err != nil {
 		logentry := fmt.Sprintf("Could Not Provide Public Key To IP. Error: %v", keyData)
@@ -33,13 +35,15 @@ func (h *Handler) GetPublicKey(req PublicKeyRequest, res *PublicKeyResponse) err
 	return nil
 }
 
-func (h *Handler) InitNewWorkSpaceConnection(req InitWorkspaceConnectionRequest, res *InitWorkspaceConnectionResponse) error {
+func (h *ClientHandler) InitNewWorkSpaceConnection(req InitWorkspaceConnectionRequest, res *InitWorkspaceConnectionResponse) error {
 	// 1. Decrypt password [X]
 	// 2. Authenticate Request [X]
 	// 3. Add the New Connection to the .PKr Config File [X]
 	// 4. Store the Public Key [X]
 	// 5. Send the Response with port [X]
 	// 6. Open a Data Transfer Port and shit [Will be a separate Function not here] [X]
+
+	h.UserConfingLogger.Info("Init New Work Space Connection Called ...")
 
 	password, err := encrypt.DecryptData(req.WorkspacePassword)
 	if err != nil {
@@ -116,7 +120,7 @@ func (h *Handler) InitNewWorkSpaceConnection(req InitWorkspaceConnectionRequest,
 	return nil
 }
 
-func (h *Handler) GetData(req GetDataRequest, res *GetDataResponse) error {
+func (h *ClientHandler) GetData(req GetDataRequest, res *GetDataResponse) error {
 	// FIXME AUTH req.workspace_name, req.workspace_password
 	// FIXME Store Keys when called GetPublicKey in cli and reuse it
 

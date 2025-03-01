@@ -3,7 +3,7 @@ package services
 import "github.com/ButterHost69/PKr-Base/logger"
 
 // Handles Requests from other Clients
-type Handler struct {
+type ClientHandler struct {
 	WorkspaceLogger   *logger.WorkspaceLogger
 	UserConfingLogger *logger.UserLogger
 }

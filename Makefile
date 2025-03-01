@@ -10,5 +10,9 @@ get_imports:
 
 build_base:
 	DEL /S PKr-base.exe && go build
+
+get_new_kcp:
+	go get github.com/ButterHost69/kcp-go@latest
+
 # Prefered One
 # .PHONY protofiles

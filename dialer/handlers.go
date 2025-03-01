@@ -21,7 +21,7 @@ func callWithContextAndConn(ctx context.Context, rpcname string, args interface{
 	if err != nil {
 		return err
 	}
-	
+
 	// Find a Way to close the kcp conn without closing UDP Connection
 	// defer conn.Close()
 
@@ -81,8 +81,7 @@ func (h *CallHandler) CallPing(server_ip, username, password, public_ip, public_
 	defer cancel()
 
 	if err := callWithContextAndConn(ctx, HANDLER_NAME+".Ping", req, &res, server_ip, h.Conn); err != nil {
-
-		return fmt.Errorf("error in Calling RPC...\nError: %v", err)
+		return fmt.Errorf("Error while Calling %s.Ping RPC...\nSource: CallPing\nError: %v", HANDLER_NAME, err)
 	}
 
 	if res.Response != 200 {

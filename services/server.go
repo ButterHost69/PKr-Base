@@ -22,7 +22,7 @@ func InitKCPServer(conn *net.UDPConn, workspace_logger *logger.WorkspaceLogger, 
 		return err
 	}
 
-	lis, err := kcp.ServeConn(nil, 0,0, conn)
+	lis, err := kcp.ServeConn(nil, 0, 0, conn)
 	if err != nil {
 		userconfing_logger.Critical(fmt.Sprintf("Could Not Start the KCP Server...\nError: %v", err))
 		return err
@@ -36,19 +36,19 @@ func InitKCPServer(conn *net.UDPConn, workspace_logger *logger.WorkspaceLogger, 
 			continue
 		}
 		remoteAddr := session.RemoteAddr().String()
-		userconfing_logger.Info("New incoming connection from "+ remoteAddr)
+		userconfing_logger.Info("New incoming connection from " + remoteAddr)
 		// userconfing_logger.Info(session.Read())
 		// Wrap connection and pass it to RPC
 		go rpc.ServeConn(session)
-		
+
 	}
 
 	// return nil
 }
 
 // TODO Close Server if no Connections in 5 Min... IDK How ??
-func StartNewNewServer(port string, workspace_logger *logger.WorkspaceLogger, userconfing_logger *logger.UserLogger) {
-	err := rpc.Register(&Handler{
+func StartNewNewServer(conn *net.UDPConn, workspace_logger *logger.WorkspaceLogger, userconfing_logger *logger.UserLogger) {
+	err := rpc.Register(&ClientHandler{
 		WorkspaceLogger:   workspace_logger,
 		UserConfingLogger: userconfing_logger,
 	})
@@ -57,13 +57,13 @@ func StartNewNewServer(port string, workspace_logger *logger.WorkspaceLogger, us
 		return
 	}
 
-	lis, err := kcp.Listen(port)
+	lis, err := kcp.ListenWithOptionsAndConn(conn, nil, 0, 0)
 	if err != nil {
 		userconfing_logger.Critical(fmt.Sprintf("Could Not Start the Client Server...\nError: %v", err))
 		return
 	}
 
-	userconfing_logger.Info("Started KCP Server...")
+	userconfing_logger.Info("Started New KCP Server START ...")
 	rpc.Accept(lis)
-
+	userconfing_logger.Info("Started New KCP Server END ...")
 }

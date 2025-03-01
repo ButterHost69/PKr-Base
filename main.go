@@ -104,17 +104,19 @@ func main() {
 	if err != nil {
 		log.Panic("Error in getting Public IP: ", err)
 	}
+	userconfing_logger.Info("My Public Port: " + myPublicIPPort)
+	log.Println("My Public Port: " + myPublicIPPort)
 
 	myPublicIp := strings.Split(myPublicIPPort, ":")[0]
 	myPublicPort := strings.Split(myPublicIPPort, ":")[1]
 
 	userconfing_logger.Info("Starting UDP Connection on Port: " + IP_ADDR)
-	
+
 	udpaddr, err := net.ResolveUDPAddr("udp", IP_ADDR)
 	if err != nil {
 		log.Fatal(err)
 	}
-	
+
 	conn, err := net.ListenUDP("udp", udpaddr)
 	if err != nil {
 		log.Fatal(err)

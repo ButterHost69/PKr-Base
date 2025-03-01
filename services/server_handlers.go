@@ -2,7 +2,9 @@ package services
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
+	"net"
 	"strconv"
 	"strings"
 
@@ -11,44 +13,59 @@ import (
 
 func (h *ServerHandler) NotifyToPunch(req NotifyToPunchRequest, res *NotifyToPunchResponse) error {
 	h.UserConfingLogger.Info("Notify To Punch Called ...")
+	log.Println("Notify to Punch Called")
 
 	dialPort := rand.Intn(16384) + 16384
-
-	publicIPAddr, err := dialer.GetMyPublicIP(dialPort)
+	myPublicIPAddr, err := dialer.GetMyPublicIP(dialPort)
 	if err != nil {
 		res.Response = 500
-		h.UserConfingLogger.Critical("Unable to Get Public IP")
-		return err
+		h.UserConfingLogger.Critical("Unable to Get Public IP\nSource: NotifyToPunch\nError: " + err.Error())
+		return fmt.Errorf("Unable to Get Public IP\nSource: NotifyToPunch\nError: %v", err)
+	}
+	log.Println("My New Public IP Addr:", myPublicIPAddr)
+	h.UserConfingLogger.Info("My New Public IP Addr: " + myPublicIPAddr)
+
+	privateIPStr := ":" + strconv.Itoa(dialPort)
+	privateIP, err := net.ResolveUDPAddr("udp", privateIPStr)
+	if err != nil {
+		h.UserConfingLogger.Critical("Error Occured while Resolving Private UDP Addr\nSource: NotifyToPunch\nError:" + err.Error())
+		return fmt.Errorf("Error Occured while Resolving Private UDP Addr\nSource: NotifyToPunch\nError:%v", err)
 	}
 
-	privateIP := fmt.Sprintf(":%d", dialPort)
+	udpConn, err := net.ListenUDP("udp", privateIP)
+	if err != nil {
+		h.UserConfingLogger.Critical("Error Occured while Listening to UDP\nSource: NotifyToPunch\nError:" + err.Error())
+		return fmt.Errorf("Error Occured while Listening to UDP\nSource: NotifyToPunch\nError:%v", err)
+	}
+
 	sendersIPAddr := fmt.Sprintf("%s:%s", req.SendersIP, req.SendersPort)
 
-	if err = dialer.PuchToIP(sendersIPAddr, privateIP); err != nil {
-		res.Response = 500
-		h.UserConfingLogger.Debug(fmt.Sprintf("Unable to Punch to ip - %s", sendersIPAddr))
-		return err
-	}
-	
-	h.UserConfingLogger.Info(fmt.Sprintf("Punched Successfully to ip - %s", sendersIPAddr))
-	
-	publicIP := strings.Split(publicIPAddr, ":")[0]
-	publicPort := strings.Split(publicIPAddr, ":")[1]
+	myPublicIPOnly := strings.Split(myPublicIPAddr, ":")[0]
+	myPublicPortOnlyStr := strings.Split(myPublicIPAddr, ":")[1]
 
-	i_publicPort, err := strconv.Atoi(publicPort)
+	myPublicPortOnlyInt, err := strconv.Atoi(myPublicPortOnlyStr)
 	if err != nil {
 		res.Response = 500
-		h.UserConfingLogger.Critical(fmt.Sprint("unable to convert port to integer", publicPort))
-		return err
+		h.UserConfingLogger.Critical(fmt.Sprintf("Unable to Convert myPublicPortOnlyStr to Integer\nSource: NotifyToPunch\nError:%v", myPublicPortOnlyStr))
+		return fmt.Errorf("Unable to Convert myPublicPortOnlyStr to Integer\nSource: NotifyToPunch\nError:%v", myPublicPortOnlyStr)
 	}
 
 	res.Response = 200
-	res.RecieversPublicIP = publicIP
-	res.RecieversPublicPort = i_publicPort
-	
-	h.UserConfingLogger.Info("Starting New New Server `Connection` server")
-	// TODO Start Reciever on private ip
-	// TODO Pass context to close server in 5min
-	go StartNewNewServer(strconv.Itoa(dialPort), h.WorkspaceLogger, h.UserConfingLogger)
+	res.RecieversPublicIP = myPublicIPOnly
+	res.RecieversPublicPort = myPublicPortOnlyInt
+
+	go func() {
+		err = dialer.RudpNatPunching(udpConn, sendersIPAddr)
+		if err != nil {
+			h.UserConfingLogger.Critical("Unable to Perform NAT Hole Punching\nSource: NotifyToPunch\nError:" + err.Error())
+			return
+		}
+
+		h.UserConfingLogger.Info("Starting New New Server `Connection` server on local port: " + strconv.Itoa(dialPort))
+		// TODO Start Reciever on private ip
+		// TODO Pass context to close server in 5min
+		StartNewNewServer(udpConn, h.WorkspaceLogger, h.UserConfingLogger)
+	}()
+
 	return nil
 }
