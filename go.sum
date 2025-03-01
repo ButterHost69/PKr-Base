@@ -6,6 +6,8 @@ github.com/ButterHost69/kcp-go v1.0.6 h1:Ue5G8PGiE080idhj/jnZ36SM6PBS92k4kLSJXCl
 github.com/ButterHost69/kcp-go v1.0.6/go.mod h1:/ECsUnFLsAZkfWFp0xFgJZUHKy8zNA9aBjam3q60uJI=
 github.com/ButterHost69/kcp-go v1.0.8 h1:+DjUQCcE/bod85WQDGSYVsRw05lY99MMIc5H/2adNSc=
 github.com/ButterHost69/kcp-go v1.0.8/go.mod h1:/ECsUnFLsAZkfWFp0xFgJZUHKy8zNA9aBjam3q60uJI=
+github.com/ButterHost69/kcp-go v1.0.10 h1:LXrttjFl8Hrmp9ebUBEDsIvIIhwNeSZyPUJ7Te0pz4o=
+github.com/ButterHost69/kcp-go v1.0.10/go.mod h1:/ECsUnFLsAZkfWFp0xFgJZUHKy8zNA9aBjam3q60uJI=
 github.com/brianvoe/gofakeit/v7 v7.2.1 h1:AGojgaaCdgq4Adzrd2uWdbGNDyX6MWNhHdQBraNfOHI=
 github.com/brianvoe/gofakeit/v7 v7.2.1/go.mod h1:QXuPeBw164PJCzCUZVmgpgHJ3Llj49jSLVkKPMtxtxA=
 github.com/ccding/go-stun v0.1.5 h1:qEM367nnezmj7dv+SdT52prv5x6HUTG3nlrjX5aitlo=
