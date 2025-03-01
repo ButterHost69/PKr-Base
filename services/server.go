@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"log"
 	"net"
 	"net/rpc"
 
@@ -64,6 +65,7 @@ func StartNewNewServer(conn *net.UDPConn, workspace_logger *logger.WorkspaceLogg
 	}
 
 	userconfing_logger.Info("Started New KCP Server START ...")
+	log.Println("Started New KCP Server Started ...")
 	rpc.Accept(lis)
 	userconfing_logger.Info("Started New KCP Server END ...")
 }

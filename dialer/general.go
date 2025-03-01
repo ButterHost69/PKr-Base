@@ -28,7 +28,7 @@ const (
 	STUN_SERVER_ADDR = "stun.l.google.com:19302"
 	MAX_BUFFER_SIZE  = 512
 	PUNCH_ATTEMPTS   = 5 // Number of Punch Packets to Send
-	READ_TIMEOUT     = 5 * time.Second
+	READ_TIMEOUT     = 10 * time.Second
 )
 
 func GetMyPublicIP(port int) (string, error) {
@@ -59,8 +59,10 @@ func handleConnection(conn net.Conn) {
 
 		if msg == "Punch" {
 			conn.Write([]byte("Punch ACK"))
+			fmt.Println("Connection Established with", conn.RemoteAddr().String())
 			return
 		} else if msg == "Punch ACK" {
+			fmt.Println("Connection Established with", conn.RemoteAddr().String())
 			return
 		}
 	}
@@ -84,22 +86,25 @@ func RudpNatPunching(udpConn *net.UDPConn, peerAddr string) error {
 	conn.SetReadDeadline(time.Now().Add(READ_TIMEOUT))
 
 	buff := make([]byte, 1024)
-	n, err := conn.Read(buff)
-	if err != nil {
-		if err.Error() == "timeout" {
-			// No message received within the timeout; act as User-A
-			fmt.Println("No message received. Acting as User-A (listener).")
-			conn.Close()
+	for {
+		n, err := conn.Read(buff)
+		if err != nil {
+			if err.Error() == "timeout" {
+				// No message received within the timeout; act as User-A
+				fmt.Println("No message received. Acting as User-A (listener).")
+				conn.Close()
+				break
+			} else {
+				fmt.Println("Error Reading from Dialer's Conn\nSource: RudpNatPunching\nError:", err)
+				return err
+			}
 		} else {
-			fmt.Println("Error Reading from Dialer's Conn\nSource: RudpNatPunching\nError:", err)
-			return err
+			// Message received; act as User-B
+			fmt.Printf("Received message: %s. Acting as User-B (dialer).\n", string(buff[:n]))
+			conn.SetReadDeadline(time.Time{})
+			handleConnection(conn)
+			return nil
 		}
-	} else {
-		// Message received; act as User-B
-		fmt.Printf("Received message: %s. Acting as User-B (dialer).\n", string(buff[:n]))
-		conn.SetReadDeadline(time.Time{})
-		handleConnection(conn)
-		return nil
 	}
 
 	// Step 3: Only for User-A

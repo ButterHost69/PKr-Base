@@ -84,9 +84,9 @@ func RegisterNewSendWorkspace(server_alias, workspace_name, workspace_path, work
 		WorkSpacePassword: workspace_password,
 	}
 
-	for _, server := range userConfig.ServerLists {
+	for idx, server := range userConfig.ServerLists {
 		if server.ServerAlias == server_alias {
-			server.SendWorkspaces = append(server.SendWorkspaces, workspaceFolder)
+			userConfig.ServerLists[idx].SendWorkspaces = append(userConfig.ServerLists[idx].SendWorkspaces, workspaceFolder)
 			if err := writeToUserConfigFile(userConfig); err != nil {
 				fmt.Println("Error Occured in Writing To the UserConfig File")
 				return err
@@ -123,6 +123,11 @@ func AuthenticateWorkspaceInfo(workspace_name string, workspace_password string)
 	if err != nil {
 		return "", err
 	}
+
+	fmt.Println("User Config Fetched ...")
+	fmt.Println(userConfig)
+	fmt.Println(userConfig.ServerLists)
+	fmt.Println(userConfig.User)
 
 	servers := userConfig.ServerLists
 	for _, server := range servers {

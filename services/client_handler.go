@@ -24,6 +24,7 @@ func (h *ClientHandler) GetPublicKey(req PublicKeyRequest, res *PublicKeyRespons
 
 	keyData, err := config.ReadPublicKey()
 	if err != nil {
+		fmt.Println("Error while reading Public Key from config\nSource: GetPublicKey\nError:", err)
 		logentry := fmt.Sprintf("Could Not Provide Public Key To IP. Error: %v", keyData)
 		h.UserConfingLogger.Debug(logentry)
 	}
@@ -44,6 +45,7 @@ func (h *ClientHandler) InitNewWorkSpaceConnection(req InitWorkspaceConnectionRe
 	// 6. Open a Data Transfer Port and shit [Will be a separate Function not here] [X]
 
 	h.UserConfingLogger.Info("Init New Work Space Connection Called ...")
+	fmt.Println("Init New Work Space Connection Called ...")
 
 	password, err := encrypt.DecryptData(req.WorkspacePassword)
 	if err != nil {
@@ -54,30 +56,36 @@ func (h *ClientHandler) InitNewWorkSpaceConnection(req InitWorkspaceConnectionRe
 		return nil
 	}
 
+	fmt.Println("Decrypted Data ...\nAuthenticating ...")
+
 	// Authenticates Workspace Name and Password and Get the Workspace File Path
 	file_path, err := config.AuthenticateWorkspaceInfo(req.WorkspaceName, password)
 	if err != nil {
 		if errors.Is(err, ErrIncorrectPassword) {
 			h.WorkspaceLogger.Debug(req.WorkspaceName, fmt.Sprintf("Incorrect Credentials for Workspace - %s, By User - %s, Server: %s", req.MyUsername, req.MyUsername, req.ServerIP))
 		} else {
-			h.UserConfingLogger.Debug(fmt.Sprintf("could not init workspace for user %s, server %s ", req.MyUsername, req.ServerIP))
+			h.UserConfingLogger.Debug(fmt.Sprintf("could not init workspace for user %s, server %s\nError:%v", req.MyUsername, req.ServerIP, err.Error()))
 		}
 
 		res.Response = 4000
 		return nil
 	}
+
+	fmt.Println("Auth Successfull ...\nGetting Server Details Using Server IP")
 
 	server, err := config.GetServerDetailsUsingServerIP(req.ServerIP)
 	if err != nil {
 		if errors.Is(err, ErrServerNotFound) {
 			h.WorkspaceLogger.Debug(req.WorkspaceName, fmt.Sprintf("Unable to find Server with such IP: %s", req.ServerIP))
 		} else {
-			h.UserConfingLogger.Debug(fmt.Sprintf("could not init workspace for user %s, server %s ", req.MyUsername, req.ServerIP))
+			h.UserConfingLogger.Debug(fmt.Sprintf("could not init workspace for user %s, server %s\nError: %v", req.MyUsername, req.ServerIP, err))
 		}
 
 		res.Response = 4000
 		return nil
 	}
+
+	fmt.Println("Getting Server Details Using Server IP Successfull ...\n Decoding Public Keys ...")
 
 	var connection config.Connection
 	connection.Username = req.MyUsername
@@ -93,6 +101,8 @@ func (h *ClientHandler) InitNewWorkSpaceConnection(req InitWorkspaceConnectionRe
 		return err
 	}
 
+	fmt.Println("Storing Public Keys ...")
+
 	keysPath, err := config.StorePublicKeys(file_path+"\\.PKr\\keys\\", string(publicKey))
 	if err != nil {
 		h.WorkspaceLogger.Debug(req.WorkspaceName, "Failed to Init Workspace Connection for User: "+req.MyUsername)
@@ -101,6 +111,8 @@ func (h *ClientHandler) InitNewWorkSpaceConnection(req InitWorkspaceConnectionRe
 		res.Response = 4000
 		return err
 	}
+
+	fmt.Println("Adding New Conn in Pkr Config File")
 
 	// Store the New Connection in the .PKr Config file
 	connection.PublicKeyPath = keysPath
