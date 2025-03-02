@@ -149,7 +149,7 @@ func ZipData(workspace_path string) (string, error) {
 
 	if err = os.Rename(fullZipPath, fullHashFilePath); err != nil {
 		logdata := fmt.Sprintf("could rename zip file to new hash name: %s | zipped file path: %s.\nError: %v", fullHashFilePath, fullZipPath, err)
-		config.AddLogEntry(workspace_name, logdata)
+		config.AddLogEntry(workspace_name, true, logdata)
 		return "", err
 	}
 

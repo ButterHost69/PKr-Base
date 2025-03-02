@@ -55,7 +55,7 @@ func (h *ServerHandler) NotifyToPunch(req NotifyToPunchRequest, res *NotifyToPun
 	res.RecieversPublicPort = myPublicPortOnlyInt
 
 	go func() {
-		err = dialer.RudpNatPunching(udpConn, sendersIPAddr)
+		err = dialer.UdpNatPunching(udpConn, sendersIPAddr)
 		if err != nil {
 			h.UserConfingLogger.Critical("Unable to Perform NAT Hole Punching\nSource: NotifyToPunch\nError:" + err.Error())
 			return
@@ -65,6 +65,7 @@ func (h *ServerHandler) NotifyToPunch(req NotifyToPunchRequest, res *NotifyToPun
 		// TODO Start Reciever on private ip
 		// TODO Pass context to close server in 5min
 		StartNewNewServer(udpConn, h.WorkspaceLogger, h.UserConfingLogger)
+		udpConn.Close()
 	}()
 
 	return nil

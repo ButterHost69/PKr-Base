@@ -148,10 +148,19 @@ func writeToPKRConfigFile(workspace_config_path string, newPKRConfing PKRConfig)
 
 // Logs Entry of all the events occurred related to the workspace
 // Also Creates the Log File by default
-func AddLogEntry(workspace_name string, log_entry any) error {
-	workspace_path, err := GetWorkspaceFilePath(workspace_name)
-	if err != nil {
-		return err
+func AddLogEntry(workspace_name string, isSendWorkspace bool, log_entry any) error {
+	var workspace_path string
+	var err error
+	if isSendWorkspace {
+		workspace_path, err = GetSendWorkspaceFilePath(workspace_name)
+		if err != nil {
+			return err
+		}
+	} else {
+		workspace_path, err = GetGetWorkspaceFilePath(workspace_name)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Adds the ".Pkr/logs.txt"
@@ -172,7 +181,7 @@ func AddLogEntry(workspace_name string, log_entry any) error {
 }
 
 func AddNewPushToConfig(workspace_name, zipfile_path string) error {
-	workspace_path, err := GetWorkspaceFilePath(workspace_name)
+	workspace_path, err := GetSendWorkspaceFilePath(workspace_name)
 	if err != nil {
 		return err
 	}

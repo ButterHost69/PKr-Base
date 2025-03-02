@@ -133,3 +133,42 @@ func RudpNatPunching(udpConn *net.UDPConn, peerAddr string) error {
 		}
 	}
 }
+
+func UdpNatPunching(conn *net.UDPConn, peerAddr string) error {
+	fmt.Println("Attempting to Dial Peer ...")
+	peerUDPAddr, err := net.ResolveUDPAddr("udp", peerAddr)
+	if err != nil {
+		fmt.Println("Error while resolving UDP Addr\nSource: UdpNatPunching\nError:", err)
+		return err
+	}
+
+	fmt.Println("Punching ", peerAddr)
+	for range PUNCH_ATTEMPTS {
+		conn.WriteToUDP([]byte("Punch"), peerUDPAddr)
+	}
+
+	var buff [512]byte
+	for {
+		n, addr, err := conn.ReadFromUDP(buff[0:])
+		if err != nil {
+			fmt.Println("Error while reading from Udp\nSource: UdpNatPunching\nError:", err)
+			continue
+		}
+		msg := string(buff[:n])
+		fmt.Printf("Received message: %s from %v\n", msg, addr)
+		if addr.String() == peerAddr {
+			if msg == "Punch" {
+				_, err = conn.WriteToUDP([]byte("Punch ACK"), peerUDPAddr)
+				if err != nil {
+					fmt.Println("Error while Writing Punch ACK\nSource: UdpNatPunching\nError:", err)
+					continue
+				}
+				fmt.Println("Connection Established with", addr.String())
+				return nil
+			} else if msg == "Punch ACK" {
+				fmt.Println("Connection Established with", addr.String())
+				return nil
+			}
+		}
+	}
+}

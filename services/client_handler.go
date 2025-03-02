@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 
 	"os"
 	"strings"
@@ -21,6 +22,7 @@ var (
 
 func (h *ClientHandler) GetPublicKey(req PublicKeyRequest, res *PublicKeyResponse) error {
 	h.UserConfingLogger.Info("Get Public Key Called ...")
+	log.Println("Get Public Key Called ...")
 
 	keyData, err := config.ReadPublicKey()
 	if err != nil {
@@ -45,7 +47,7 @@ func (h *ClientHandler) InitNewWorkSpaceConnection(req InitWorkspaceConnectionRe
 	// 6. Open a Data Transfer Port and shit [Will be a separate Function not here] [X]
 
 	h.UserConfingLogger.Info("Init New Work Space Connection Called ...")
-	fmt.Println("Init New Work Space Connection Called ...")
+	log.Println("Init New Work Space Connection Called ...")
 
 	password, err := encrypt.DecryptData(req.WorkspacePassword)
 	if err != nil {
@@ -123,6 +125,9 @@ func (h *ClientHandler) InitNewWorkSpaceConnection(req InitWorkspaceConnectionRe
 		res.Response = 4000
 		return nil
 	}
+
+	fmt.Println("Added New Conn in Pkr Config file")
+	fmt.Println("Init New Workspace Conn Successful")
 	// models.AddLogEntry(request.WorkspaceName, fmt.Sprintf("Added User with IP: %v to the Connection List", ip))
 	h.WorkspaceLogger.Info(req.WorkspaceName, fmt.Sprintf("Added User IP: %v of Server %s to the Connection List", req.MyUsername, server.ServerAlias))
 
@@ -142,8 +147,9 @@ func (h *ClientHandler) GetData(req GetDataRequest, res *GetDataResponse) error 
 
 	// TODO Maintain 3 Last Hash object files, and Send Files Accordingly
 
+	fmt.Printf("Data Requested For Workspace: %s\n", req.WorkspaceName)
 	h.WorkspaceLogger.Info(req.WorkspaceName, fmt.Sprintf("Data Requested For Workspace: %s", req.WorkspaceName))
-	workspacePath, err := config.GetWorkspaceFilePath(req.WorkspaceName)
+	workspacePath, err := config.GetSendWorkspaceFilePath(req.WorkspaceName)
 	if err != nil {
 		log_entry := fmt.Sprintf("cannot get workspace's file path\nError: %s\nSource: PullData() Handler", err.Error())
 		h.WorkspaceLogger.Debug(req.WorkspaceName, log_entry)
@@ -166,7 +172,7 @@ func (h *ClientHandler) GetData(req GetDataRequest, res *GetDataResponse) error 
 		h.WorkspaceLogger.Critical(req.WorkspaceName, logdata)
 		return err
 	}
-	config.AddLogEntry(req.WorkspaceName, "Workspace Zipped")
+	config.AddLogEntry(req.WorkspaceName, true, "Workspace Zipped")
 
 	key, err := encrypt.AESGenerakeKey(16)
 	if err != nil {
@@ -241,10 +247,12 @@ func (h *ClientHandler) GetData(req GetDataRequest, res *GetDataResponse) error 
 		return err
 	}
 
+	res.Response = 200
 	res.NewHash = zipped_hash
 	res.KeyBytes = []byte(encrypt_key)
 	res.IVBytes = []byte(encrypt_iv)
 	res.Data = fileData
 
+	fmt.Println("Get Data Done")
 	return nil
 }

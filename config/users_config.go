@@ -101,7 +101,7 @@ func RegisterNewSendWorkspace(server_alias, workspace_name, workspace_path, work
 	return nil
 }
 
-func GetWorkspaceFilePath(workspace_name string) (string, error) {
+func GetGetWorkspaceFilePath(workspace_name string) (string, error) {
 	userConfig, err := ReadFromUserConfigFile()
 	if err != nil {
 		return "", err
@@ -110,6 +110,24 @@ func GetWorkspaceFilePath(workspace_name string) (string, error) {
 	servers := userConfig.ServerLists
 	for _, server := range servers {
 		for _, workspace := range server.GetWorkspaces {
+			if workspace.WorkspaceName == workspace_name {
+				return workspace.WorkspacePath, nil
+			}
+		}
+	}
+
+	return "", errors.New("no such workspace found")
+}
+
+func GetSendWorkspaceFilePath(workspace_name string) (string, error) {
+	userConfig, err := ReadFromUserConfigFile()
+	if err != nil {
+		return "", err
+	}
+
+	servers := userConfig.ServerLists
+	for _, server := range servers {
+		for _, workspace := range server.SendWorkspaces {
 			if workspace.WorkspaceName == workspace_name {
 				return workspace.WorkspacePath, nil
 			}
