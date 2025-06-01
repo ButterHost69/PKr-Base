@@ -12,7 +12,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/ButterHost69/PKr-Base/config"
 	"github.com/ButterHost69/PKr-Base/dialer"
@@ -143,9 +142,8 @@ func main() {
 				if err := serverRpcHandler.CallPing(server.ServerIP, server.Username, server.Password, myPublicIp, myPublicPort); err != nil {
 					userconfing_logger.Critical(err)
 				}
-				userconfing_logger.Info(fmt.Sprintf("Ping Method Called Successful for : %s", server.ServerAlias))
+				userconfing_logger.Info(fmt.Sprintf("Recevied Pong from %s", server.ServerAlias))
 			}
-			time.Sleep(5 * time.Minute)
 		}
 	}()
 
