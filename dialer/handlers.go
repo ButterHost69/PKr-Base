@@ -77,7 +77,7 @@ func (h *CallHandler) CallPing(server_ip, username, password, public_ip, public_
 	req.PublicIP = public_ip
 	req.PublicPort = public_port
 
-	ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Minute)
 	defer cancel()
 
 	if err := callWithContextAndConn(ctx, HANDLER_NAME+".Ping", req, &res, server_ip, h.Conn); err != nil {
