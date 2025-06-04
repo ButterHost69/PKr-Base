@@ -139,17 +139,17 @@ func main() {
 
 			for _, server := range serverList {
 				userconfing_logger.Info(fmt.Sprintf("Calling Ping Method For: %s", server.ServerAlias))
-				// log.Println("Calling Ping Method for", server.ServerAlias)
-				// udp_raddr, err := net.ResolveUDPAddr("udp", server.ServerIP)
-				// if err != nil {
-				// 	userconfing_logger.Critical("Error while resolving UDP Addr of Server: " + err.Error())
-				// 	continue
-				// }
-				// _, err = conn.WriteToUDP([]byte("Ping"), udp_raddr)
-				// if err != nil {
-				// 	userconfing_logger.Critical("Error while Pinging to Server via UDP(NOT RPC): " + err.Error())
-				// 	continue
-				// }
+				log.Println("Calling Ping Method for", server.ServerAlias)
+				udp_raddr, err := net.ResolveUDPAddr("udp", server.ServerIP)
+				if err != nil {
+					userconfing_logger.Critical("Error while resolving UDP Addr of Server: " + err.Error())
+					continue
+				}
+				_, err = conn.WriteToUDP([]byte("Ping"), udp_raddr)
+				if err != nil {
+					userconfing_logger.Critical("Error while Pinging to Server via UDP(NOT RPC): " + err.Error())
+					continue
+				}
 
 				if err := serverRpcHandler.CallPing(server.ServerIP, server.Username, server.Password, myPublicIp, myPublicPort); err != nil {
 					userconfing_logger.Critical(err)
