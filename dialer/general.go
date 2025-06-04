@@ -156,7 +156,10 @@ func UdpNatPunching(conn *net.UDPConn, peerAddr string) error {
 		}
 		msg := string(buff[:n])
 		fmt.Printf("Received message: %s from %v\n", msg, addr)
+		fmt.Println(peerAddr == addr.String())
+
 		if addr.String() == peerAddr {
+			fmt.Println("Expected User Messaged:", addr.String())
 			if msg == "Punch" {
 				_, err = conn.WriteToUDP([]byte("Punch ACK"), peerUDPAddr)
 				if err != nil {
@@ -168,7 +171,12 @@ func UdpNatPunching(conn *net.UDPConn, peerAddr string) error {
 			} else if msg == "Punch ACK" {
 				fmt.Println("Connection Established with", addr.String())
 				return nil
+			} else {
+				fmt.Println("Something Else is in Message:", msg)
 			}
+		} else {
+			fmt.Println("Unexpected User Messaged:", addr.String())
+			fmt.Println(msg)
 		}
 	}
 }

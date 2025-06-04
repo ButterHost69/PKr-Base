@@ -11,7 +11,6 @@ import (
 )
 
 func InitKCPServer(conn *net.UDPConn, workspace_logger *logger.WorkspaceLogger, userconfing_logger *logger.UserLogger) error {
-
 	handler := ServerHandler{
 		WorkspaceLogger:   workspace_logger,
 		UserConfingLogger: userconfing_logger,

@@ -31,6 +31,7 @@ func (h *ServerHandler) NotifyToPunch(req NotifyToPunchRequest, res *NotifyToPun
 		h.UserConfingLogger.Critical("Error Occured while Resolving Private UDP Addr\nSource: NotifyToPunch\nError:" + err.Error())
 		return fmt.Errorf("Error Occured while Resolving Private UDP Addr\nSource: NotifyToPunch\nError:%v", err)
 	}
+	log.Println("Resolving UDP Addr")
 
 	udpConn, err := net.ListenUDP("udp", privateIP)
 	if err != nil {
@@ -50,11 +51,13 @@ func (h *ServerHandler) NotifyToPunch(req NotifyToPunchRequest, res *NotifyToPun
 		return fmt.Errorf("Unable to Convert myPublicPortOnlyStr to Integer\nSource: NotifyToPunch\nError:%v", myPublicPortOnlyStr)
 	}
 
+	log.Println("Setting My Public IP & Port into Response")
 	res.Response = 200
 	res.RecieversPublicIP = myPublicIPOnly
 	res.RecieversPublicPort = myPublicPortOnlyInt
 
 	go func() {
+		log.Println("Initializing UDP NAT Hole Punching")
 		err = dialer.UdpNatPunching(udpConn, sendersIPAddr)
 		if err != nil {
 			h.UserConfingLogger.Critical("Unable to Perform NAT Hole Punching\nSource: NotifyToPunch\nError:" + err.Error())
@@ -67,6 +70,7 @@ func (h *ServerHandler) NotifyToPunch(req NotifyToPunchRequest, res *NotifyToPun
 		StartNewNewServer(udpConn, h.WorkspaceLogger, h.UserConfingLogger)
 		udpConn.Close()
 	}()
+	log.Println("Sending Response to Server After")
 
 	return nil
 }
