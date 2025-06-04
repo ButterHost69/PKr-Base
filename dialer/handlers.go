@@ -3,6 +3,7 @@ package dialer
 import (
 	"context"
 	"fmt"
+	"log"
 	"net"
 	"net/rpc"
 	"time"
@@ -21,13 +22,16 @@ func callWithContextAndConn(ctx context.Context, rpcname string, args interface{
 	if err != nil {
 		return err
 	}
-	conn.SetNoDelay(0, 1000, 0, 0)
+	defer conn.Close()
+	conn.SetNoDelay(0, 15000, 0, 0)
+	conn.SetDeadline(time.Now().Add(30 * time.Second)) // Overall timeout
+	conn.SetACKNoDelay(false)                          // Batch ACKs to reduce traffic
 
 	// Find a Way to close the kcp conn without closing UDP Connection
 	// defer conn.Close()
 
 	c := rpc.NewClient(conn)
-	// defer c.Close()
+	defer c.Close()
 
 	// Create a channel to handle the RPC call with context
 	done := make(chan error, 1)
@@ -68,7 +72,7 @@ func call(rpcname string, args interface{}, reply interface{}, ripaddr, lipaddr 
 	return nil
 }
 
-func (h *CallHandler) CallPing(server_ip, username, password, public_ip, public_port string) error {
+func (h *CallHandler) CallPing(server_ip, username, password, public_ip, public_port string, ping_num int) error {
 
 	var req PingRequest
 	var res PingResponse
@@ -77,8 +81,9 @@ func (h *CallHandler) CallPing(server_ip, username, password, public_ip, public_
 	req.Password = password
 	req.PublicIP = public_ip
 	req.PublicPort = public_port
+	req.PingNum = ping_num
 
-	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	if err := callWithContextAndConn(ctx, HANDLER_NAME+".Ping", req, &res, server_ip, h.Conn); err != nil {
@@ -88,6 +93,7 @@ func (h *CallHandler) CallPing(server_ip, username, password, public_ip, public_
 	if res.Response != 200 {
 		return fmt.Errorf("calling Ping Method was not Successful.\nReturn Code - %d", res.Response)
 	}
+	log.Println("Ping Num:", res.PingNum)
 
 	return nil
 }

@@ -12,6 +12,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/ButterHost69/PKr-Base/config"
 	"github.com/ButterHost69/PKr-Base/dialer"
@@ -125,7 +126,9 @@ func main() {
 
 	go func() {
 		userconfing_logger.Info("Update me Service Started")
+		ping_num := 0
 		for {
+			fmt.Println("Ping Machine")
 			// Read Each Time... So can automatically detect changes without manual anything....
 			serverList, err := config.GetAllServers()
 			if err != nil {
@@ -140,23 +143,25 @@ func main() {
 			for _, server := range serverList {
 				userconfing_logger.Info(fmt.Sprintf("Calling Ping Method For: %s", server.ServerAlias))
 				log.Println("Calling Ping Method for", server.ServerAlias)
-				udp_raddr, err := net.ResolveUDPAddr("udp", server.ServerIP)
-				if err != nil {
-					userconfing_logger.Critical("Error while resolving UDP Addr of Server: " + err.Error())
-					continue
-				}
-				_, err = conn.WriteToUDP([]byte("Ping"), udp_raddr)
-				if err != nil {
-					userconfing_logger.Critical("Error while Pinging to Server via UDP(NOT RPC): " + err.Error())
-					continue
-				}
+				// udp_raddr, err := net.ResolveUDPAddr("udp", server.ServerIP)
+				// if err != nil {
+				// 	userconfing_logger.Critical("Error while resolving UDP Addr of Server: " + err.Error())
+				// 	continue
+				// }
+				// _, err = conn.WriteToUDP([]byte("Dummy Ping"), udp_raddr)
+				// if err != nil {
+				// 	userconfing_logger.Critical("Error while Pinging to Server via UDP(NOT RPC): " + err.Error())
+				// 	continue
+				// }
 
-				if err := serverRpcHandler.CallPing(server.ServerIP, server.Username, server.Password, myPublicIp, myPublicPort); err != nil {
+				if err := serverRpcHandler.CallPing(server.ServerIP, server.Username, server.Password, myPublicIp, myPublicPort, ping_num); err != nil {
 					userconfing_logger.Critical(err)
 				}
 				userconfing_logger.Info(fmt.Sprintf("Received Pong from %s", server.ServerAlias))
 				log.Println("Received Pong from", server.ServerAlias)
+				ping_num++
 			}
+			time.Sleep(time.Minute)
 		}
 	}()
 
