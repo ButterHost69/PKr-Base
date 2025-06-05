@@ -161,7 +161,7 @@ func main() {
 				log.Println("Received Pong from", server.ServerAlias)
 				ping_num++
 			}
-			time.Sleep(time.Minute)
+			time.Sleep(time.Minute) // TODO: Try increasing this timeout if feasible
 		}
 	}()
 
@@ -175,5 +175,4 @@ func main() {
 	if err != nil {
 		userconfing_logger.Critical(fmt.Sprintf("Error: %v\n", err))
 	}
-
 }
