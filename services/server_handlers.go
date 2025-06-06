@@ -5,10 +5,12 @@ import (
 	"log"
 	"math/rand"
 	"net"
+	"slices"
 	"strconv"
 	"strings"
 
 	"github.com/ButterHost69/PKr-Base/dialer"
+	"github.com/ButterHost69/PKr-Base/utils"
 )
 
 func (h *ServerHandler) NotifyToPunch(req NotifyToPunchRequest, res *NotifyToPunchResponse) error {
@@ -51,6 +53,11 @@ func (h *ServerHandler) NotifyToPunch(req NotifyToPunchRequest, res *NotifyToPun
 		return fmt.Errorf("Unable to Convert myPublicPortOnlyStr to Integer\nSource: NotifyToPunch\nError:%v", myPublicPortOnlyStr)
 	}
 
+	clientHandlerName := utils.RandomString(4)
+	for slices.Contains(h.RandomStringList, clientHandlerName) {
+		clientHandlerName = utils.RandomString(4)
+	}
+
 	log.Println("Setting My Public IP & Port into Response")
 	res.Response = 200
 	res.RecieversPublicIP = myPublicIPOnly
@@ -58,7 +65,7 @@ func (h *ServerHandler) NotifyToPunch(req NotifyToPunchRequest, res *NotifyToPun
 
 	go func() {
 		log.Println("Initializing UDP NAT Hole Punching")
-		err = dialer.UdpNatPunching(udpConn, sendersIPAddr)
+		err = dialer.UdpNatPunching(udpConn, sendersIPAddr, clientHandlerName)
 		if err != nil {
 			h.UserConfingLogger.Critical("Unable to Perform NAT Hole Punching\nSource: NotifyToPunch\nError:" + err.Error())
 			return
@@ -67,7 +74,7 @@ func (h *ServerHandler) NotifyToPunch(req NotifyToPunchRequest, res *NotifyToPun
 		h.UserConfingLogger.Info("Starting New New Server `Connection` server on local port: " + strconv.Itoa(dialPort))
 		// TODO Start Reciever on private ip
 		// TODO Pass context to close server in 5min
-		StartNewNewServer(udpConn, h.WorkspaceLogger, h.UserConfingLogger)
+		StartNewNewServer(udpConn, h.WorkspaceLogger, h.UserConfingLogger, clientHandlerName)
 		udpConn.Close()
 	}()
 	log.Println("Sending Response to Server After")

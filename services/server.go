@@ -15,6 +15,7 @@ func InitKCPServer(conn *net.UDPConn, workspace_logger *logger.WorkspaceLogger, 
 	handler := ServerHandler{
 		WorkspaceLogger:   workspace_logger,
 		UserConfingLogger: userconfing_logger,
+		RandomStringList:  []string{},
 	}
 
 	err := rpc.Register(&handler)
@@ -36,6 +37,7 @@ func InitKCPServer(conn *net.UDPConn, workspace_logger *logger.WorkspaceLogger, 
 			userconfing_logger.Critical(fmt.Sprint("Error accepting KCP connection: ", err))
 			continue
 		}
+		// TODO: Call session.Close()
 
 		remoteAddr := session.RemoteAddr().String()
 		userconfing_logger.Info("New incoming connection from " + remoteAddr)
@@ -55,8 +57,9 @@ func InitKCPServer(conn *net.UDPConn, workspace_logger *logger.WorkspaceLogger, 
 }
 
 // TODO Close Server if no Connections in 5 Min... IDK How ??
-func StartNewNewServer(conn *net.UDPConn, workspace_logger *logger.WorkspaceLogger, userconfing_logger *logger.UserLogger) {
-	err := rpc.Register(&ClientHandler{
+func StartNewNewServer(conn *net.UDPConn, workspace_logger *logger.WorkspaceLogger, userconfing_logger *logger.UserLogger, clientHandlerName string) {
+	log.Println("ClientHandler"+clientHandlerName, "Started")
+	err := rpc.RegisterName("ClientHandler"+clientHandlerName, &ClientHandler{
 		WorkspaceLogger:   workspace_logger,
 		UserConfingLogger: userconfing_logger,
 	})

@@ -6,6 +6,8 @@ import "github.com/ButterHost69/PKr-Base/logger"
 type ServerHandler struct {
 	WorkspaceLogger   *logger.WorkspaceLogger
 	UserConfingLogger *logger.UserLogger
+
+	RandomStringList []string
 }
 
 type NotifyToPunchRequest struct {

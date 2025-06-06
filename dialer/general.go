@@ -134,7 +134,7 @@ func RudpNatPunching(udpConn *net.UDPConn, peerAddr string) error {
 	}
 }
 
-func UdpNatPunching(conn *net.UDPConn, peerAddr string) error {
+func UdpNatPunching(conn *net.UDPConn, peerAddr, clientHandlerName string) error {
 	fmt.Println("Attempting to Dial Peer ...")
 	peerUDPAddr, err := net.ResolveUDPAddr("udp", peerAddr)
 	if err != nil {
@@ -161,7 +161,7 @@ func UdpNatPunching(conn *net.UDPConn, peerAddr string) error {
 		if addr.String() == peerAddr {
 			fmt.Println("Expected User Messaged:", addr.String())
 			if msg == "Punch" {
-				_, err = conn.WriteToUDP([]byte("Punch ACK"), peerUDPAddr)
+				_, err = conn.WriteToUDP([]byte("Punch ACK"+";"+clientHandlerName), peerUDPAddr)
 				if err != nil {
 					fmt.Println("Error while Writing Punch ACK\nSource: UdpNatPunching\nError:", err)
 					continue
