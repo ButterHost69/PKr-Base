@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"net/rpc"
+	rpc "github.com/ButterHost69/PKr-Base/prpc"
 	"time"
 
 	"github.com/ButterHost69/PKr-Base/logger"

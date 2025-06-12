@@ -12,6 +12,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/ButterHost69/PKr-Base/config"
@@ -97,6 +98,7 @@ func init() {
 }
 
 func main() {
+	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds)
 	// TODO: [ ] Test this code, neither human test nor code test done....
 	// All The functions written with it are not tested
 
@@ -124,9 +126,12 @@ func main() {
 
 	serverRpcHandler.Conn = conn
 
+	// To lock Ping Machine to ping only one thing and not switch and complete maybe ??
+	var pingLock    sync.Mutex
+	var ping_num 	int = 0
+	
 	go func() {
 		userconfing_logger.Info("Update me Service Started")
-		ping_num := 0
 		for {
 			fmt.Println("Ping Machine")
 			// Read Each Time... So can automatically detect changes without manual anything....
@@ -141,8 +146,12 @@ func main() {
 			}
 
 			for _, server := range serverList {
+				log.Println("Trying Lock")
+				pingLock.Lock()
+				log.Println("Removed from Waiting")
+
 				userconfing_logger.Info(fmt.Sprintf("Calling Ping Method For: %s", server.ServerAlias))
-				log.Println("Calling Ping Method for", server.ServerAlias)
+				log.Println("Calling Ping Method - ", ping_num, " for", server.ServerAlias)
 				// udp_raddr, err := net.ResolveUDPAddr("udp", server.ServerIP)
 				// if err != nil {
 				// 	userconfing_logger.Critical("Error while resolving UDP Addr of Server: " + err.Error())
@@ -160,6 +169,8 @@ func main() {
 				userconfing_logger.Info(fmt.Sprintf("Received Pong from %s", server.ServerAlias))
 				log.Println("Received Pong from", server.ServerAlias)
 				ping_num++
+				log.Println("Unlocking Lock")
+				pingLock.Unlock()
 			}
 			time.Sleep(time.Minute) // TODO: Try increasing this timeout if feasible
 		}
