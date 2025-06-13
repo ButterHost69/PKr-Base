@@ -16,9 +16,10 @@ import (
 )
 
 var (
-	ErrIncorrectPassword  = errors.New("incorrect password")
-	ErrServerNotFound     = errors.New("server not found in config")
-	ErrInternalSeverError = errors.New("internal server error")
+	ErrIncorrectPassword             = errors.New("incorrect password")
+	ErrServerNotFound                = errors.New("server not found in config")
+	ErrInternalSeverError            = errors.New("internal server error")
+	ErrUserAlreadyHasLatestWorkspace = errors.New("you already've latest version of workspace")
 )
 
 type ClientHandler struct{}
@@ -42,8 +43,6 @@ func (h *ClientHandler) InitNewWorkSpaceConnection(req models.InitWorkspaceConne
 	// 2. Authenticate Request [X]
 	// 3. Add the New Connection to the .PKr Config File [X]
 	// 4. Store the Public Key [X]
-	// 5. Send the Response with port [X]
-	// 6. Open a Data Transfer Port and shit [Will be a separate Function not here] [X]
 
 	log.Println("Init New Work Space Connection Called ...")
 
@@ -117,14 +116,30 @@ func (h *ClientHandler) InitNewWorkSpaceConnection(req models.InitWorkspaceConne
 }
 
 func (h *ClientHandler) GetData(req models.GetDataRequest, res *models.GetDataResponse) error {
-	// FIXME AUTH req.workspace_name, req.workspace_password
-	// FIXME Store Keys when called GetPublicKey in cli and reuse it
-
 	// TODO Compare Hash ...
 	// TODO - If Hash == "" : Send Entire File
 	// TODO - If Hash == Last_Hash : Do Nothing
 
-	// TODO Maintain 3 Last Hash object files, and Send Files Accordingly
+	password, err := encrypt.DecryptData(req.WorkspacePassword)
+	if err != nil {
+		log.Println("Failed to Decrypt the Workspace Pass Received from Listener:", err)
+		log.Println("Source: GetData()")
+		return ErrInternalSeverError
+	}
+	log.Println("Decrypted Data ...\nAuthenticating ...")
+
+	// Authenticates Workspace Name and Password and Get the Workspace File Path
+	_, err = config.AuthenticateWorkspaceInfo(req.WorkspaceName, password)
+	if err != nil {
+		if errors.Is(err, ErrIncorrectPassword) {
+			log.Println("Error: Incorrect Credentials for Workspace")
+			log.Println("Source: GetData()")
+			return ErrIncorrectPassword
+		}
+		log.Println("Failed to Authenticate Password of Listener:", err)
+		log.Println("Source: GetData()")
+		return ErrIncorrectPassword
+	}
 
 	log.Printf("Data Requested For Workspace: %s\n", req.WorkspaceName)
 	workspacePath, err := config.GetSendWorkspaceFilePath(req.WorkspaceName)
@@ -144,14 +159,11 @@ func (h *ClientHandler) GetData(req models.GetDataRequest, res *models.GetDataRe
 	zipped_hash := strings.Split(zipped_file_name, ".")[0]
 	log.Println("Data Service Hash File Name: " + zipped_file_name)
 
-	err = config.AddNewPushToConfig(req.WorkspaceName, zipped_hash)
-	if err != nil {
-		log.Println("Failed to Add New Push to Config:", err)
-		log.Println("Source: GetData()")
-		return ErrInternalSeverError
+	if zipped_hash == req.LastHash {
+		log.Println("User has the Latest Workspace, according to Last Hash")
+		log.Println("No need to transfer data")
+		return ErrUserAlreadyHasLatestWorkspace
 	}
-	log.Println("Added New Push to Config")
-	// config.AddLogEntry(req.WorkspaceName, true, "Workspace Zipped")
 
 	log.Println("Generating Keys ...")
 	key, err := encrypt.AESGenerakeKey(16)
@@ -225,6 +237,13 @@ func (h *ClientHandler) GetData(req models.GetDataRequest, res *models.GetDataRe
 		return ErrInternalSeverError
 	}
 
+	err = config.AddNewPushToConfig(req.WorkspaceName, zipped_hash)
+	if err != nil {
+		log.Println("Failed to Add New Push to Config:", err)
+		log.Println("Source: GetData()")
+		return ErrInternalSeverError
+	}
+	log.Println("Added New Push to Config")
 	log.Println("Done with Everything now returning Response")
 
 	res.NewHash = zipped_hash

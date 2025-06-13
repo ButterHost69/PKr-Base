@@ -1,14 +1,12 @@
 package ws
 
 import (
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"log"
 	"math/rand"
 	"net"
 	"net/rpc"
-	"os"
 	"strings"
 	"time"
 
@@ -249,41 +247,9 @@ func cloneWorkspace(workspace_owner_username, workspace_name string, conn *webso
 		return
 	}
 
-	// Reading my Public Key
-	my_public_key, err := os.ReadFile("./tmp/mykeys/publickey.pem")
-	if err != nil {
-		log.Println("Error while Reading Public Key:", err)
-		log.Println("Source: cloneWorkspace()")
-		return
-	}
-	base64_public_key := []byte(base64.StdEncoding.EncodeToString(my_public_key))
-
-	log.Println("Calling InitWorkspaceConnection")
-	// Requesting InitWorkspaceConnection
-	err = rpcClientHandler.CallInitNewWorkSpaceConnection(workspace_name, MY_USERNAME, MY_SERVER_IP, encrypted_password, base64_public_key, client_handler_name, rpc_client)
-	if err != nil {
-		log.Println("Error while Calling Init New Workspace Connection:", err)
-		log.Println("Source: cloneWorkspace()")
-		return
-	}
-
-	// Create .PKr folder to store zipped data
-	currDir, err := os.Getwd()
-	if err != nil {
-		log.Println("Error while Getting Current Directory:", err)
-		log.Println("Source: cloneWorkspace()")
-		return
-	}
-	err = os.MkdirAll(currDir+"\\.PKr\\", 0777)
-	if err != nil {
-		log.Println("Error while using MkdirAll for '.PKr' folder:", err)
-		log.Println("Source: cloneWorkspace()")
-		return
-	}
-
 	log.Println("Calling GetData ...")
 	// Calling GetData
-	res, err := rpcClientHandler.CallGetData(MY_USERNAME, MY_SERVER_IP, workspace_name, workspace_password, last_hash, client_handler_name, rpc_client)
+	res, err := rpcClientHandler.CallGetData(MY_USERNAME, MY_SERVER_IP, workspace_name, encrypted_password, last_hash, client_handler_name, rpc_client)
 	if err != nil {
 		log.Println("Error while Calling GetData:", err)
 		log.Println("Source: cloneWorkspace()")
