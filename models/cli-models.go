@@ -1,15 +1,6 @@
-package services
+package models
 
-import "github.com/ButterHost69/PKr-Base/logger"
-
-// Handles Requests from other Clients
-type ClientHandler struct {
-	WorkspaceLogger   *logger.WorkspaceLogger
-	UserConfingLogger *logger.UserLogger
-}
-
-type PublicKeyRequest struct {
-}
+type PublicKeyRequest struct{}
 
 type PublicKeyResponse struct {
 	PublicKey []byte
@@ -24,9 +15,7 @@ type InitWorkspaceConnectionRequest struct {
 	WorkspacePassword string
 }
 
-type InitWorkspaceConnectionResponse struct {
-	Response int32 // 200 [Valid / ACK / OK] ||| 4000 [InValid / You Fucked Up Somewhere]
-}
+type InitWorkspaceConnectionResponse struct{}
 
 type GetDataRequest struct {
 	WorkspaceName     string
@@ -39,8 +28,6 @@ type GetDataRequest struct {
 }
 
 type GetDataResponse struct {
-	Response int
-
 	NewHash string
 	Data    []byte
 

@@ -1,7 +1,6 @@
 package encrypt
 
 import (
-	// "bytes"
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
@@ -9,8 +8,6 @@ import (
 	"io"
 	"os"
 )
-
-// import "path/filepath"
 
 func AESGenerakeKey(length int) ([]byte, error) {
 	// keep length 16, 24, 32 -> 128, 192, 256 respectively
@@ -69,7 +66,7 @@ func decryptFile(filename string, key []byte, iv []byte) error {
 	}
 	defer inputFile.Close()
 
-	outputFile, err := os.Create(filename + ".dec")
+	outputFile, err := os.Create(filename + ".zip")
 	if err != nil {
 		return err
 	}

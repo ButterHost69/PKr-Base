@@ -1,15 +1,13 @@
 package config
 
 import (
-	// "ButterHost69/PKr-base/services"
 	"encoding/json"
 	"fmt"
 	"log"
-	"math/rand"
 	"os"
 	"path/filepath"
 
-	fake "github.com/brianvoe/gofakeit/v7"
+	"github.com/ButterHost69/PKr-Base/utils"
 )
 
 const (
@@ -59,17 +57,6 @@ func AddConnectionToPKRConfigFile(workspace_config_path string, connection Conne
 	return nil
 }
 
-func CreateSlug() string {
-	var gamerTag []string
-	for i := 0; i < 1024; i++ {
-		gamerTag = append(gamerTag, fake.Gamertag())
-	}
-	// fmt.Println(gamerTag)
-	g := rand.Intn(1024)
-	// fmt.Println(g)
-	return gamerTag[g]
-}
-
 func GetConnectionsPublicKeyUsingUsername(workspace_path, username string) (string, error) {
 	pkrconfig, err := ReadFromPKRConfigFile(workspace_path + "\\" + WORKSPACE_CONFIG_FILE_PATH)
 	if err != nil {
@@ -86,7 +73,7 @@ func GetConnectionsPublicKeyUsingUsername(workspace_path, username string) (stri
 }
 
 func StorePublicKeys(workspace_keys_path string, key string) (string, error) {
-	keyPath := workspace_keys_path + "\\" + CreateSlug() + ".pem"
+	keyPath := workspace_keys_path + "\\" + utils.CreateSlug() + ".pem"
 	file, err := os.OpenFile(keyPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		return "", err

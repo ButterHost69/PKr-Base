@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,7 +13,6 @@ import (
 
 	"github.com/ButterHost69/PKr-Base/config"
 	"github.com/ButterHost69/PKr-Base/encrypt"
-	// "github.com/ButterHost69/PKr-Base/models"
 )
 
 // I dont Know if this works. Check it later
@@ -87,9 +87,9 @@ func addFilesToZip(writer *zip.Writer, dirpath string, relativepath string) erro
 
 	for _, file := range files {
 		// Comment This Later ... Only For Debugging
-		// models.AddUsersLogEntry(fmt.Sprintf("File: %s", file.Name()))
+		// config.AddUsersLogEntry(log.Sprintf("File: %s", file.Name()))
 		// ..........
-		if file.Name() == ".PKr" || file.Name() == "PKr-Base.exe" || file.Name() == "PKr-cli.exe" || file.Name() == "tmp" {
+		if file.Name() == ".PKr" || file.Name() == "PKr-Base.exe" || file.Name() == "PKr-Cli.exe" || file.Name() == "tmp" {
 			continue
 		} else if !file.IsDir() {
 			content, err := os.ReadFile(dirpath + file.Name())
@@ -122,7 +122,7 @@ func ZipData(workspace_path string) (string, error) {
 
 	zip_file, err := os.Create(fullZipPath)
 	if err != nil {
-		// models.AddLogEntry(workspace_name, err)
+		// config.AddLogEntry(workspace_name, err)
 		return "", err
 	}
 
@@ -135,6 +135,7 @@ func ZipData(workspace_path string) (string, error) {
 	}
 
 	hashFileName, err := encrypt.GenerateHashWithFileIO(zip_file)
+	// hashFileName, err := encrypt.GenerateHashWithFilePath(fullZipPath)
 	if err != nil {
 		return "", err
 	}
@@ -157,7 +158,7 @@ func ZipData(workspace_path string) (string, error) {
 }
 
 func UnzipData(src, dest string) error {
-	fmt.Printf("Unzipping Files: %s\n\t to %s\n", src, dest)
+	log.Printf("Unzipping Files: %s\n\t to %s\n", src, dest)
 	zipper, err := zip.OpenReader(src)
 	if err != nil {
 		return err
@@ -191,9 +192,9 @@ func UnzipData(src, dest string) error {
 				return err
 			}
 			totalfiles += 1
-			fmt.Printf("%d] File: %s\n", count, unzipfile.Name())
+			log.Printf("%d] File: %s\n", count, unzipfile.Name())
 		}
 	}
-	fmt.Printf("\nTotal Files Recieved: %d\n", totalfiles)
+	log.Printf("\nTotal Files Recieved: %d\n", totalfiles)
 	return nil
 }

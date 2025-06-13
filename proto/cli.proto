@@ -1,0 +1,86 @@
+syntax = "proto3";
+
+package proto;
+option go_package = "./pb";
+
+service CliService {
+    rpc Register (RegisterRequest) returns (RegisterResponse) {}
+    rpc RegisterWorkspace (RegisterWorkspaceRequest) returns (RegisterWorkspaceResponse) {}
+    rpc RegisterUserToWorkspace (RegisterUserToWorkspaceRequest) returns (RegisterUserToWorkspaceResponse) {}
+    rpc RequestPunchFromReceiver (RequestPunchFromReceiverRequest) returns (RequestPunchFromReceiverResponse) {}
+    rpc NotifyNewPushToListeners (NotifyNewPushToListenersRequest) returns (NotifyNewPushToListenersResponse) {}
+    rpc GetAllWorkspaces (GetAllWorkspacesRequest) returns (GetAllWorkspacesResponse) {}
+    rpc GetLastHashOfWorkspace (GetLastHashOfWorkspaceRequest) returns (GetLastHashOfWorkspaceResponse) {}
+}
+
+message RegisterRequest {
+    string username = 1;
+    string password = 2;
+}
+
+message RegisterResponse {}
+
+message RegisterWorkspaceRequest {
+    string username = 1;
+    string password = 2;
+    string workspace_name = 3;
+    string last_hash = 4;
+}
+
+message RegisterWorkspaceResponse {}
+
+message RegisterUserToWorkspaceRequest {
+    string listener_username = 1;
+    string listener_password = 2;
+    string workspace_name = 3;
+    string workspace_owner_username = 4;
+}
+
+message RegisterUserToWorkspaceResponse {}
+
+message RequestPunchFromReceiverRequest {
+    string listener_username = 1;
+    string listener_password = 2;
+    string listener_public_ip = 3;
+    string listener_public_port= 4;
+    string workspace_owner_username = 5;
+}
+
+message RequestPunchFromReceiverResponse {
+    string workspace_owner_public_ip = 1;
+    string workspace_owner_public_port = 2;
+}
+
+message NotifyNewPushToListenersRequest {
+    string workspace_owner_username = 1;
+    string workspace_owner_password = 2;
+    string workspace_name = 3;
+    string new_workspace_hash = 4;
+}
+
+message NotifyNewPushToListenersResponse {}
+
+message GetAllWorkspacesRequest {
+    string username = 1;
+    string password = 2;
+}
+
+message WorkspaceInfo {
+    string workspace_owner = 1;
+    string workspace_name = 2;
+}
+
+message GetAllWorkspacesResponse {
+    repeated WorkspaceInfo workspaces = 1;    
+}
+
+message GetLastHashOfWorkspaceRequest {
+    string workspace_owner = 1;
+    string workspace_name = 2;
+    string listener_username = 3;
+    string listener_password = 4;
+}
+
+message GetLastHashOfWorkspaceResponse {
+    string last_hash = 1;
+}

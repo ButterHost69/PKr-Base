@@ -22,8 +22,8 @@ type SendWorkspaceFolder struct {
 }
 
 type GetWorkspaceFolder struct {
-	WorkspaceName string `json:"workspace_name"`
-	WorkspacePath string `json:"workspace_path"`
-	WorkspcaceIP  string `json:"workspace_ip"`
-	LastHash      string `json:"last_hash"`
+	WorkspaceName     string `json:"workspace_name"`
+	WorkspacePassword string `json:"workspace_password"`
+	WorkspacePath     string `json:"workspace_path"`
+	LastHash          string `json:"last_hash"`
 }

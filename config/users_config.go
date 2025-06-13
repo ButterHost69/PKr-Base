@@ -1,15 +1,13 @@
 package config
 
 import (
-	// "ButterHost69/PKr-client/encrypt"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"os"
 
-	"github.com/ButterHost69/PKr-cli/encrypt"
-	// "github.com/go-delve/delve/cmd/dlv/cmds"
+	"github.com/ButterHost69/PKr-Base/encrypt"
 )
 
 const (
@@ -19,9 +17,7 @@ const (
 	LOG_FILE     = ROOT_DIR + "\\logs.txt"
 )
 
-var (
-	MY_USERNAME string
-)
+var MY_USERNAME string
 
 // FIXME: NOT IMPORTANT : Remove Prints - return stuff
 
@@ -89,6 +85,35 @@ func RegisterNewSendWorkspace(server_alias, workspace_name, workspace_path, work
 		if server.ServerAlias == server_alias {
 			userConfig.ServerLists[idx].SendWorkspaces = append(userConfig.ServerLists[idx].SendWorkspaces, workspaceFolder)
 			// fmt.Println("Register Send Workspace | UserConfig: ", userConfig)
+			if err := writeToUserConfigFile(userConfig); err != nil {
+				fmt.Println("Error Occured in Writing To the UserConfig File")
+				return err
+			}
+			return nil
+		}
+	}
+
+	fmt.Println("No Such Server Alias Exists...")
+	return nil
+}
+
+func RegisterNewGetWorkspace(server_alias, workspace_name, workspace_path, workspace_password, last_hash string) error {
+	userConfig, err := ReadFromUserConfigFile()
+	if err != nil {
+		fmt.Println("Error in reading From the UserConfig File...")
+		return err
+	}
+
+	workspaceFolder := GetWorkspaceFolder{
+		WorkspaceName:     workspace_name,
+		WorkspacePath:     workspace_path,
+		WorkspacePassword: workspace_password,
+		LastHash:          last_hash,
+	}
+
+	for idx, server := range userConfig.ServerLists {
+		if server.ServerAlias == server_alias {
+			userConfig.ServerLists[idx].GetWorkspaces = append(userConfig.ServerLists[idx].GetWorkspaces, workspaceFolder)
 			if err := writeToUserConfigFile(userConfig); err != nil {
 				fmt.Println("Error Occured in Writing To the UserConfig File")
 				return err
@@ -204,121 +229,6 @@ func writeToUserConfigFile(newUserConfig UsersConfig) error {
 	return nil
 }
 
-// FIXME: This is an Old Function, the caller passes connection_slug
-// func AddConnectionInUserConfig(connection_slug string, password string, connectionIP string, cmdPort int) error {
-// 	userConfig, err := ReadFromUserConfigFile()
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	connection := Connections{
-// 		ConnectionSlug: connection_slug,
-// 		// Password:       password,
-// 		CurrentIP:   connectionIP,
-// 		CurrentPort: strconv.Itoa(cmdPort),
-// 	}
-
-// 	userConfig.AllConnections = append(userConfig.AllConnections, connection)
-// 	newUserConfig := UsersConfig{
-// 		User:           userConfig.User,
-// 		AllConnections: userConfig.AllConnections,
-// 		Sendworkspaces: userConfig.Sendworkspaces,
-// 		GetWorkspaces:  userConfig.GetWorkspaces,
-// 	}
-
-// 	if err := writeToUserConfigFile(newUserConfig); err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
-
-// This old function doesnt do anyting ??
-// func AddNewConnectionToTheWorkspace(wName string, connectionSlug string) error {
-// 	userConfig, err := ReadFromUserConfigFile()
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	wFound := false
-// 	for _, server := range userConfig.ServerLists {
-// 		for _, newSWork := range server.SendWorkspaces {
-// 			if wName == newSWork.WorkspaceName {
-// 				wFound = true
-// 				break
-// 			}
-// 		}
-// 	}
-
-// 	if !wFound {
-// 		fmt.Println(" No Such Workspace Exists !!")
-// 		return nil
-// 	}
-
-// 	if err := writeToUserConfigFile(userConfig); err != nil {
-// 		fmt.Println("error in writting to the user config file ...")
-// 		return err
-// 	}
-
-// 	fmt.Printf(" New Connection Added To %s Workspace \n", wName)
-// 	return nil
-// }
-
-// This CODE Might Be Useless.
-// This Function Doesnt Seem to be Used Anywhere
-// Please Delete this Future ME
-func CreateNewWorkspace(serverAlias, wName, wPassword, wPath string) error {
-	wfolder := SendWorkspaceFolder{
-		WorkspaceName:     wName,
-		WorkSpacePassword: wPassword,
-		WorkspacePath:     wPath,
-	}
-
-	userConfig, err := ReadFromUserConfigFile()
-	if err != nil {
-		return err
-	}
-
-	for _, server := range userConfig.ServerLists {
-		if server.ServerAlias == serverAlias {
-			server.SendWorkspaces = append(server.SendWorkspaces, wfolder)
-			if err := writeToUserConfigFile(userConfig); err != nil {
-				fmt.Println("error: could not write to userconfig file")
-				return err
-			}
-
-			return nil
-		}
-	}
-
-	return fmt.Errorf("server with the alias - %s Not Found", serverAlias)
-}
-
-// TODO: See what this func is used for and rewrite a better one
-// func GetAllConnections() []Connections {
-// 	userConfigFile, err := ReadFromUserConfigFile()
-// 	if err != nil {
-// 		fmt.Println("error in reading from the userConfig File")
-// 	}
-
-// 	return userConfigFile.AllConnections
-// }
-
-// func ValidateConnection(connSlug string, connPassword string) bool {
-// 	userConfigFile, err := readFromUserConfigFile()
-// 	if err != nil {
-// 		fmt.Println("error in reading from the userConfig File")
-// 		return false
-// 	}
-
-// 	for _, conn := range userConfigFile.AllConnections {
-// 		if conn.ConnectionSlug == connPassword && conn.Password == connPassword{
-// 			return true
-// 		}
-// 	}
-
-// 	return false
-// }
-
 // Creates Log Entry in the Main tmp file
 func AddUsersLogEntry(log_entry any) error {
 	// Adds the "root_dir/logs.txt"
@@ -337,21 +247,8 @@ func AddUsersLogEntry(log_entry any) error {
 	return nil
 }
 
-// FIXME: This code is not needed... Fix the Caller and remove it
-// func UpdateBasePort(port string) error {
-// 	file, err := ReadFromUserConfigFile()
-// 	if err != nil {
-// 		return err
-// 	}
-//
-// 	file.BasePort = port
-// 	err = writeToUserConfigFile(file)
-//
-// 	return err
-// }
-
 // Update Last Hash (Used during Pulls)
-func UpdateGetWorkspaceFolderToUserConfig(workspace_name, workspace_path, workspace_ip string, last_hash string) error {
+func UpdateLastHashInGetWorkspaceFolderToUserConfig(workspace_name, workspace_path, workspace_ip string, last_hash string) error {
 	// WorkspaceName		string		`json:"workspace_name"`
 	// WorkspacePath    	string		`json:"workspace_path"`
 	// WorkspcaceIP			string		`json:"workspace_ip"`

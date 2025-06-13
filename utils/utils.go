@@ -3,7 +3,18 @@ package utils
 import (
 	"math/rand"
 	"time"
+
+	fake "github.com/brianvoe/gofakeit/v7"
 )
+
+func CreateSlug() string {
+	var gamerTag []string
+	for range 1024 {
+		gamerTag = append(gamerTag, fake.Gamertag())
+	}
+	g := rand.Intn(1024)
+	return gamerTag[g]
+}
 
 func RandomString(n int) string {
 	letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
