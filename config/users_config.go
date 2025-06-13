@@ -248,14 +248,11 @@ func AddUsersLogEntry(log_entry any) error {
 }
 
 // Update Last Hash (Used during Pulls)
-func UpdateLastHashInGetWorkspaceFolderToUserConfig(workspace_name, workspace_path, workspace_ip string, last_hash string) error {
-	// WorkspaceName		string		`json:"workspace_name"`
-	// WorkspacePath    	string		`json:"workspace_path"`
-	// WorkspcaceIP			string		`json:"workspace_ip"`
-	// LastHash				string		`json:"last_hash"`
-
+func UpdateLastHashInGetWorkspaceFolderToUserConfig(workspace_name, last_hash string) error {
 	userConfig, err := ReadFromUserConfigFile()
 	if err != nil {
+		log.Println("Error while reading User Config File:", err)
+		log.Println("Source: UpdateLastHashInGetWorkspaceFolderToUserConfig()")
 		return err
 	}
 
@@ -269,9 +266,10 @@ func UpdateLastHashInGetWorkspaceFolderToUserConfig(workspace_name, workspace_pa
 	}
 
 	if err := writeToUserConfigFile(userConfig); err != nil {
+		log.Println("Error while writing User Config File:", err)
+		log.Println("Source: UpdateLastHashInGetWorkspaceFolderToUserConfig()")
 		return err
 	}
-
 	return nil
 }
 

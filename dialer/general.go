@@ -11,7 +11,8 @@ import (
 
 const (
 	CLIENT_BASE_HANDLER_NAME = "ClientHandler"
-	CONTEXT_TIMEOUT          = 25 * time.Second
+	CONTEXT_TIMEOUT          = 45 * time.Second
+	LONG_CONTEXT_TIMEOUT     = 10 * time.Minute
 )
 
 func GetMyPublicIP(port int) (string, error) {
@@ -26,10 +27,7 @@ func GetMyPublicIP(port int) (string, error) {
 	return myExtAddr.String(), nil
 }
 
-func CallKCP_RPC_WithContext(args, reply any, rpc_name string, rpc_client *rpc.Client) error {
-	ctx, cancel := context.WithTimeout(context.Background(), CONTEXT_TIMEOUT)
-	defer cancel()
-
+func CallKCP_RPC_WithContext(ctx context.Context, args, reply any, rpc_name string, rpc_client *rpc.Client) error {
 	// Create a channel to handle the RPC call with context
 	done := make(chan error, 1)
 	go func() {

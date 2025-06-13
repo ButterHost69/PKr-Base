@@ -65,7 +65,7 @@ func connectToAnotherUser(workspace_owner_username string, conn *websocket.Conn)
 	count := 0
 
 	for {
-		time.Sleep(10 * time.Second)
+		time.Sleep(5 * time.Second)
 		RequestPunchFromReceiverResponseMap.Lock()
 		req_punch_from_receiver_response, ok = RequestPunchFromReceiverResponseMap.Map[workspace_owner_username]
 		RequestPunchFromReceiverResponseMap.Unlock()
@@ -74,8 +74,8 @@ func connectToAnotherUser(workspace_owner_username string, conn *websocket.Conn)
 			delete(RequestPunchFromReceiverResponseMap.Map, workspace_owner_username)
 			RequestPunchFromReceiverResponseMap.Unlock()
 			break
-
 		}
+
 		if count == 6 {
 			invalid_flag = true
 			break
@@ -127,11 +127,9 @@ func connectToAnotherUser(workspace_owner_username string, conn *websocket.Conn)
 	}
 
 	// KCP Params for Congestion Control
-	kcp_conn.SetWindowSize(4, 128)
-	kcp_conn.SetNoDelay(1, 15000, 0, 1)
+	kcp_conn.SetWindowSize(128, 512)
+	kcp_conn.SetNoDelay(1, 20, 0, 1)
 	kcp_conn.SetACKNoDelay(false)
-	kcp_conn.SetMtu(1350)
-	kcp_conn.SetDeadline(time.Now().Add(60 * time.Second))
 
 	return client_handler_name, kcp_conn, nil
 }
@@ -302,7 +300,7 @@ func cloneWorkspace(workspace_owner_username, workspace_name string, conn *webso
 	}
 
 	// Update tmp/userConfig.json
-	err = config.RegisterNewGetWorkspace(MY_SERVER_ALIAS, workspace_name, currDir, workspace_password, res.NewHash)
+	err = config.UpdateLastHashInGetWorkspaceFolderToUserConfig(workspace_name, res.NewHash)
 	if err != nil {
 		fmt.Println("Error while Registering New GetWorkspace:", err)
 		fmt.Println("Source: cloneWorkspace()")

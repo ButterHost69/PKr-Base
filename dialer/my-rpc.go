@@ -1,6 +1,7 @@
 package dialer
 
 import (
+	"context"
 	"log"
 	"net/rpc"
 
@@ -13,8 +14,11 @@ func (h *ClientCallHandler) CallGetPublicKey(clientHandlerName string, rpc_clien
 	var req models.PublicKeyRequest
 	var res models.PublicKeyResponse
 
+	ctx, cancel := context.WithTimeout(context.Background(), CONTEXT_TIMEOUT)
+	defer cancel()
+
 	rpc_name := CLIENT_BASE_HANDLER_NAME + clientHandlerName + ".GetPublicKey"
-	if err := CallKCP_RPC_WithContext(req, &res, rpc_name, rpc_client); err != nil {
+	if err := CallKCP_RPC_WithContext(ctx, req, &res, rpc_name, rpc_client); err != nil {
 		log.Println("Error while Calling GetPublicKey:", err)
 		log.Println("Source: CallGetPublicKey()")
 		return nil, err
@@ -33,8 +37,11 @@ func (h *ClientCallHandler) CallInitNewWorkSpaceConnection(workspace_name, my_us
 	req.ServerIP = server_ip
 	req.WorkspacePassword = workspace_password
 
+	ctx, cancel := context.WithTimeout(context.Background(), CONTEXT_TIMEOUT)
+	defer cancel()
+
 	rpc_name := CLIENT_BASE_HANDLER_NAME + clientHandlerName + ".InitNewWorkSpaceConnection"
-	if err := CallKCP_RPC_WithContext(req, &res, rpc_name, rpc_client); err != nil {
+	if err := CallKCP_RPC_WithContext(ctx, req, &res, rpc_name, rpc_client); err != nil {
 		log.Println("Error while Calling Init New Workspace Connection:", err)
 		log.Println("Source: CallInitNewWorkSpaceConnection()")
 		return err
@@ -52,8 +59,11 @@ func (h *ClientCallHandler) CallGetData(my_username, server_ip, workspace_name, 
 	req.LastHash = last_hash
 	req.ServerIP = server_ip
 
+	ctx, cancel := context.WithTimeout(context.Background(), LONG_CONTEXT_TIMEOUT)
+	defer cancel()
+
 	rpc_name := CLIENT_BASE_HANDLER_NAME + clientHandlerName + ".GetData"
-	if err := CallKCP_RPC_WithContext(req, &res, rpc_name, rpc_client); err != nil {
+	if err := CallKCP_RPC_WithContext(ctx, req, &res, rpc_name, rpc_client); err != nil {
 		log.Println("Error while Calling Get Data:", err)
 		log.Println("Source: CallGetData()")
 		return nil, err

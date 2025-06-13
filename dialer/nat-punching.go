@@ -84,13 +84,15 @@ func WorkspaceListenerUdpNatHolePunching(conn *net.UDPConn, peerAddr string) (st
 
 		if addr.String() == peerAddr {
 			log.Println("Expected User Messaged:", addr.String())
-			if msg == "Punch" {
+			if strings.HasPrefix(msg, "Punch") {
+				clientHandlerName := strings.Split(msg, ";")[1]
 				_, err = conn.WriteToUDP([]byte("Punch ACK"), peerUDPAddr)
 				if err != nil {
 					log.Println("Error while Writing Punch ACK\nSource: UdpNatPunching\nError:", err)
 					continue
 				}
 				log.Println("Connection Established with", addr.String())
+				return clientHandlerName, nil
 			} else if strings.HasPrefix(msg, "Punch ACK") {
 				log.Println("Connection Established with", addr.String())
 				clientHandlerName := strings.Split(msg, ";")[1]

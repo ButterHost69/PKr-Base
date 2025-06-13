@@ -101,7 +101,7 @@ func StartNewNewServer(conn *net.UDPConn, clientHandlerName string) {
 	}
 	log.Println("Started New KCP Server Started ...")
 
-	err = lis.SetDeadline(time.Now().Add(10 * time.Minute))
+	err = lis.SetReadDeadline(time.Now().Add(10 * time.Minute))
 	if err != nil {
 		log.Println("Error while Setting Deadline for KCP Listener:", err)
 		log.Println("Source: StartNewNewServer()")
@@ -118,11 +118,9 @@ func StartNewNewServer(conn *net.UDPConn, clientHandlerName string) {
 			log.Println("Closing NewNewServer ...")
 			return
 		}
-		session.SetWindowSize(4, 128)
-		session.SetNoDelay(1, 15000, 0, 1)
+		session.SetWindowSize(128, 512)
+		session.SetNoDelay(1, 20, 0, 1)
 		session.SetACKNoDelay(false)
-		session.SetMtu(1350)
-		session.SetDeadline(time.Now().Add(60 * time.Second))
 
 		go rpc.ServeConn(session)
 	}
