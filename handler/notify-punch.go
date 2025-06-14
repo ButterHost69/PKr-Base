@@ -5,7 +5,6 @@ import (
 	"log"
 	"math/rand"
 	"net"
-	"net/rpc"
 	"slices"
 	"strconv"
 	"strings"
@@ -71,8 +70,7 @@ func HandleNotifyToPunch(peer_addr string) (string, string, error) {
 		}
 
 		log.Println("Starting New New Server `Connection` server on local port:", local_port)
-		// TODO Start Reciever on private ip
-		// TODO Pass context to close server in 5min
+		// TODO Start Receiver on private ip
 		StartNewNewServer(udp_conn, clientHandlerName)
 		udp_conn.Close()
 	}()
@@ -84,16 +82,16 @@ func HandleNotifyToPunch(peer_addr string) (string, string, error) {
 	return myPublicIPOnly, myPublicPortOnly, nil
 }
 
-func StartNewNewServer(conn *net.UDPConn, clientHandlerName string) {
+func StartNewNewServer(udp_conn *net.UDPConn, clientHandlerName string) {
 	log.Println("ClientHandler"+clientHandlerName, "Started")
-	err := rpc.RegisterName("ClientHandler"+clientHandlerName, &ClientHandler{})
+	err := RegisterName("ClientHandler"+clientHandlerName, &ClientHandler{})
 	if err != nil {
 		log.Println("Error while Register ClientHandler:", err)
 		log.Println("Source: StartNewNewServer()")
 		return
 	}
 
-	lis, err := kcp.ListenWithOptionsAndConn(conn, nil, 0, 0)
+	kcp_lis, err := kcp.ListenWithOptionsAndConn(udp_conn, nil, 0, 0)
 	if err != nil {
 		log.Println("Error while Listening KCP With Options & Conn:", err)
 		log.Println("Source: StartNewNewServer()")
@@ -101,7 +99,7 @@ func StartNewNewServer(conn *net.UDPConn, clientHandlerName string) {
 	}
 	log.Println("Started New KCP Server Started ...")
 
-	err = lis.SetReadDeadline(time.Now().Add(10 * time.Minute))
+	err = kcp_lis.SetReadDeadline(time.Now().Add(10 * time.Minute))
 	if err != nil {
 		log.Println("Error while Setting Deadline for KCP Listener:", err)
 		log.Println("Source: StartNewNewServer()")
@@ -109,19 +107,45 @@ func StartNewNewServer(conn *net.UDPConn, clientHandlerName string) {
 	}
 
 	for {
-		session, err := lis.AcceptKCP()
+		kcp_session, err := kcp_lis.AcceptKCP()
 		if err != nil {
 			log.Println("Error while Accepting KCP from KCP Listener:", err)
 			log.Println("Source: StartNewNewServer()")
-			conn.Close()
-			lis.Close()
+			udp_conn.Close()
+			kcp_lis.Close()
 			log.Println("Closing NewNewServer ...")
 			return
 		}
-		session.SetWindowSize(128, 512)
-		session.SetNoDelay(1, 20, 0, 1)
-		session.SetACKNoDelay(false)
+		log.Println("New Incoming Connection in NewNewServer from:", kcp_session.RemoteAddr())
 
-		go rpc.ServeConn(session)
+		// KCP Params for Congestion Control
+		kcp_session.SetWindowSize(128, 512)
+		kcp_session.SetNoDelay(1, 10, 1, 1)
+
+		go func() {
+			log.Println("Deciding the Type of Session ...")
+			defer kcp_session.Close()
+			var buff [3]byte
+			_, err = kcp_session.Read(buff[:])
+			if err != nil {
+				log.Println("Error while Reading the type of Session(KCP-RPC or KCP-Plain):", err)
+				log.Println("Source: StartNewNewServer()")
+				return
+			}
+			log.Println("Type of Session Received from Listener ...")
+
+			kcp_buff := [3]byte{'K', 'C', 'P'}
+			rpc_buff := [3]byte{'R', 'P', 'C'}
+
+			if buff == kcp_buff {
+				log.Println("KCP-Plain:", kcp_session.RemoteAddr().String())
+				GetDataHandler(kcp_session)
+			} else if buff == rpc_buff {
+				log.Println("KCP-RPC:", kcp_session.RemoteAddr().String())
+				ServeConn(kcp_session)
+			} else {
+				log.Println("Unknown Type of Session Sent:", string(buff[:]))
+			}
+		}()
 	}
 }

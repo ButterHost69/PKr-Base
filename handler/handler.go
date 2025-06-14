@@ -3,7 +3,6 @@ package handler
 import (
 	"encoding/base64"
 	"errors"
-	"io/ioutil"
 	"log"
 
 	"os"
@@ -115,15 +114,11 @@ func (h *ClientHandler) InitNewWorkSpaceConnection(req models.InitWorkspaceConne
 	return nil
 }
 
-func (h *ClientHandler) GetData(req models.GetDataRequest, res *models.GetDataResponse) error {
-	// TODO Compare Hash ...
-	// TODO - If Hash == "" : Send Entire File
-	// TODO - If Hash == Last_Hash : Do Nothing
-
+func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.GetMetaDataResponse) error {
 	password, err := encrypt.DecryptData(req.WorkspacePassword)
 	if err != nil {
 		log.Println("Failed to Decrypt the Workspace Pass Received from Listener:", err)
-		log.Println("Source: GetData()")
+		log.Println("Source: GetMetaData()")
 		return ErrInternalSeverError
 	}
 	log.Println("Decrypted Data ...\nAuthenticating ...")
@@ -133,26 +128,26 @@ func (h *ClientHandler) GetData(req models.GetDataRequest, res *models.GetDataRe
 	if err != nil {
 		if errors.Is(err, ErrIncorrectPassword) {
 			log.Println("Error: Incorrect Credentials for Workspace")
-			log.Println("Source: GetData()")
+			log.Println("Source: GetMetaData()")
 			return ErrIncorrectPassword
 		}
 		log.Println("Failed to Authenticate Password of Listener:", err)
-		log.Println("Source: GetData()")
+		log.Println("Source: GetMetaData()")
 		return ErrIncorrectPassword
 	}
 
 	log.Printf("Data Requested For Workspace: %s\n", req.WorkspaceName)
-	workspacePath, err := config.GetSendWorkspaceFilePath(req.WorkspaceName)
+	workspace_path, err := config.GetSendWorkspaceFilePath(req.WorkspaceName)
 	if err != nil {
 		log.Println("Failed to Get Workspace Path from Config:", err)
-		log.Println("Source: GetData()")
+		log.Println("Source: GetMetaData()")
 		return ErrInternalSeverError
 	}
 
-	zipped_file_name, err := filetracker.ZipData(workspacePath)
+	zipped_file_name, err := filetracker.ZipData(workspace_path)
 	if err != nil {
 		log.Println("Failed to Hash & Zip Data:", err)
-		log.Println("Source: GetData()")
+		log.Println("Source: GetMetaData()")
 		return ErrInternalSeverError
 	}
 
@@ -169,93 +164,83 @@ func (h *ClientHandler) GetData(req models.GetDataRequest, res *models.GetDataRe
 	key, err := encrypt.AESGenerakeKey(16)
 	if err != nil {
 		log.Println("Failed to Generate AES Keys:", err)
-		log.Println("Source: GetData()")
+		log.Println("Source: GetMetaData()")
 		return ErrInternalSeverError
 	}
 
 	iv, err := encrypt.AESGenerateIV()
 	if err != nil {
 		log.Println("Failed to Generate IV Keys:", err)
-		log.Println("Source: GetData()")
+		log.Println("Source: GetMetaData()")
 		return ErrInternalSeverError
 	}
 
 	log.Println("Zipping Workspace ...")
 
-	zipped_filepath := workspacePath + "\\.PKr\\" + zipped_file_name
+	zipped_filepath := workspace_path + "\\.PKr\\" + zipped_file_name
 	destination_filepath := strings.Replace(zipped_filepath, ".zip", ".enc", 1)
 	if err := encrypt.AESEncrypt(zipped_filepath, destination_filepath, key, iv); err != nil {
 		log.Println("Failed to Encrypt Data using AES:", err)
-		log.Println("Source: GetData()")
+		log.Println("Source: GetMetaData()")
 		return ErrInternalSeverError
 	}
 
 	log.Println("Fetching Public Key of Listener")
-	publicKeyPath, err := config.GetConnectionsPublicKeyUsingUsername(workspacePath, req.Username)
+	public_key_path, err := config.GetConnectionsPublicKeyUsingUsername(workspace_path, req.Username)
 	if err != nil {
 		log.Println("Failed to Get Public Key's Path of Listener Using Username:", err)
-		log.Println("Source: GetData()")
+		log.Println("Source: GetMetaData()")
 		return ErrInternalSeverError
 	}
 
-	publicKey, err := os.ReadFile(publicKeyPath)
+	public_key, err := os.ReadFile(public_key_path)
 	if err != nil {
 		log.Println("Failed to Read Public Key of Listener:", err)
-		log.Println("Source: GetData()")
+		log.Println("Source: GetMetaData()")
 		return ErrInternalSeverError
 	}
 
 	log.Println("Encrypting Key")
-	encrypt_key, err := encrypt.EncryptData(string(key), string(publicKey))
+	encrypt_key, err := encrypt.EncryptData(string(key), string(public_key))
 	if err != nil {
 		log.Println("Failed to Encrypt AES Keys using Listener's Public Key:", err)
-		log.Println("Source: GetData()")
+		log.Println("Source: GetMetaData()")
 		return ErrInternalSeverError
 	}
 
-	encrypt_iv, err := encrypt.EncryptData(string(iv), string(publicKey))
+	encrypt_iv, err := encrypt.EncryptData(string(iv), string(public_key))
 	if err != nil {
 		log.Println("Failed to Encrypt IV Keys using Listener's Public Key:", err)
-		log.Println("Source: GetData()")
+		log.Println("Source: GetMetaData()")
 		return ErrInternalSeverError
 	}
 
-	log.Println("Opening Destination File")
-	encrypt_file, err := os.Open(destination_filepath)
+	file_info, err := os.Stat(destination_filepath)
 	if err != nil {
-		log.Println("Failed to Open Destination Filepath:", err)
-		log.Println("Source: GetData()")
-		return ErrInternalSeverError
-	}
-	defer encrypt_file.Close()
-
-	log.Println("Reading Destination File")
-	fileData, err := ioutil.ReadAll(encrypt_file)
-	if err != nil {
-		log.Println("Failed to Read Content of Destination FilePath:", err)
-		log.Println("Source: GetData()")
+		log.Println("Failed to Get FileInfo of Encrypted Zip File:", err)
+		log.Println("Source: GetMetaData()")
 		return ErrInternalSeverError
 	}
 
 	err = config.AddNewPushToConfig(req.WorkspaceName, zipped_hash)
 	if err != nil {
 		log.Println("Failed to Add New Push to Config:", err)
-		log.Println("Source: GetData()")
+		log.Println("Source: GetMetaData()")
 		return ErrInternalSeverError
 	}
 	log.Println("Added New Push to Config")
 	log.Println("Done with Everything now returning Response")
 
+	res.LenData = int(file_info.Size())
 	res.NewHash = zipped_hash
 	res.KeyBytes = []byte(encrypt_key)
 	res.IVBytes = []byte(encrypt_iv)
-	res.Data = fileData
 
 	log.Println(res.NewHash)
 	log.Println(len(string(res.KeyBytes)))
 	log.Println(len(string(res.IVBytes)))
-	log.Println(len(string(res.Data)))
+	log.Println(res.LenData)
 
-	log.Println("Get Data Done")
+	log.Println("Get Meta Data Done")
 	return nil
 }

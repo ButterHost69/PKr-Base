@@ -49,9 +49,9 @@ func (h *ClientCallHandler) CallInitNewWorkSpaceConnection(workspace_name, my_us
 	return nil
 }
 
-func (h *ClientCallHandler) CallGetData(my_username, server_ip, workspace_name, workspace_password, last_hash, clientHandlerName string, rpc_client *rpc.Client) (*models.GetDataResponse, error) {
-	var req models.GetDataRequest
-	var res models.GetDataResponse
+func (h *ClientCallHandler) CallGetMetaData(my_username, server_ip, workspace_name, workspace_password, last_hash, clientHandlerName string, rpc_client *rpc.Client) (*models.GetMetaDataResponse, error) {
+	var req models.GetMetaDataRequest
+	var res models.GetMetaDataResponse
 
 	req.Username = my_username
 	req.WorkspaceName = workspace_name
@@ -59,13 +59,13 @@ func (h *ClientCallHandler) CallGetData(my_username, server_ip, workspace_name, 
 	req.LastHash = last_hash
 	req.ServerIP = server_ip
 
-	ctx, cancel := context.WithTimeout(context.Background(), LONG_CONTEXT_TIMEOUT)
+	ctx, cancel := context.WithTimeout(context.Background(), CONTEXT_TIMEOUT)
 	defer cancel()
 
-	rpc_name := CLIENT_BASE_HANDLER_NAME + clientHandlerName + ".GetData"
+	rpc_name := CLIENT_BASE_HANDLER_NAME + clientHandlerName + ".GetMetaData"
 	if err := CallKCP_RPC_WithContext(ctx, req, &res, rpc_name, rpc_client); err != nil {
 		log.Println("Error while Calling Get Data:", err)
-		log.Println("Source: CallGetData()")
+		log.Println("Source: CallGetMetaData()")
 		return nil, err
 	}
 	return &res, nil
