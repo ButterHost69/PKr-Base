@@ -239,7 +239,7 @@ func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.G
 	log.Println(res.NewHash)
 	log.Println(len(string(res.KeyBytes)))
 	log.Println(len(string(res.IVBytes)))
-	log.Println(res.LenData)
+	log.Println("Length of Data:", res.LenData)
 
 	log.Println("Get Meta Data Done")
 	return nil

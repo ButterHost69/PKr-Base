@@ -15,6 +15,7 @@ import (
 	"github.com/ButterHost69/PKr-Base/filetracker"
 	"github.com/ButterHost69/PKr-Base/handler"
 	"github.com/ButterHost69/PKr-Base/models"
+	"github.com/ButterHost69/PKr-Base/utils"
 	"github.com/ButterHost69/kcp-go"
 	"github.com/gorilla/websocket"
 )
@@ -205,10 +206,6 @@ func fetchData(workspace_owner_public_ip, workspace_name, workspace_hash string,
 	log.Println("Connected Successfully to Workspace Owner")
 
 	// KCP Params for Congestion Control
-	// kcp_conn.SetWindowSize(128, 512)
-	// kcp_conn.SetNoDelay(0, 100, 0, 1)
-	// kcp_conn.SetACKNoDelay(false)
-
 	kcp_conn.SetWindowSize(128, 512)
 	kcp_conn.SetNoDelay(1, 10, 1, 1)
 
@@ -237,37 +234,45 @@ func fetchData(workspace_owner_public_ip, workspace_name, workspace_hash string,
 		return nil, err
 	}
 	log.Println("Workspace Name & Hash Sent to Workspace Owner")
+
+	CHUNK_SIZE := min(DATA_CHUNK, len_data_bytes)
+
 	log.Println("Len Data Bytes:", len_data_bytes)
-
-	MAX_CHUNK_SIZE := min(DATA_CHUNK, len_data_bytes)
-
-	data_bytes := make([]byte, len_data_bytes)
+	log.Println("Len Buffer:", len_data_bytes+CHUNK_SIZE)
+	data_bytes := make([]byte, len_data_bytes+CHUNK_SIZE)
 	offset := 0
 
 	log.Println("Now Reading Data from Workspace Owner ...")
 	for offset < len_data_bytes {
-		log.Println("Offset:", offset)
-		n, err := kcp_conn.Read(data_bytes[offset : offset+MAX_CHUNK_SIZE])
+		utils.PrintProgressBar(offset, len_data_bytes, 100)
+
+		n, err := kcp_conn.Read(data_bytes[offset : offset+CHUNK_SIZE])
 		// Check for Errors on Workspace Owner's Side
 		if n < 30 {
 			msg := string(data_bytes[offset : offset+n])
 			if msg == "Incorrect Workspace Name/Hash" || msg == "Internal Server Error" {
-				log.Println("Error while Reading from Workspace on his/her side:", msg)
+				log.Println("\nError while Reading from Workspace on his/her side:", msg)
 				log.Println("Source: fetchData()")
 				return nil, errors.New(msg)
 			}
 		}
 
 		if err != nil {
-			log.Println("Error while Reading from Workspace Owner:", err)
+			log.Println("\nError while Reading from Workspace Owner:", err)
 			log.Println("Source: fetchData()")
 			return nil, err
 		}
-		// log.Println("Received Chunk Number:", offset)
 		offset += n
 	}
-	log.Println("Data Transfer Completed ...")
-	return data_bytes, nil
+	log.Println("\nData Transfer Completed:", offset)
+
+	_, err = kcp_conn.Write([]byte("Data Received"))
+	if err != nil {
+		log.Println("Error while Sending Data Received Message:", err)
+		log.Println("Source: fetchData()")
+		// Not Returning Error because, we got data, we don't care if workspace owner now is offline
+	}
+	return data_bytes[:offset], nil
 }
 
 func pullWorkspace(workspace_owner_username, workspace_name string, conn *websocket.Conn) {

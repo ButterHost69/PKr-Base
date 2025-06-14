@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -26,4 +27,23 @@ func RandomString(n int) string {
 		s[i] = letters[r.Intn(len(letters))]
 	}
 	return string(s)
+}
+
+func PrintProgressBar(progress int, total int, barLength int) {
+	percent := float64(progress) / float64(total)
+	hashes := int(percent * float64(barLength))
+	spaces := barLength - hashes
+
+	fmt.Printf("\r[%s%s] %.2f%%",
+		repeat("#", hashes),
+		repeat(" ", spaces),
+		percent*100)
+}
+
+func repeat(char string, count int) string {
+	result := ""
+	for range count {
+		result += char
+	}
+	return result
 }

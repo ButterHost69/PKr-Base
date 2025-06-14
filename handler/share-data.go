@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/ButterHost69/PKr-Base/config"
+	"github.com/ButterHost69/PKr-Base/utils"
 	"github.com/ButterHost69/kcp-go"
 )
 
@@ -56,7 +57,8 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 	destination_filepath := workspace_path + "\\.PKr\\" + workspace_hash + ".enc"
 	log.Println("Destination FilePath to share:", destination_filepath)
 
-	if _, err := os.Stat(destination_filepath); err == nil {
+	fileInfo, err := os.Stat(destination_filepath)
+	if err == nil {
 		log.Println("Destination File exists")
 	} else if os.IsNotExist(err) {
 		log.Println("Destination File does not exist")
@@ -82,8 +84,14 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 	buffer := make([]byte, DATA_CHUNK)
 	reader := bufio.NewReader(file)
 
+	len_data_bytes := int(fileInfo.Size())
+	log.Println("Length of File:", len_data_bytes)
+
 	log.Println("Preparing to Transfer Data")
+	offset := 0
 	for {
+		utils.PrintProgressBar(offset, len_data_bytes, 100)
+
 		n, err := reader.Read(buffer)
 		if n > 0 {
 			_, err := kcp_session.Write([]byte(buffer[:n]))
@@ -95,7 +103,17 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 			}
 		}
 		if err == io.EOF {
-			log.Println("Data Transfer Completed")
+			log.Println("\nDone Sent, now waiting for ack from listener ...")
+			n, err = kcp_session.Read(buff[:])
+			if err != nil {
+				log.Println("Error while Reading 'Data Received' Message from Listener:", err)
+				log.Println("Source: GetDataHandler()")
+
+			}
+			if string(buff[:n]) == "Data Received" {
+				log.Println("Data Transfer Completed:", offset)
+			}
+			log.Println("Received Unexpected Message:", string(buff[:]))
 			return
 		}
 		if err != nil {
@@ -104,5 +122,6 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 			sendErrorMessage(kcp_session, "Internal Server Error")
 			return
 		}
+		offset += n
 	}
 }
