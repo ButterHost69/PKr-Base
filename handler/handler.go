@@ -162,7 +162,7 @@ func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.G
 	} 
 	
 	log.Println("Check if Hash Provided is Valid and Present in Updates Hash List")
-	ifHashPresent, err := config.IfHashContains(req.LastHash, workspace_path)
+	ifHashPresent, err := config.IfHashContains(req.LastHash, workspace_path + "\\.PKr\\workspaceConfig.json")
 	if err != nil {
 		log.Println("Failed to verify Hash:", err)
 		log.Println("Source: GetMetaData()")
@@ -180,7 +180,7 @@ func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.G
 		log.Println("Provide Latest Snapshot from .Pkr/Files/Current/")
 		
 		snapshot_folder_path := workspace_path + "\\.PKr\\Files\\Current\\"
-		enc_zip_path := snapshot_folder_path + workspace_config.LastHash
+		enc_zip_path := snapshot_folder_path + workspace_config.LastHash + ".enc"
 		iv_path := snapshot_folder_path + "AES_IV"
 		aeskey_path := snapshot_folder_path + "AES_KEY"
 

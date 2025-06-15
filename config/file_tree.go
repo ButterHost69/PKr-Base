@@ -58,7 +58,7 @@ func GetNewTree(workspace_file_path string) (FileTree, error) {
 		}
 
 		if info.Name() == ".PKr" || info.Name() == "PKr-Base.exe" || info.Name() == "PKr-Cli.exe" || info.Name() == "tmp" {
-			// Do Nothing
+			return filepath.SkipDir
 		} else if !info.IsDir() {
 			relPath, err := filepath.Rel(workspace_file_path, path)
 			if err != nil {

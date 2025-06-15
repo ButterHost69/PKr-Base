@@ -55,7 +55,35 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 	}
 	log.Println("Workspace Path:", workspace_path)
 
-	destination_filepath := workspace_path + "\\.PKr\\" + workspace_hash + ".enc"
+	// Check if hash is last hash -> Send The .Pkr/Files/Current dir 
+	// TODO: Else Check in Changes Hash, Send it (should be there;to be created during metadata)
+	config, err := config.ReadFromPKRConfigFile(workspace_path + "\\.PKr\\" + "workspaceConfig.json")
+	if err != nil {
+		log.Println("Failed to Get Workspace  Config:", err)
+		log.Println("Source: GetDataHandler()")
+		sendErrorMessage(kcp_session, "Internal Server Error")
+		return
+	}
+
+	destination_filepath := ""
+	if workspace_hash == config.LastHash {
+		log.Println("Requested Hash is of the Snapshot")
+		destination_filepath = workspace_path + "\\.PKr\\Files\\Current\\" + workspace_hash + ".enc"
+		log.Println("Updated Destination File Path: ", destination_filepath)
+	} else {
+		// TODO: Complete this
+		log.Println("Requested Hash is of the Changes or Garbage")
+		log.Println("Implementation Remaining")
+		
+	}
+
+	if destination_filepath == ""{
+		log.Println("Garbage Hash")
+		sendErrorMessage(kcp_session, "Internal Server Error")
+		return
+	}
+
+
 	log.Println("Destination FilePath to share:", destination_filepath)
 
 	fileInfo, err := os.Stat(destination_filepath)
