@@ -116,9 +116,9 @@ func addFilesToZip(writer *zip.Writer, dirpath string, relativepath string) erro
 	return nil
 }
 
-func ZipData(workspace_path string) (string, error) {
+func ZipData(workspace_path string, destination_path string) (string, error) {
 	zipFileName := strings.Split(time.Now().String(), " ")[0] + ".zip"
-	fullZipPath := workspace_path + "\\.PKr\\" + zipFileName
+	fullZipPath := destination_path + zipFileName
 
 	zip_file, err := os.Create(fullZipPath)
 	if err != nil {
@@ -143,7 +143,7 @@ func ZipData(workspace_path string) (string, error) {
 	zip_file.Close()
 
 	hashFileName = hashFileName + ".zip"
-	fullHashFilePath := workspace_path + "\\.PKr\\" + hashFileName
+	fullHashFilePath := destination_path + hashFileName
 
 	workspace_split := strings.Split(workspace_path, "\\")
 	workspace_name := workspace_split[len(workspace_split)-1]

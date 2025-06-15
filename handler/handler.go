@@ -144,7 +144,7 @@ func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.G
 		return ErrInternalSeverError
 	}
 
-	zipped_file_name, err := filetracker.ZipData(workspace_path)
+	zipped_file_name, err := filetracker.ZipData(workspace_path, workspace_path + "\\.PKr\\")
 	if err != nil {
 		log.Println("Failed to Hash & Zip Data:", err)
 		log.Println("Source: GetMetaData()")
