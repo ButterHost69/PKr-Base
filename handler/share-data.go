@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -103,17 +104,20 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 			}
 		}
 		if err == io.EOF {
-			log.Println("\nDone Sent, now waiting for ack from listener ...")
+			fmt.Println()
+			log.Println("Done Sent, now waiting for ack from listener ...")
 			n, err = kcp_session.Read(buff[:])
 			if err != nil {
 				log.Println("Error while Reading 'Data Received' Message from Listener:", err)
 				log.Println("Source: GetDataHandler()")
-
 			}
-			if string(buff[:n]) == "Data Received" {
+			//Data Received
+			msg := string(buff[:n])
+			if msg == "Data Received" {
 				log.Println("Data Transfer Completed:", offset)
+				return
 			}
-			log.Println("Received Unexpected Message:", string(buff[:]))
+			log.Println("Received Unexpected Message:", msg)
 			return
 		}
 		if err != nil {
