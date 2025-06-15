@@ -167,7 +167,9 @@ func AddLogEntry(workspace_name string, isSendWorkspace bool, log_entry any) err
 	return nil
 }
 
-func AddNewPushToConfig(workspace_name, zipfile_path string) error {
+// func RegisterNewPushEntry(workspace_name, workspace_path)
+
+func UpdateLastHash(workspace_name, zipfile_path string) error {
 	workspace_path, err := GetSendWorkspaceFilePath(workspace_name)
 	if err != nil {
 		return err

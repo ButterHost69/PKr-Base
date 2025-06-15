@@ -9,6 +9,7 @@ type PKRConfig struct {
 
 type FileChange struct {
 	FilePath	string	`json:"file_path"`
+	FileHash	string	`json:"file_hash"`
 	Type		string	`json:"type"` //Created ; Updated ; Removed
 }
 type Updates struct {
