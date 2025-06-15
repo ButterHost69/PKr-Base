@@ -223,3 +223,16 @@ func IfHashContains(hash, workspace_path string)(bool, error) {
 
 	return false, nil
 }
+
+func AppendWorkspaceUpdates(updates Updates, workspace_path string) (error) {
+	workspace_json, err := ReadFromPKRConfigFile(workspace_path)
+	if err != nil {
+		return fmt.Errorf("could not read from config file.\nError: %v", err)
+	}
+
+	workspace_json.AllUpdates = append(workspace_json.AllUpdates, updates)
+	if err := writeToPKRConfigFile(workspace_path, workspace_json); err != nil {
+		return fmt.Errorf("error in writing the update hash to file: %s.\nError: %v", workspace_path, err)
+	}
+	return nil
+}
