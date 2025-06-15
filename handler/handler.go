@@ -6,11 +6,9 @@ import (
 	"log"
 
 	"os"
-	"strings"
 
 	"github.com/ButterHost69/PKr-Base/config"
 	"github.com/ButterHost69/PKr-Base/encrypt"
-	"github.com/ButterHost69/PKr-Base/filetracker"
 	"github.com/ButterHost69/PKr-Base/models"
 )
 
@@ -114,6 +112,10 @@ func (h *ClientHandler) InitNewWorkSpaceConnection(req models.InitWorkspaceConne
 	return nil
 }
 
+// TODO: Send Updated File Structure too...
+// Compare Provided Hash File Structure and The Current File Structure Hash
+// Compres and Hash those files - Store them
+// Send that Hash
 func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.GetMetaDataResponse) error {
 	password, err := encrypt.DecryptData(req.WorkspacePassword)
 	if err != nil {
@@ -144,103 +146,113 @@ func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.G
 		return ErrInternalSeverError
 	}
 
-	zipped_file_name, err := filetracker.ZipData(workspace_path, workspace_path + "\\.PKr\\")
+	workspace_config, err := config.ReadFromPKRConfigFile(workspace_path + "\\.PKr\\workspaceConfig.json")
 	if err != nil {
-		log.Println("Failed to Hash & Zip Data:", err)
+		log.Println("Failed to Fetch Config Struct Using Workspace Path:", err)
 		log.Println("Source: GetMetaData()")
 		return ErrInternalSeverError
 	}
-
-	zipped_hash := strings.Split(zipped_file_name, ".")[0]
-	log.Println("Data Service Hash File Name: " + zipped_file_name)
-
-	if zipped_hash == req.LastHash {
+	
+	// If Provided Last Hash == Last Snapshot then Do Nothing
+	// If Provided Last Hash == "" or garbage then User Cloning For the First time ; Provide Latest Snapshot
+	if req.LastHash == workspace_config.LastHash {
 		log.Println("User has the Latest Workspace, according to Last Hash")
 		log.Println("No need to transfer data")
 		return ErrUserAlreadyHasLatestWorkspace
-	}
-
-	log.Println("Generating Keys ...")
-	key, err := encrypt.AESGenerakeKey(16)
+	} 
+	
+	log.Println("Check if Hash Provided is Valid and Present in Updates Hash List")
+	ifHashPresent, err := config.IfHashContains(req.LastHash, workspace_path)
 	if err != nil {
-		log.Println("Failed to Generate AES Keys:", err)
+		log.Println("Failed to verify Hash:", err)
 		log.Println("Source: GetMetaData()")
 		return ErrInternalSeverError
 	}
 
-	iv, err := encrypt.AESGenerateIV()
-	if err != nil {
-		log.Println("Failed to Generate IV Keys:", err)
-		log.Println("Source: GetMetaData()")
-		return ErrInternalSeverError
+	if ifHashPresent {
+
+	} else { 	
+		// Send Last Snapshot if last hash is garbage or "" it means clone or some funny business
+		// Send Last Hash
+		// Encrypt Given AES Key and IV 
+		// Send that shiii....
+		log.Println("User is Cloning For the First Time")
+		log.Println("Provide Latest Snapshot from .Pkr/Files/Current/")
+		
+		snapshot_folder_path := workspace_path + "\\.PKr\\Files\\Current\\"
+		enc_zip_path := snapshot_folder_path + workspace_config.LastHash
+		iv_path := snapshot_folder_path + "AES_IV"
+		aeskey_path := snapshot_folder_path + "AES_KEY"
+
+		log.Println("Reading Latest Snapshot Hash IV")
+		log.Println("IV Loc: ", iv_path)
+		iv_data, err := os.ReadFile(iv_path)
+		if err != nil {
+			log.Println("Error reading IV:", err)
+			log.Println("Source: GetMetaData()")
+			return err
+		}
+
+		log.Println("Reading Latest Snapshot Hash AES Key")
+		log.Println("AES Key Loc: ", aeskey_path)
+		aeskey_data, err := os.ReadFile(aeskey_path)
+		if err != nil {
+			log.Println("Error reading AES Key:", err)
+			log.Println("Source: GetMetaData()")
+			return err
+		}
+
+		log.Println("Fetching Public Key of Listener")
+		public_key_path, err := config.GetConnectionsPublicKeyUsingUsername(workspace_path, req.Username)
+		if err != nil {
+			log.Println("Failed to Get Public Key's Path of Listener Using Username:", err)
+			log.Println("Source: GetMetaData()")
+			return ErrInternalSeverError
+		}
+
+		public_key, err := os.ReadFile(public_key_path)
+		if err != nil {
+			log.Println("Failed to Read Public Key of Listener:", err)
+			log.Println("Source: GetMetaData()")
+			return ErrInternalSeverError
+		}
+
+		log.Println("Encrypting AES Keys")
+		encrypt_key, err := encrypt.EncryptData(string(aeskey_data), string(public_key))
+		if err != nil {
+			log.Println("Failed to Encrypt AES Keys using Listener's Public Key:", err)
+			log.Println("Source: GetMetaData()")
+			return ErrInternalSeverError
+		}
+	
+		encrypt_iv, err := encrypt.EncryptData(string(iv_data), string(public_key))
+		if err != nil {
+			log.Println("Failed to Encrypt IV Keys using Listener's Public Key:", err)
+			log.Println("Source: GetMetaData()")
+			return ErrInternalSeverError
+		}
+	
+		file_info, err := os.Stat(enc_zip_path)
+		if err != nil {
+			log.Println("Failed to Get FileInfo of Encrypted Zip File:", err)
+			log.Println("Source: GetMetaData()")
+			return ErrInternalSeverError
+		}
+
+		res.LenData = int(file_info.Size())
+		res.NewHash = workspace_config.LastHash
+		res.KeyBytes = []byte(encrypt_key)
+		res.IVBytes = []byte(encrypt_iv)
+
+		log.Println(res.NewHash)
+		log.Println(len(string(res.KeyBytes)))
+		log.Println(len(string(res.IVBytes)))
+		log.Println("Length of Data:", res.LenData)
+
+		log.Println("Get Meta Data Done")
+		return nil
+
 	}
-
-	log.Println("Zipping Workspace ...")
-
-	zipped_filepath := workspace_path + "\\.PKr\\" + zipped_file_name
-	destination_filepath := strings.Replace(zipped_filepath, ".zip", ".enc", 1)
-	if err := encrypt.AESEncrypt(zipped_filepath, destination_filepath, key, iv); err != nil {
-		log.Println("Failed to Encrypt Data using AES:", err)
-		log.Println("Source: GetMetaData()")
-		return ErrInternalSeverError
-	}
-
-	log.Println("Fetching Public Key of Listener")
-	public_key_path, err := config.GetConnectionsPublicKeyUsingUsername(workspace_path, req.Username)
-	if err != nil {
-		log.Println("Failed to Get Public Key's Path of Listener Using Username:", err)
-		log.Println("Source: GetMetaData()")
-		return ErrInternalSeverError
-	}
-
-	public_key, err := os.ReadFile(public_key_path)
-	if err != nil {
-		log.Println("Failed to Read Public Key of Listener:", err)
-		log.Println("Source: GetMetaData()")
-		return ErrInternalSeverError
-	}
-
-	log.Println("Encrypting Key")
-	encrypt_key, err := encrypt.EncryptData(string(key), string(public_key))
-	if err != nil {
-		log.Println("Failed to Encrypt AES Keys using Listener's Public Key:", err)
-		log.Println("Source: GetMetaData()")
-		return ErrInternalSeverError
-	}
-
-	encrypt_iv, err := encrypt.EncryptData(string(iv), string(public_key))
-	if err != nil {
-		log.Println("Failed to Encrypt IV Keys using Listener's Public Key:", err)
-		log.Println("Source: GetMetaData()")
-		return ErrInternalSeverError
-	}
-
-	file_info, err := os.Stat(destination_filepath)
-	if err != nil {
-		log.Println("Failed to Get FileInfo of Encrypted Zip File:", err)
-		log.Println("Source: GetMetaData()")
-		return ErrInternalSeverError
-	}
-
-	err = config.AddNewPushToConfig(req.WorkspaceName, zipped_hash)
-	if err != nil {
-		log.Println("Failed to Add New Push to Config:", err)
-		log.Println("Source: GetMetaData()")
-		return ErrInternalSeverError
-	}
-	log.Println("Added New Push to Config")
-	log.Println("Done with Everything now returning Response")
-
-	res.LenData = int(file_info.Size())
-	res.NewHash = zipped_hash
-	res.KeyBytes = []byte(encrypt_key)
-	res.IVBytes = []byte(encrypt_iv)
-
-	log.Println(res.NewHash)
-	log.Println(len(string(res.KeyBytes)))
-	log.Println(len(string(res.IVBytes)))
-	log.Println("Length of Data:", res.LenData)
-
-	log.Println("Get Meta Data Done")
+	
 	return nil
 }

@@ -194,6 +194,9 @@ func storeDataIntoWorkspace(workspace_name string, res *models.GetMetaDataRespon
 	return nil
 }
 
+// TODO: Make is totally streaming
+// We are still creating a buffer of the size of the entire filesize
+// Take the file path and write/append the bytes as they come
 func fetchData(workspace_owner_public_ip, workspace_name, workspace_hash string, udp_conn *net.UDPConn, len_data_bytes int) ([]byte, error) {
 	// Now Transfer Data using KCP ONLY, No RPC in chunks
 	log.Println("Connecting Again to Workspace Owner")

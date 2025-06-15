@@ -206,3 +206,18 @@ func GetWorkspaceConnectionsUsingPath(workspace_path string) ([]Connection, erro
 
 	return workspace_json.AllConnections, nil
 }
+
+func IfHashContains(hash, workspace_path string)(bool, error) {
+	workspace_json, err := ReadFromPKRConfigFile(workspace_path)
+	if err != nil {
+		return false, fmt.Errorf("could not read from config file.\nError: %v", err)
+	}
+
+	for _, update := range workspace_json.AllUpdates{
+		if update.Hash == hash{
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
