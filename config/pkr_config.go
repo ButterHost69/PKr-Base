@@ -236,3 +236,58 @@ func AppendWorkspaceUpdates(updates Updates, workspace_path string) (error) {
 	}
 	return nil
 }
+
+func MergeUpdates(workspace_path, start_hash, end_hash string) (Updates, error) {
+	mupdates := Updates{}
+
+	workspace_json, err := ReadFromPKRConfigFile(workspace_path)
+	if err != nil {
+		return mupdates, fmt.Errorf("could not read from config file.\nError: %v", err)
+	}
+
+	type HashType struct {
+		Hash	string
+		Type	string
+	}
+
+	updates_list := make(map[string]HashType)
+	merge := false
+	for _, update := range workspace_json.AllUpdates{
+		if update.Hash == end_hash {
+			merge = true
+		}
+
+		if merge == true {
+			for _, change := range update.Changes{
+				_, exist := updates_list[change.FilePath]
+				if exist {
+					// Priority to last change
+					continue
+				}else {	
+					updates_list[change.FilePath] = HashType{
+						Hash: change.FileHash,
+						Type: change.Type,
+					}
+				}
+			}
+			if update.Hash == start_hash {
+				break
+			}
+		}
+	}
+
+	merged_changes := []FileChange{}
+	for path, hash_type := range updates_list{
+		merged_changes = append(merged_changes, FileChange{
+			FilePath: path,
+			FileHash: hash_type.Hash,
+			Type:     hash_type.Type,
+		})
+	}
+
+	// FIXME: Generate Hash with the Changed Files as a combo
+	mupdates.Hash = "ChangeMeLater"
+	mupdates.Changes = merged_changes
+
+	return mupdates, nil
+}
