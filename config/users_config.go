@@ -97,7 +97,7 @@ func RegisterNewSendWorkspace(server_alias, workspace_name, workspace_path, work
 	return nil
 }
 
-func RegisterNewGetWorkspace(server_alias, workspace_name, workspace_path, workspace_password, last_hash string) error {
+func RegisterNewGetWorkspace(server_alias, workspace_name, workspace_owner_name, workspace_path, workspace_password, last_hash string) error {
 	userConfig, err := ReadFromUserConfigFile()
 	if err != nil {
 		fmt.Println("Error in reading From the UserConfig File...")
@@ -105,10 +105,11 @@ func RegisterNewGetWorkspace(server_alias, workspace_name, workspace_path, works
 	}
 
 	workspaceFolder := GetWorkspaceFolder{
-		WorkspaceName:     workspace_name,
-		WorkspacePath:     workspace_path,
-		WorkspacePassword: workspace_password,
-		LastHash:          last_hash,
+		WorkspaceOwnerName: workspace_owner_name,
+		WorkspaceName:      workspace_name,
+		WorkspacePath:      workspace_path,
+		WorkspacePassword:  workspace_password,
+		LastHash:           last_hash,
 	}
 
 	for idx, server := range userConfig.ServerLists {

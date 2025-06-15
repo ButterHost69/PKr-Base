@@ -275,7 +275,7 @@ func fetchData(workspace_owner_public_ip, workspace_name, workspace_hash string,
 	return data_bytes[:offset], nil
 }
 
-func pullWorkspace(workspace_owner_username, workspace_name string, conn *websocket.Conn) {
+func PullWorkspace(workspace_owner_username, workspace_name string, conn *websocket.Conn) {
 	log.Println("Pulling Workspace:", workspace_name)
 	log.Println("Workspace Owner:", workspace_owner_username)
 

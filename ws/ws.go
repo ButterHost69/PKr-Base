@@ -77,7 +77,7 @@ func handleNotifyNewPushToListeners(msg models.WSMessage, conn *websocket.Conn) 
 	}
 	log.Printf("Res: %#v", noti_new_push)
 
-	pullWorkspace(noti_new_push.WorkspaceOwnerUsername, noti_new_push.WorkspaceName, conn)
+	PullWorkspace(noti_new_push.WorkspaceOwnerUsername, noti_new_push.WorkspaceName, conn)
 }
 
 func handleRequestPunchFromReceiverResponse(msg models.WSMessage) {
