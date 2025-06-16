@@ -5,9 +5,6 @@ import (
 	"log"
 	"os"
 	"path"
-	"path/filepath"
-
-	"github.com/ButterHost69/PKr-Base/encrypt"
 )
 
 // Delete files and folders in the Workspace Except: /.PKr , PKr-base.exe, PKr-cli.exe, /tmp
@@ -41,38 +38,4 @@ func SaveDataToFile(data []byte, dest string) error {
 	zippedfile.Write(data)
 
 	return nil
-}
-
-func FolderTree(folder_path string) (map[string]string, error){
-		result := make(map[string]string)
-
-	err := filepath.Walk(folder_path, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if info.IsDir() {
-			return nil
-		}
-
-		f, err := os.Open(path)
-		if err != nil {
-			return err
-		}
-		defer f.Close()
-		hash, err := encrypt.GenerateHashWithFileIO(f)
-		if err != nil {
-			return err
-		}
-
-		relPath, err := filepath.Rel(folder_path, path)
-		if err != nil {
-			return err
-		}
-
-		result[relPath] = hash
-		return nil
-	})
-
-	return result, err
 }
