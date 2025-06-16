@@ -119,12 +119,15 @@ func StartNewNewServer(udp_conn *net.UDPConn, clientHandlerName string) {
 		log.Println("New Incoming Connection in NewNewServer from:", kcp_session.RemoteAddr())
 
 		// KCP Params for Congestion Control
-		kcp_session.SetWindowSize(128, 512)
-		kcp_session.SetNoDelay(1, 10, 1, 1)
+		kcp_session.SetWindowSize(128, 1024)
+		kcp_session.SetNoDelay(1, 10, 2, 1)
+		kcp_session.SetACKNoDelay(true)
+		kcp_session.SetDSCP(46)
 
 		go func() {
-			log.Println("Deciding the Type of Session ...")
 			defer kcp_session.Close()
+			log.Println("Deciding the Type of Session ...")
+
 			var buff [3]byte
 			_, err = kcp_session.Read(buff[:])
 			if err != nil {

@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"net"
 	"net/rpc"
+	"os"
 	"strings"
 	"time"
 
@@ -128,8 +129,10 @@ func connectToAnotherUser(workspace_owner_username string, conn *websocket.Conn)
 	}
 
 	// KCP Params for Congestion Control
-	kcp_conn.SetWindowSize(128, 512)
-	kcp_conn.SetNoDelay(1, 10, 1, 1)
+	kcp_conn.SetWindowSize(128, 1024)
+	kcp_conn.SetNoDelay(1, 10, 2, 1)
+	kcp_conn.SetACKNoDelay(true)
+	kcp_conn.SetDSCP(46)
 
 	return client_handler_name, workspace_owner_public_ip, udp_conn, kcp_conn, nil
 }
@@ -191,6 +194,14 @@ func storeDataIntoWorkspace(workspace_name string, res *models.GetMetaDataRespon
 		log.Println("Source: storeDataIntoWorkspace()")
 		return err
 	}
+
+	// Remove Zip File After Unzipping it
+	err = os.Remove(zip_file_path)
+	if err != nil {
+		log.Println("Error while Removing the Zip File After Use:", err)
+		log.Println("Source: storeDataIntoWorkspace()")
+		// No need to return err
+	}
 	return nil
 }
 
@@ -206,8 +217,10 @@ func fetchData(workspace_owner_public_ip, workspace_name, workspace_hash string,
 	log.Println("Connected Successfully to Workspace Owner")
 
 	// KCP Params for Congestion Control
-	kcp_conn.SetWindowSize(128, 512)
-	kcp_conn.SetNoDelay(1, 10, 1, 1)
+	kcp_conn.SetWindowSize(128, 1024)
+	kcp_conn.SetNoDelay(1, 10, 2, 1)
+	kcp_conn.SetACKNoDelay(true)
+	kcp_conn.SetDSCP(46)
 
 	// Sending the Type of Session
 	kpc_buff := [3]byte{'K', 'C', 'P'}
@@ -305,7 +318,7 @@ func PullWorkspace(workspace_owner_username, workspace_name string, conn *websoc
 	var workspace_password, last_hash string
 	for _, server := range user_config.ServerLists {
 		for _, workspace := range server.GetWorkspaces {
-			if workspace.WorkspaceName == workspace_name {
+			if workspace.WorkspaceName == workspace_name && workspace.WorkspaceOwnerName == workspace_owner_username {
 				workspace_password = workspace.WorkspacePassword
 				last_hash = workspace.LastHash
 			}

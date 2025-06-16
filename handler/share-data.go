@@ -111,7 +111,7 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 				log.Println("Error while Reading 'Data Received' Message from Listener:", err)
 				log.Println("Source: GetDataHandler()")
 			}
-			//Data Received
+			// Data Received
 			msg := string(buff[:n])
 			if msg == "Data Received" {
 				log.Println("Data Transfer Completed:", offset)
