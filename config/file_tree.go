@@ -156,7 +156,7 @@ func CompareTrees(oldTree, newTree FileTree, new_hash string) Updates {
 			changes = append(changes, FileChange{
 				FilePath: path,
 				FileHash: newHash,
-				Type:     "Created",
+				Type:     "Updated",
 			})
 		} else if newHash != oldHash {
 			// Updated file

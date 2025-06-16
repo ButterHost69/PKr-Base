@@ -258,17 +258,18 @@ func MergeUpdates(workspace_path, start_hash, end_hash string) (Updates, error) 
 	updates_list := make(map[string]HashType)
 	merge := false
 	for _, update := range workspace_json.AllUpdates {
-		if update.Hash == end_hash {
+		if update.Hash == start_hash {
 			merge = true
 		}
 
 		if merge == true {
-			fmt.Println("[Remove Later] Current Hash: ", update.Hash)
 			for _, change := range update.Changes {
-				_, exist := updates_list[change.FilePath]
+				update, exist := updates_list[change.FilePath]
 				if exist {
-					// Priority to last change
-					continue
+					if update.Type == "Updated" && change.Type == "Removed" {
+						delete(updates_list, change.FilePath)
+						continue
+					}
 				} else {
 					updates_list[change.FilePath] = HashType{
 						Hash: change.FileHash,
@@ -276,7 +277,7 @@ func MergeUpdates(workspace_path, start_hash, end_hash string) (Updates, error) 
 					}
 				}
 			}
-			if update.Hash == start_hash {
+			if update.Hash == end_hash {
 				break
 			}
 		}
