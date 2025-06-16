@@ -102,6 +102,7 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 				if err != nil {
 					log.Println("Error while Reading 'Data Received' Message from Listener:", err)
 					log.Println("Source: GetDataHandler()")
+					return
 				}
 				// Data Received
 				msg := string(buff[:n])
