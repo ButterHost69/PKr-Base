@@ -244,7 +244,6 @@ func fetchData(workspace_owner_public_ip, workspace_name, workspace_hash string,
 
 	log.Println("Now Reading Data from Workspace Owner ...")
 	for offset < len_data_bytes {
-		utils.PrintProgressBar(offset, len_data_bytes, 100)
 
 		n, err := kcp_conn.Read(data_bytes[offset : offset+CHUNK_SIZE])
 		// Check for Errors on Workspace Owner's Side
@@ -263,6 +262,7 @@ func fetchData(workspace_owner_public_ip, workspace_name, workspace_hash string,
 			return nil, err
 		}
 		offset += n
+		utils.PrintProgressBar(offset, len_data_bytes, 100)
 	}
 	log.Println("\nData Transfer Completed:", offset)
 

@@ -55,7 +55,7 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 	}
 	log.Println("Workspace Path:", workspace_path)
 
-	destination_filepath := workspace_path + "\\.PKr\\" + workspace_hash + ".enc"
+	destination_filepath := workspace_path + "\\.PKr\\Files\\Current\\" + workspace_hash + ".enc"
 	log.Println("Destination FilePath to share:", destination_filepath)
 
 	fileInfo, err := os.Stat(destination_filepath)
