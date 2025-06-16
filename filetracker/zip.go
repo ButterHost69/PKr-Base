@@ -25,7 +25,7 @@ func zippToInfiniteSize(workspace_path string) (string, error) {
 	// 2024-01-20.zip
 	zipFileName := strings.Split(time.Now().String(), " ")[0] + ".zip"
 
-	file, err := os.Create(workspace_path + "\\.PKr\\" + zipFileName)
+	file, err := os.Create(filepath.Join(workspace_path, ".PKr", zipFileName))
 	if err != nil {
 		return "", err
 	}
@@ -92,22 +92,22 @@ func addFilesToZip(writer *zip.Writer, dirpath string, relativepath string) erro
 		if file.Name() == ".PKr" || file.Name() == "PKr-Base.exe" || file.Name() == "PKr-Cli.exe" || file.Name() == "tmp" {
 			continue
 		} else if !file.IsDir() {
-			content, err := os.ReadFile(dirpath + file.Name())
+			content, err := os.ReadFile(filepath.Join(dirpath, file.Name()))
 
 			if err != nil {
 				// log.Println(err)
 				return err
 			}
 
-			file, err := writer.Create(relativepath + file.Name())
+			file, err := writer.Create(filepath.Join(relativepath, file.Name()))
 			if err != nil {
 				// log.Println(err)
 				return err
 			}
 			file.Write(content)
 		} else if file.IsDir() {
-			newDirPath := dirpath + file.Name() + "\\"
-			newRelativePath := relativepath + file.Name() + "\\"
+			newDirPath := filepath.Join(dirpath, file.Name()) + string(os.PathSeparator)
+			newRelativePath := filepath.Join(relativepath, file.Name()) + string(os.PathSeparator)
 
 			addFilesToZip(writer, newDirPath, newRelativePath)
 		}
@@ -118,7 +118,7 @@ func addFilesToZip(writer *zip.Writer, dirpath string, relativepath string) erro
 
 func ZipData(workspace_path string, destination_path string) (string, error) {
 	zipFileName := strings.Split(time.Now().String(), " ")[0] + ".zip"
-	fullZipPath := destination_path + zipFileName
+	fullZipPath := filepath.Join(destination_path, zipFileName)
 
 	zip_file, err := os.Create(fullZipPath)
 	if err != nil {
@@ -128,7 +128,7 @@ func ZipData(workspace_path string, destination_path string) (string, error) {
 
 	writer := zip.NewWriter(zip_file)
 
-	addFilesToZip(writer, workspace_path+"\\", "")
+	addFilesToZip(writer, workspace_path+string(os.PathSeparator), "")
 
 	if err = writer.Close(); err != nil {
 		return "", err
@@ -143,9 +143,9 @@ func ZipData(workspace_path string, destination_path string) (string, error) {
 	zip_file.Close()
 
 	hashFileName = hashFileName + ".zip"
-	fullHashFilePath := destination_path + hashFileName
+	fullHashFilePath := filepath.Join(destination_path, hashFileName)
 
-	workspace_split := strings.Split(workspace_path, "\\")
+	workspace_split := strings.Split(workspace_path, string(os.PathSeparator))
 	workspace_name := workspace_split[len(workspace_split)-1]
 
 	if err = os.Rename(fullZipPath, fullHashFilePath); err != nil {

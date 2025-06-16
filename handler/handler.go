@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"log"
+	"path/filepath"
 
 	"os"
 
@@ -91,7 +92,7 @@ func (h *ClientHandler) InitNewWorkSpaceConnection(req models.InitWorkspaceConne
 
 	// Save Public Key
 	log.Println("Storing Public Keys ...")
-	keysPath, err := config.StorePublicKeys(file_path+"\\.PKr\\keys\\", string(publicKey))
+	keysPath, err := config.StorePublicKeys(filepath.Join(file_path, ".PKr", "keys"), string(publicKey))
 	if err != nil {
 		log.Println("Failed to Store Public Keys at '.PKr\\keys':", err)
 		log.Println("Source: InitNewWorkSpaceConnection()")
@@ -101,7 +102,7 @@ func (h *ClientHandler) InitNewWorkSpaceConnection(req models.InitWorkspaceConne
 
 	// Store the New Connection in the .PKr Config file
 	connection.PublicKeyPath = keysPath
-	if err := config.AddConnectionToPKRConfigFile(file_path+"\\.PKr\\workspaceConfig.json", connection); err != nil {
+	if err := config.AddConnectionToPKRConfigFile(filepath.Join(file_path, ".PKr", "workspaceConfig.json"), connection); err != nil {
 		log.Println("Failed to Add Connection to .PKr Config File:", err)
 		log.Println("Source: InitNewWorkSpaceConnection()")
 		return ErrInternalSeverError
@@ -146,23 +147,23 @@ func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.G
 		return ErrInternalSeverError
 	}
 
-	workspace_config, err := config.ReadFromPKRConfigFile(workspace_path + "\\.PKr\\workspaceConfig.json")
+	workspace_config, err := config.ReadFromPKRConfigFile(filepath.Join(workspace_path, ".PKr", "workspaceConfig.json"))
 	if err != nil {
 		log.Println("Failed to Fetch Config Struct Using Workspace Path:", err)
 		log.Println("Source: GetMetaData()")
 		return ErrInternalSeverError
 	}
-	
+
 	// If Provided Last Hash == Last Snapshot then Do Nothing
 	// If Provided Last Hash == "" or garbage then User Cloning For the First time ; Provide Latest Snapshot
 	if req.LastHash == workspace_config.LastHash {
 		log.Println("User has the Latest Workspace, according to Last Hash")
 		log.Println("No need to transfer data")
 		return ErrUserAlreadyHasLatestWorkspace
-	} 
-	
+	}
+
 	log.Println("Check if Hash Provided is Valid and Present in Updates Hash List")
-	ifHashPresent, err := config.IfHashContains(req.LastHash, workspace_path + "\\.PKr\\workspaceConfig.json")
+	ifHashPresent, err := config.IfHashContains(req.LastHash, filepath.Join(workspace_path, ".PKr", "workspaceConfig.json"))
 	if err != nil {
 		log.Println("Failed to verify Hash:", err)
 		log.Println("Source: GetMetaData()")
@@ -171,18 +172,18 @@ func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.G
 
 	if ifHashPresent {
 
-	} else { 	
+	} else {
 		// Send Last Snapshot if last hash is garbage or "" it means clone or some funny business
 		// Send Last Hash
-		// Encrypt Given AES Key and IV 
+		// Encrypt Given AES Key and IV
 		// Send that shiii....
 		log.Println("User is Cloning For the First Time")
 		log.Println("Provide Latest Snapshot from .Pkr/Files/Current/")
-		
-		snapshot_folder_path := workspace_path + "\\.PKr\\Files\\Current\\"
-		enc_zip_path := snapshot_folder_path + workspace_config.LastHash + ".enc"
-		iv_path := snapshot_folder_path + "AES_IV"
-		aeskey_path := snapshot_folder_path + "AES_KEY"
+
+		snapshot_folder_path := filepath.Join(workspace_path, ".PKr", "Files", "Current")
+		enc_zip_path := filepath.Join(snapshot_folder_path, workspace_config.LastHash+".enc")
+		iv_path := filepath.Join(snapshot_folder_path, "AES_IV")
+		aeskey_path := filepath.Join(snapshot_folder_path, "AES_KEY")
 
 		log.Println("Reading Latest Snapshot Hash IV")
 		log.Println("IV Loc: ", iv_path)
@@ -224,14 +225,14 @@ func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.G
 			log.Println("Source: GetMetaData()")
 			return ErrInternalSeverError
 		}
-	
+
 		encrypt_iv, err := encrypt.EncryptData(string(iv_data), string(public_key))
 		if err != nil {
 			log.Println("Failed to Encrypt IV Keys using Listener's Public Key:", err)
 			log.Println("Source: GetMetaData()")
 			return ErrInternalSeverError
 		}
-	
+
 		file_info, err := os.Stat(enc_zip_path)
 		if err != nil {
 			log.Println("Failed to Get FileInfo of Encrypted Zip File:", err)
@@ -253,6 +254,6 @@ func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.G
 		return nil
 
 	}
-	
+
 	return nil
 }

@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"net"
 	"net/rpc"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -172,7 +173,7 @@ func storeDataIntoWorkspace(workspace_name string, res *models.GetMetaDataRespon
 	}
 	log.Println("Workspace Path: ", workspace_path)
 
-	zip_file_path := workspace_path + "\\.PKr\\" + res.NewHash + ".zip"
+	zip_file_path := filepath.Join(workspace_path, ".PKr", res.NewHash + ".zip")
 	if err = filetracker.SaveDataToFile(data, zip_file_path); err != nil {
 		log.Println("Error while Saving Data into '.PKr/abc.zip':", err)
 		log.Println("Source: storeDataIntoWorkspace()")
@@ -186,7 +187,7 @@ func storeDataIntoWorkspace(workspace_name string, res *models.GetMetaDataRespon
 	}
 
 	// Unzip Content
-	if err = filetracker.UnzipData(zip_file_path, workspace_path+"\\"); err != nil {
+	if err = filetracker.UnzipData(zip_file_path, filepath.Join(workspace_path, "")); err != nil {
 		log.Println("Error while Unzipping Data into Workspace:", err)
 		log.Println("Source: storeDataIntoWorkspace()")
 		return err

@@ -3,6 +3,7 @@ package utils
 import (
 	"log"
 	"os"
+	"path/filepath"
 )
 
 const (
@@ -20,10 +21,11 @@ func StoreInitPublicKeys(connection_slug string, key string) error {
 		log.Println("~ Folder Connections Exists !!")
 	}
 
-	if err := os.Mkdir(CONNECTION_KEYS_PATH+connection_slug+"/", 0766); err != nil {
+	connDir := filepath.Join(CONNECTION_KEYS_PATH, connection_slug)
+	if err := os.Mkdir(connDir, 0766); err != nil {
 		log.Printf("~ Folder %s Exists !!\n", connection_slug)
 	}
-	connectionFilePath := CONNECTION_KEYS_PATH + connection_slug + "/publickey.pem"
 
+	connectionFilePath := filepath.Join(CONNECTION_KEYS_PATH, connection_slug, "publickey.pem")
 	return os.WriteFile(connectionFilePath, []byte(key), 0666)
 }

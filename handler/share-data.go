@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/ButterHost69/PKr-Base/config"
 	"github.com/ButterHost69/PKr-Base/utils"
@@ -57,7 +58,7 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 
 	// Check if hash is last hash -> Send The .Pkr/Files/Current dir 
 	// TODO: Else Check in Changes Hash, Send it (should be there;to be created during metadata)
-	config, err := config.ReadFromPKRConfigFile(workspace_path + "\\.PKr\\" + "workspaceConfig.json")
+	config, err := config.ReadFromPKRConfigFile(filepath.Join(workspace_path, ".PKr", "workspaceConfig.json"))
 	if err != nil {
 		log.Println("Failed to Get Workspace  Config:", err)
 		log.Println("Source: GetDataHandler()")
@@ -68,7 +69,7 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 	destination_filepath := ""
 	if workspace_hash == config.LastHash {
 		log.Println("Requested Hash is of the Snapshot")
-		destination_filepath = workspace_path + "\\.PKr\\Files\\Current\\" + workspace_hash + ".enc"
+		destination_filepath := filepath.Join(workspace_path, ".PKr", "Files", "Current", workspace_hash+".enc")
 		log.Println("Updated Destination File Path: ", destination_filepath)
 	} else {
 		// TODO: Complete this
