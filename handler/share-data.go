@@ -55,10 +55,10 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 	}
 	log.Println("Workspace Path:", workspace_path)
 
-	destination_filepath := workspace_path + "\\.PKr\\Files\\Current\\" + workspace_hash + ".enc"
-	log.Println("Destination FilePath to share:", destination_filepath)
+	zip_enc_path := workspace_path + "\\.PKr\\Files\\Current\\" + workspace_hash + ".enc"
+	log.Println("Destination FilePath to share:", zip_enc_path)
 
-	fileInfo, err := os.Stat(destination_filepath)
+	fileInfo, err := os.Stat(zip_enc_path)
 	if err == nil {
 		log.Println("Destination File exists")
 	} else if os.IsNotExist(err) {
@@ -73,17 +73,17 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 	}
 
 	log.Println("Opening Destination File")
-	file, err := os.Open(destination_filepath)
+	zip_enc_file_obj, err := os.Open(zip_enc_path)
 	if err != nil {
 		log.Println("Error while Opening Destination File:", err)
 		log.Println("Source: GetDataHandler()")
 		sendErrorMessage(kcp_session, "Internal Server Error")
 		return
 	}
-	defer file.Close()
+	defer zip_enc_file_obj.Close()
 
 	buffer := make([]byte, DATA_CHUNK)
-	reader := bufio.NewReader(file)
+	reader := bufio.NewReader(zip_enc_file_obj)
 
 	len_data_bytes := int(fileInfo.Size())
 	log.Println("Length of File:", len_data_bytes)
