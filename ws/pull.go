@@ -259,6 +259,12 @@ func fetchData(workspace_owner_public_ip, workspace_name, workspace_hash string,
 	for offset < len_data_bytes {
 
 		n, err := kcp_conn.Read(data_bytes[offset : offset+CHUNK_SIZE])
+		if err != nil {
+			log.Println("\nError while Reading from Workspace Owner:", err)
+			log.Println("Source: fetchData()")
+			return nil, err
+		}
+
 		// Check for Errors on Workspace Owner's Side
 		if n < 30 {
 			msg := string(data_bytes[offset : offset+n])
@@ -269,11 +275,6 @@ func fetchData(workspace_owner_public_ip, workspace_name, workspace_hash string,
 			}
 		}
 
-		if err != nil {
-			log.Println("\nError while Reading from Workspace Owner:", err)
-			log.Println("Source: fetchData()")
-			return nil, err
-		}
 		offset += n
 		utils.PrintProgressBar(offset, len_data_bytes, 100)
 	}

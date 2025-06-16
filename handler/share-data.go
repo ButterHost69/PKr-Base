@@ -94,6 +94,30 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 		utils.PrintProgressBar(offset, len_data_bytes, 100)
 
 		n, err := reader.Read(buffer)
+		if err != nil {
+			if err == io.EOF {
+				fmt.Println()
+				log.Println("Done Sent, now waiting for ack from listener ...")
+				n, err := kcp_session.Read(buff[:])
+				if err != nil {
+					log.Println("Error while Reading 'Data Received' Message from Listener:", err)
+					log.Println("Source: GetDataHandler()")
+				}
+				// Data Received
+				msg := string(buff[:n])
+				if msg == "Data Received" {
+					log.Println("Data Transfer Completed:", offset)
+					return
+				}
+				log.Println("Received Unexpected Message:", msg)
+				return
+			}
+			log.Println("Error while Sending Workspace Chunk:", err)
+			log.Println("Source: GetDataHandler()")
+			sendErrorMessage(kcp_session, "Internal Server Error")
+			return
+		}
+
 		if n > 0 {
 			_, err := kcp_session.Write([]byte(buffer[:n]))
 			if err != nil {
@@ -102,29 +126,6 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 				sendErrorMessage(kcp_session, "Internal Server Error")
 				return
 			}
-		}
-		if err == io.EOF {
-			fmt.Println()
-			log.Println("Done Sent, now waiting for ack from listener ...")
-			n, err = kcp_session.Read(buff[:])
-			if err != nil {
-				log.Println("Error while Reading 'Data Received' Message from Listener:", err)
-				log.Println("Source: GetDataHandler()")
-			}
-			// Data Received
-			msg := string(buff[:n])
-			if msg == "Data Received" {
-				log.Println("Data Transfer Completed:", offset)
-				return
-			}
-			log.Println("Received Unexpected Message:", msg)
-			return
-		}
-		if err != nil {
-			log.Println("Error while Sending Workspace Chunk:", err)
-			log.Println("Source: GetDataHandler()")
-			sendErrorMessage(kcp_session, "Internal Server Error")
-			return
 		}
 		offset += n
 	}
