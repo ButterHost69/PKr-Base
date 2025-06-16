@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 )
 
-const (
-	CONNECTION_KEYS_PATH = "tmp/connections/"
+var (
 	ROOT_DIR             = "tmp"
-	CONFIG_FILE          = "tmp/userConfig.json"
+	CONNECTION_KEYS_PATH = filepath.Join(ROOT_DIR, "connections")
+	CONFIG_FILE          = filepath.Join(ROOT_DIR, "userConfig.json")
 )
 
 func StoreInitPublicKeys(connection_slug string, key string) error {
