@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/ButterHost69/PKr-Base/config"
 	"github.com/ButterHost69/PKr-Base/utils"
@@ -66,10 +67,13 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 		return
 	}
 
+	config.LastHash = strings.TrimSpace(config.LastHash)
+	workspace_hash = strings.TrimSpace(workspace_hash)
+
 	destination_filepath := ""
 	if workspace_hash == config.LastHash {
 		log.Println("Requested Hash is of the Snapshot")
-		destination_filepath := filepath.Join(workspace_path, ".PKr", "Files", "Current", workspace_hash+".enc")
+		destination_filepath = filepath.Join(workspace_path, ".PKr", "Files", "Current", workspace_hash+".enc")
 		log.Println("Updated Destination File Path: ", destination_filepath)
 	} else {
 		// TODO: Complete this
@@ -80,6 +84,8 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 
 	if destination_filepath == ""{
 		log.Println("Garbage Hash")
+		log.Println("Provided Hash: ", workspace_hash)
+		log.Println("Last Config Hash: ", config.LastHash)
 		sendErrorMessage(kcp_session, "Internal Server Error")
 		return
 	}
