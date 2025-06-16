@@ -260,6 +260,7 @@ func MergeUpdates(workspace_path, start_hash, end_hash string) (Updates, error) 
 	for _, update := range workspace_json.AllUpdates {
 		if update.Hash == start_hash {
 			merge = true
+			continue
 		}
 
 		if merge == true {
