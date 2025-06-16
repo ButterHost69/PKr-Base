@@ -14,7 +14,8 @@ import (
 	"github.com/ButterHost69/kcp-go"
 )
 
-const DATA_CHUNK = 1024 // 1KB
+const DATA_CHUNK = 1024                        // 1KB
+const FLUSH_AFTER_EVERY_X_MB = 5 * 1024 * 1024 // 5 MB
 
 func sendErrorMessage(kcp_session *kcp.UDPSession, error_msg string) {
 	_, err := kcp_session.Write([]byte(error_msg))
@@ -57,7 +58,7 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 	}
 	log.Println("Workspace Path:", workspace_path)
 
-	// Check if hash is last hash -> Send The .Pkr/Files/Current dir 
+	// Check if hash is last hash -> Send The .Pkr/Files/Current dir
 	// TODO: Else Check in Changes Hash, Send it (should be there;to be created during metadata)
 	config, err := config.ReadFromPKRConfigFile(filepath.Join(workspace_path, ".PKr", "workspaceConfig.json"))
 	if err != nil {
@@ -79,17 +80,16 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 		// TODO: Complete this
 		log.Println("Requested Hash is of the Changes or Garbage")
 		log.Println("Implementation Remaining")
-		
+
 	}
 
-	if destination_filepath == ""{
+	if destination_filepath == "" {
 		log.Println("Garbage Hash")
 		log.Println("Provided Hash: ", workspace_hash)
 		log.Println("Last Config Hash: ", config.LastHash)
 		sendErrorMessage(kcp_session, "Internal Server Error")
 		return
 	}
-
 
 	log.Println("Destination FilePath to share:", destination_filepath)
 
