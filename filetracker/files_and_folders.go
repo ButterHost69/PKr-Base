@@ -53,7 +53,7 @@ func FolderTree(folder_path string) (map[string]string, error) {
 			return err
 		}
 
-		if info.Name() == ".PKr" || info.Name() == "PKr-Base.exe" || info.Name() == "PKr-Cli.exe" || info.Name() == "tmp" && info.Name() == "PKr-Base" && info.Name() == "PKr-Cli"{
+		if info.Name() == ".PKr" || info.Name() == "PKr-Base.exe" || info.Name() == "PKr-Cli.exe" || info.Name() == "tmp" || info.Name() == "PKr-Base" || info.Name() == "PKr-Cli"{
 			return filepath.SkipDir
 		}
 		if info.IsDir() {
