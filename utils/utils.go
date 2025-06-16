@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"math/rand"
+	"strings"
 	"time"
 
 	fake "github.com/brianvoe/gofakeit/v7"
@@ -35,15 +36,7 @@ func PrintProgressBar(progress int, total int, barLength int) {
 	spaces := barLength - hashes
 
 	fmt.Printf("\r[%s%s] %.2f%%",
-		repeat("#", hashes),
-		repeat(" ", spaces),
+		strings.Repeat("#", hashes),
+		strings.Repeat(" ", spaces),
 		percent*100)
-}
-
-func repeat(char string, count int) string {
-	result := ""
-	for range count {
-		result += char
-	}
-	return result
 }
