@@ -12,7 +12,8 @@ import (
 	"github.com/ButterHost69/kcp-go"
 )
 
-const DATA_CHUNK = 1024 // 1KB
+const DATA_CHUNK = 1024                        // 1KB
+const FLUSH_AFTER_EVERY_X_MB = 5 * 1024 * 1024 // 5 MB
 
 func sendErrorMessage(kcp_session *kcp.UDPSession, error_msg string) {
 	_, err := kcp_session.Write([]byte(error_msg))

@@ -3,6 +3,7 @@ package ws
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"log"
 	"math/rand"
 	"net"
@@ -259,12 +260,22 @@ func fetchAndStoreDataIntoWorkspace(workspace_owner_public_ip, workspace_name st
 			return err
 		}
 
+		// Flush buffer to disk after 'FLUSH_AFTER_EVERY_X_MB'
+		if offset%handler.FLUSH_AFTER_EVERY_X_MB == 0 {
+			err = writer.Flush()
+			if err != nil {
+				fmt.Println("Error flushing 'writer' buffer:", err)
+				fmt.Println("Soure: fetchAndStoreDataIntoWorkspace()")
+				return err
+			}
+		}
+
 		offset += n
 		utils.PrintProgressBar(offset, res.LenData, 100)
 	}
 	log.Println("\nData Transfer Completed ...")
 
-	// Flush buffer to disk
+	// Flush buffer to disk at end
 	err = writer.Flush()
 	if err != nil {
 		log.Println("Error flushing 'writer' buffer:", err)
