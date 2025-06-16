@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"net"
 	"net/rpc"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -173,25 +174,42 @@ func storeDataIntoWorkspace(workspace_name string, res *models.GetMetaDataRespon
 	}
 	log.Println("Workspace Path: ", workspace_path)
 
-	zip_file_path := filepath.Join(workspace_path, ".PKr", res.NewHash + ".zip")
+	zip_file_path := filepath.Join(workspace_path, ".PKr", res.RequestHash+".zip")
 	if err = filetracker.SaveDataToFile(data, zip_file_path); err != nil {
 		log.Println("Error while Saving Data into '.PKr/abc.zip':", err)
 		log.Println("Source: storeDataIntoWorkspace()")
 		return err
 	}
 
-	if err = filetracker.CleanFilesFromWorkspace(workspace_path); err != nil {
-		log.Println("Error while Cleaning Workspace :", err)
+	// if err = filetracker.CleanFilesFromWorkspace(workspace_path); err != nil {
+	// 	log.Println("Error while Cleaning Workspace :", err)
+	// 	log.Println("Source: storeDataIntoWorkspace()")
+	// 	return err
+	// }
+
+	// Create Temp Folder to store shit
+	err = os.Mkdir(filepath.Join(workspace_path, ".PKr", "Contents"), 0755)
+	if err != nil {
+		log.Println("Error Could not Create Temporary Unzip Folder:", err)
 		log.Println("Source: storeDataIntoWorkspace()")
 		return err
 	}
 
 	// Unzip Content
-	if err = filetracker.UnzipData(zip_file_path, filepath.Join(workspace_path, "")); err != nil {
+	unzip_dest := filepath.Join(workspace_path, ".PKr", "Contents")
+	if err = filetracker.UnzipData(zip_file_path, unzip_dest); err != nil {
 		log.Println("Error while Unzipping Data into Workspace:", err)
 		log.Println("Source: storeDataIntoWorkspace()")
 		return err
 	}
+
+	// Update Files in Workspace
+	if err = filetracker.UpdateFilesFromWorkspace(workspace_path, unzip_dest, res.Updates); err != nil {
+		log.Println("Error while updating changes Workspace:", err)
+		log.Println("Source: storeDataIntoWorkspace()")
+		return err
+	}
+
 	return nil
 }
 
@@ -349,7 +367,7 @@ func PullWorkspace(workspace_owner_username, workspace_name string, conn *websoc
 	}
 	log.Println("Get Data Responded, now storing files into workspace")
 
-	data_bytes, err := fetchData(workspace_owner_public_ip, workspace_name, res.NewHash, udp_conn, res.LenData)
+	data_bytes, err := fetchData(workspace_owner_public_ip, workspace_name, res.RequestHash, udp_conn, res.LenData)
 	if err != nil {
 		log.Println("Error while Fetching Data:", err)
 		log.Println("Source: pullWorkspace()")
@@ -365,7 +383,7 @@ func PullWorkspace(workspace_owner_username, workspace_name string, conn *websoc
 	}
 
 	// Update tmp/userConfig.json
-	err = config.UpdateLastHashInGetWorkspaceFolderToUserConfig(workspace_name, res.NewHash)
+	err = config.UpdateLastHashInGetWorkspaceFolderToUserConfig(workspace_name, res.UpdatedHash)
 	if err != nil {
 		log.Println("Error while Registering New GetWorkspace:", err)
 		log.Println("Source: pullWorkspace()")
