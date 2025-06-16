@@ -54,9 +54,12 @@ func GetNewTree(workspace_file_path string) (FileTree, error) {
 			return err // skip files we can't read
 		}
 
-		if info.Name() == ".PKr" || info.Name() == "PKr-Base.exe" || info.Name() == "PKr-Cli.exe" || info.Name() == "tmp" {
+		if info.IsDir() && (info.Name() == ".PKr" || info.Name() == "tmp") {
 			return filepath.SkipDir
 		} else if !info.IsDir() {
+			if info.Name() == "PKr-Base.exe" || info.Name() == "PKr-Cli.exe"{
+				return nil
+			}
 			relPath, err := filepath.Rel(workspace_file_path, path)
 			if err != nil {
 				log.Println("Could Not Generate RelPath")
@@ -89,8 +92,8 @@ func GetNewTree(workspace_file_path string) (FileTree, error) {
 	return tree, nil
 }
 
-func ReadFromTreeFile(workspace_config_path string) (FileTree, error) {
-	file, err := os.Open(filepath.Join(workspace_config_path, TREE_REL_PATH))
+func ReadFromTreeFile(workspace_tree_path string) (FileTree, error) {
+	file, err := os.Open(filepath.Join(workspace_tree_path, TREE_REL_PATH))
 	if err != nil {
 		AddUsersLogEntry("error in opening PKR config file.... pls check if .PKr/workspaceConfig.json available ")
 		return FileTree{}, err
@@ -109,7 +112,7 @@ func ReadFromTreeFile(workspace_config_path string) (FileTree, error) {
 	return fileTree, nil
 }
 
-func WriteToFileTree(workspace_config_path string, FileTree FileTree) error {
+func WriteToFileTree(workspace_tree_path string, FileTree FileTree) error {
 	jsonData, err := json.MarshalIndent(FileTree, "", "	")
 	// fmt.Println(jsonData)
 	if err != nil {
@@ -119,7 +122,7 @@ func WriteToFileTree(workspace_config_path string, FileTree FileTree) error {
 	}
 
 	// fmt.Println(string(jsonData))
-	err = os.WriteFile(filepath.Join(workspace_config_path, TREE_REL_PATH), jsonData, 0777)
+	err = os.WriteFile(filepath.Join(workspace_tree_path, TREE_REL_PATH), jsonData, 0777)
 	if err != nil {
 		log.Println("error occured in storing data in userconfig file")
 		log.Println(err)
