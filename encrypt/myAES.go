@@ -6,6 +6,7 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"io"
+	"log"
 	"os"
 )
 
@@ -122,4 +123,20 @@ func AESDecrypt(data []byte, key, iv string) ([]byte, error) {
 	}
 
 	return decryptedData.Bytes(), nil
+}
+
+// Same func for Encrypt & Decrypt
+func EncryptDecryptChunk(data, key, iv []byte) ([]byte, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		log.Println("Error while Creating New Cipher Block:", err)
+		log.Println("Source: EncryptDecryptChunk()")
+		return nil, err
+	}
+
+	encrypted_decrypted := make([]byte, len(data))
+	stream := cipher.NewCTR(block, iv)
+	stream.XORKeyStream(encrypted_decrypted, data)
+
+	return encrypted_decrypted, nil
 }
