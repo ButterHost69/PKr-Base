@@ -61,18 +61,18 @@ func HandleNotifyToPunch(peer_addr string) (string, string, error) {
 	}
 
 	go func() {
+		defer udp_conn.Close()
 		time.Sleep(5 * time.Second)
 		log.Println("Initializing UDP NAT Hole Punching")
 		err = dialer.WorkspaceOwnerUdpNatPunching(udp_conn, peer_addr, clientHandlerName)
 		if err != nil {
 			log.Println("Error while Performing UDP NAT Hole Punching:", err)
+			log.Println("Source: HandleNotifyToPunch()")
 			return
 		}
 
 		log.Println("Starting New New Server `Connection` server on local port:", local_port)
-		// TODO Start Receiver on private ip
 		StartNewNewServer(udp_conn, clientHandlerName)
-		udp_conn.Close()
 	}()
 
 	// Sending Response to Server

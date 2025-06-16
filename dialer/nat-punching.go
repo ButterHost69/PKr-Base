@@ -4,6 +4,7 @@ import (
 	"log"
 	"net"
 	"strings"
+	"time"
 )
 
 const (
@@ -22,6 +23,13 @@ func WorkspaceOwnerUdpNatPunching(conn *net.UDPConn, peerAddr, clientHandlerName
 	log.Println("Punching ", peerAddr)
 	for range PUNCH_ATTEMPTS {
 		conn.WriteToUDP([]byte("Punch"+";"+clientHandlerName), peerUDPAddr)
+	}
+
+	err = conn.SetReadDeadline(time.Now().Add(30 * time.Second))
+	if err != nil {
+		log.Println("Error while Setting Deadline during UDP NAT Hole Punching:", err)
+		log.Println("Source: WorkspaceOwnerUdpNatPunching()")
+		return err
 	}
 
 	var buff [512]byte
@@ -69,6 +77,13 @@ func WorkspaceListenerUdpNatHolePunching(conn *net.UDPConn, peerAddr string) (st
 	log.Println("Punching ", peerAddr)
 	for range PUNCH_ATTEMPTS {
 		conn.WriteToUDP([]byte("Punch"), peerUDPAddr)
+	}
+
+	err = conn.SetReadDeadline(time.Now().Add(30 * time.Second))
+	if err != nil {
+		log.Println("Error while Setting Deadline during UDP NAT Hole Punching:", err)
+		log.Println("Source: WorkspaceOwnerUdpNatPunching()")
+		return "", err
 	}
 
 	var buff [512]byte
