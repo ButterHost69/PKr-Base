@@ -263,6 +263,7 @@ func MergeUpdates(workspace_path, start_hash, end_hash string) (Updates, error) 
 		}
 
 		if merge == true {
+			fmt.Println("[Remove Later] Current Hash: ", update.Hash)
 			for _, change := range update.Changes {
 				_, exist := updates_list[change.FilePath]
 				if exist {
@@ -281,6 +282,7 @@ func MergeUpdates(workspace_path, start_hash, end_hash string) (Updates, error) 
 		}
 	}
 
+	fmt.Println("Update List: ", updates_list)
 	merged_changes := []FileChange{}
 	for path, hash_type := range updates_list {
 		merged_changes = append(merged_changes, FileChange{
