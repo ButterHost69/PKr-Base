@@ -198,3 +198,83 @@ func UnzipData(src, dest string) error {
 	log.Printf("\nTotal Files Recieved: %d\n", totalfiles)
 	return nil
 }
+
+func ZipUpdates(updates config.Updates, workspace_path string, hash string) (err error) {
+	files := []string{}
+	for _, changes := range updates.Changes {
+		if changes.Type == "Updated" {
+			files = append(files, changes.FilePath)
+		}
+	}
+
+	// Create current change cache folder -> in Changes
+	storeFolderPath := filepath.Join(workspace_path, ".PKr", "Files", "Changes", hash)
+	if err = os.Mkdir(storeFolderPath, 0777); err != nil {
+		log.Println("Could not Create the Dir: ")
+		log.Println("Error: ", err)
+		log.Println("Source: ZipHashUpdates()")
+		return err
+	}
+
+	// Create Zip File
+	zipFilePath := filepath.Join(storeFolderPath, hash+".zip")
+	zipFile, err := os.Create(zipFilePath)
+	if err != nil {
+		log.Printf("Error Could Not Create File %v: %v\n", zipFilePath, err)
+		log.Println("Source: ZipHashUpdates()")
+		return err
+	}
+	defer zipFile.Close()
+
+	writer := zip.NewWriter(zipFile)
+	defer writer.Close()
+
+	for _, relPath := range files {
+		filePath := filepath.Join(workspace_path, relPath)
+
+		// Open source file
+		file, err := os.Open(filePath)
+		if err != nil {
+			log.Println("Could Not Open source file")
+			log.Println("Source: ZipHashUpdates()")
+			return err
+		}
+		defer file.Close()
+
+		info, err := file.Stat()
+		if err != nil {
+			log.Println("Could Not see File Stats")
+			log.Println("Source: ZipHashUpdates()")
+			return err
+		}
+
+		// Create zip header
+		header, err := zip.FileInfoHeader(info)
+		if err != nil {
+			log.Println("Could Not Create zip header")
+			log.Println("Source: ZipHashUpdates()")
+			return err
+		}
+		header.Name = relPath
+		header.Method = zip.Deflate
+
+		// Create writer for file
+		writerPart, err := writer.CreateHeader(header)
+		if err != nil {
+			log.Println("Could Not Create writer for file")
+			log.Println("Source: ZipHashUpdates()")
+
+			return err
+		}
+
+		// Copy file contents to zip
+		_, err = io.Copy(writerPart, file)
+		if err != nil {
+			log.Println("Could Not Create writer for file")
+			log.Println("Source: ZipHashUpdates()")
+			return err
+		}
+	}
+
+	return nil
+}

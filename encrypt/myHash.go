@@ -2,10 +2,12 @@ package encrypt
 
 import (
 	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
 	"os"
+	"sort"
 )
 
 func GenerateHashWithFilePath(file_path string) (string, error) {
@@ -39,4 +41,18 @@ func GenerateHashWithFileIO(file *os.File) (string, error) {
 
 	hash := h.Sum(nil)
 	return fmt.Sprintf("%x", hash), nil
+}
+
+// Generates Hash using Entire FileName and its Path
+func GeneratHashFromFileNames(files_hash_list []string) string {
+	sort.Strings(files_hash_list) // Step 1: sort for deterministic result
+
+	combined := ""
+	for _, h := range files_hash_list {
+		combined += h
+	}
+
+	// Step 3: hash the combined string
+	hash := sha256.Sum256([]byte(combined))
+	return hex.EncodeToString(hash[:])
 }
