@@ -89,7 +89,7 @@ func addFilesToZip(writer *zip.Writer, dirpath string, relativepath string) erro
 		// Comment This Later ... Only For Debugging
 		// config.AddUsersLogEntry(log.Sprintf("File: %s", file.Name()))
 		// ..........
-		if file.Name() == ".PKr" || file.Name() == "PKr-Base.exe" || file.Name() == "PKr-Cli.exe" || file.Name() == "tmp" {
+		if file.Name() == ".PKr" || file.Name() == "PKr-Base.exe" || file.Name() == "PKr-Cli.exe" || file.Name() == "tmp" && file.Name() != "PKr-Base" && file.Name() != "PKr-Cli"{
 			continue
 		} else if !file.IsDir() {
 			content, err := os.ReadFile(filepath.Join(dirpath, file.Name()))
