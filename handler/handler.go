@@ -92,7 +92,7 @@ func (h *ClientHandler) InitNewWorkSpaceConnection(req models.InitWorkspaceConne
 
 	// Save Public Key
 	log.Println("Storing Public Keys ...")
-	keysPath, err := config.StorePublicKeys(filepath.Join(file_path, ".PKr", "keys"), string(publicKey))
+	keysPath, err := config.StorePublicKeys(filepath.Join(file_path, ".PKr", "Keys"), string(publicKey))
 	if err != nil {
 		log.Println("Failed to Store Public Keys at '.PKr\\keys':", err)
 		log.Println("Source: InitNewWorkSpaceConnection()")
