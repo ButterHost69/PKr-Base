@@ -99,7 +99,7 @@ func StartNewNewServer(udp_conn *net.UDPConn, clientHandlerName string) {
 	}
 	log.Println("Started New KCP Server Started ...")
 
-	err = kcp_lis.SetReadDeadline(time.Now().Add(10 * time.Minute))
+	err = kcp_lis.SetReadDeadline(time.Now().Add(5 * time.Minute))
 	if err != nil {
 		log.Println("Error while Setting Deadline for KCP Listener:", err)
 		log.Println("Source: StartNewNewServer()")

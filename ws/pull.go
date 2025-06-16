@@ -313,7 +313,6 @@ func PullWorkspace(workspace_owner_username, workspace_name string, conn *websoc
 		log.Println("Source: pullWorkspace()")
 		return
 	}
-	defer kcp_conn.Close()
 
 	rpc_buff := [3]byte{'R', 'P', 'C'}
 	_, err = kcp_conn.Write(rpc_buff[:])
@@ -342,8 +341,6 @@ func PullWorkspace(workspace_owner_username, workspace_name string, conn *websoc
 
 	// Creating RPC Client
 	rpc_client := rpc.NewClient(kcp_conn)
-	defer rpc_client.Close()
-
 	rpcClientHandler := dialer.ClientCallHandler{}
 
 	log.Println("Calling Get Public Key")
@@ -372,6 +369,9 @@ func PullWorkspace(workspace_owner_username, workspace_name string, conn *websoc
 		return
 	}
 	log.Println("Get Data Responded, now storing files into workspace")
+
+	kcp_conn.Close()
+	rpc_client.Close()
 
 	err = fetchAndStoreDataIntoWorkspace(workspace_owner_public_ip, workspace_name, udp_conn, *res)
 	if err != nil {
