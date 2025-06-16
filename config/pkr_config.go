@@ -99,7 +99,8 @@ func StorePublicKeys(workspace_keys_path string, key string) (string, error) {
 func ReadFromPKRConfigFile(workspace_config_path string) (PKRConfig, error) {
 	file, err := os.Open(workspace_config_path)
 	if err != nil {
-		AddUsersLogEntry("error in opening PKR config file.... pls check if .PKr/workspaceConfig.json available ")
+		// AddUsersLogEntry("error in opening PKR config file.... pls check if .PKr/workspaceConfig.json available ")
+		log.Println("error in opening PKR config file.... pls check if .PKr/workspaceConfig.json available ")
 		return PKRConfig{}, err
 	}
 	defer file.Close()

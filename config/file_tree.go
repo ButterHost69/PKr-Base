@@ -95,7 +95,8 @@ func GetNewTree(workspace_file_path string) (FileTree, error) {
 func ReadFromTreeFile(workspace_tree_path string) (FileTree, error) {
 	file, err := os.Open(filepath.Join(workspace_tree_path, TREE_REL_PATH))
 	if err != nil {
-		AddUsersLogEntry("error in opening PKR config file.... pls check if .PKr/workspaceConfig.json available ")
+		// AddUsersLogEntry("error in opening PKR config file.... pls check if .PKr/workspaceConfig.json available ")
+		log.Println("error in opening PKR config file.... pls check if .PKr/workspaceConfig.json available ")
 		return FileTree{}, err
 	}
 	defer file.Close()
