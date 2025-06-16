@@ -6,15 +6,19 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/ButterHost69/PKr-Base/encrypt"
 )
 
 const (
 	ROOT_DIR     = "tmp"
-	MY_KEYS_PATH = ROOT_DIR + "\\mykeys"
-	CONFIG_FILE  = ROOT_DIR + "\\userConfig.json"
-	LOG_FILE     = ROOT_DIR + "\\logs.txt"
+)
+
+var (
+	MY_KEYS_PATH = filepath.Join(ROOT_DIR, "mykeys")
+	CONFIG_FILE  = filepath.Join(ROOT_DIR,"userConfig.json")
+	LOG_FILE     = filepath.Join(ROOT_DIR + "logs.txt")
 )
 
 var MY_USERNAME string
@@ -22,7 +26,7 @@ var MY_USERNAME string
 // FIXME: NOT IMPORTANT : Remove Prints - return stuff
 
 func CreateUserIfNotExists() {
-	if _, err := os.Stat(ROOT_DIR + "/userConfig.json"); os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(ROOT_DIR + "userConfig.json")); os.IsNotExist(err) {
 		fmt.Println("!! 'tmp' No such DIR exists ")
 
 		usconf := UsersConfig{
@@ -51,11 +55,11 @@ func CreateUserIfNotExists() {
 			panic("Could Not Generate Keys")
 		}
 
-		if err = encrypt.StorePrivateKeyInFile(MY_KEYS_PATH+"/privatekey.pem", private_key); err != nil {
+		if err = encrypt.StorePrivateKeyInFile(filepath.Join(MY_KEYS_PATH, "privatekey.pem"), private_key); err != nil {
 			panic(err.Error())
 		}
 
-		if err = encrypt.StorePublicKeyInFile(MY_KEYS_PATH+"/publickey.pem", public_key); err != nil {
+		if err = encrypt.StorePublicKeyInFile(filepath.Join(MY_KEYS_PATH, "publickey.pem"), public_key); err != nil {
 			panic(err.Error())
 		}
 

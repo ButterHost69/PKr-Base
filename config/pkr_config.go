@@ -11,13 +11,16 @@ import (
 )
 
 const (
-	WORKSPACE_PKR_DIR          = ".PKr"
-	LOGS_PKR_FILE_PATH         = WORKSPACE_PKR_DIR + "\\logs.txt"
-	WORKSPACE_CONFIG_FILE_PATH = WORKSPACE_PKR_DIR + "\\workspaceConfig.json"
+	WORKSPACE_PKR_DIR = ".PKr"
+)
+
+var (
+	LOGS_PKR_FILE_PATH         = filepath.Join(WORKSPACE_PKR_DIR, "logs.txt")
+	WORKSPACE_CONFIG_FILE_PATH = filepath.Join(WORKSPACE_PKR_DIR, "workspaceConfig.json")
 )
 
 func CreatePKRConfigIfNotExits(workspace_name string, workspace_file_path string) error {
-	pkr_config_file_path := workspace_file_path + "\\" + WORKSPACE_CONFIG_FILE_PATH
+	pkr_config_file_path := filepath.Join(workspace_file_path, WORKSPACE_CONFIG_FILE_PATH)
 	if _, err := os.Stat(pkr_config_file_path); os.IsExist(err) {
 		fmt.Println("~ workspaceConfig.jso already Exists")
 		return err
@@ -58,7 +61,7 @@ func AddConnectionToPKRConfigFile(workspace_config_path string, connection Conne
 }
 
 func GetConnectionsPublicKeyUsingUsername(workspace_path, username string) (string, error) {
-	pkrconfig, err := ReadFromPKRConfigFile(workspace_path + "\\" + WORKSPACE_CONFIG_FILE_PATH)
+	pkrconfig, err := ReadFromPKRConfigFile(filepath.Join(workspace_path, WORKSPACE_CONFIG_FILE_PATH))
 	if err != nil {
 		return "", err
 	}
@@ -73,7 +76,7 @@ func GetConnectionsPublicKeyUsingUsername(workspace_path, username string) (stri
 }
 
 func StorePublicKeys(workspace_keys_path string, key string) (string, error) {
-	keyPath := workspace_keys_path + "\\" + utils.CreateSlug() + ".pem"
+	keyPath := filepath.Join(workspace_keys_path, utils.CreateSlug()+".pem")
 	file, err := os.OpenFile(keyPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		return "", err
@@ -151,7 +154,7 @@ func AddLogEntry(workspace_name string, isSendWorkspace bool, log_entry any) err
 	}
 
 	// Adds the ".Pkr/logs.txt"
-	workspace_path += "\\" + LOGS_PKR_FILE_PATH
+	workspace_path = filepath.Join(workspace_path, LOGS_PKR_FILE_PATH)
 
 	// Opens or Creates the Log File
 	file, err := os.OpenFile(workspace_path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
@@ -175,7 +178,7 @@ func UpdateLastHash(workspace_name, zipfile_path string) error {
 		return err
 	}
 
-	workspace_path = workspace_path + "\\" + WORKSPACE_CONFIG_FILE_PATH
+	workspace_path = filepath.Join(workspace_path, WORKSPACE_CONFIG_FILE_PATH)
 	// fmt.Println("[LOG DELETE LATER]Workspace Path: ", workspace_path)
 
 	workspace_json, err := ReadFromPKRConfigFile(workspace_path)
@@ -192,7 +195,8 @@ func UpdateLastHash(workspace_name, zipfile_path string) error {
 }
 
 func ReadPublicKey() (string, error) {
-	keyData, err := os.ReadFile(MY_KEYS_PATH + "\\publickey.pem")
+	keyPath := filepath.Join(MY_KEYS_PATH, "publickey.pem")
+	keyData, err := os.ReadFile(keyPath)
 	if err != nil {
 		return "", err
 	}
@@ -209,14 +213,14 @@ func GetWorkspaceConnectionsUsingPath(workspace_path string) ([]Connection, erro
 	return workspace_json.AllConnections, nil
 }
 
-func IfHashContains(hash, workspace_path string)(bool, error) {
+func IfHashContains(hash, workspace_path string) (bool, error) {
 	workspace_json, err := ReadFromPKRConfigFile(workspace_path)
 	if err != nil {
 		return false, fmt.Errorf("could not read from config file.\nError: %v", err)
 	}
 
-	for _, update := range workspace_json.AllUpdates{
-		if update.Hash == hash{
+	for _, update := range workspace_json.AllUpdates {
+		if update.Hash == hash {
 			return true, nil
 		}
 	}
@@ -224,7 +228,7 @@ func IfHashContains(hash, workspace_path string)(bool, error) {
 	return false, nil
 }
 
-func AppendWorkspaceUpdates(updates Updates, workspace_path string) (error) {
+func AppendWorkspaceUpdates(updates Updates, workspace_path string) error {
 	workspace_json, err := ReadFromPKRConfigFile(workspace_path)
 	if err != nil {
 		return fmt.Errorf("could not read from config file.\nError: %v", err)
@@ -246,24 +250,24 @@ func MergeUpdates(workspace_path, start_hash, end_hash string) (Updates, error) 
 	}
 
 	type HashType struct {
-		Hash	string
-		Type	string
+		Hash string
+		Type string
 	}
 
 	updates_list := make(map[string]HashType)
 	merge := false
-	for _, update := range workspace_json.AllUpdates{
+	for _, update := range workspace_json.AllUpdates {
 		if update.Hash == end_hash {
 			merge = true
 		}
 
 		if merge == true {
-			for _, change := range update.Changes{
+			for _, change := range update.Changes {
 				_, exist := updates_list[change.FilePath]
 				if exist {
 					// Priority to last change
 					continue
-				}else {	
+				} else {
 					updates_list[change.FilePath] = HashType{
 						Hash: change.FileHash,
 						Type: change.Type,
@@ -277,7 +281,7 @@ func MergeUpdates(workspace_path, start_hash, end_hash string) (Updates, error) 
 	}
 
 	merged_changes := []FileChange{}
-	for path, hash_type := range updates_list{
+	for path, hash_type := range updates_list {
 		merged_changes = append(merged_changes, FileChange{
 			FilePath: path,
 			FileHash: hash_type.Hash,

@@ -10,7 +10,7 @@ import (
 	"github.com/ButterHost69/PKr-Base/encrypt"
 )
 
-const  TREE_REL_PATH = "\\.PKr\\file_tree.json"
+var TREE_REL_PATH = filepath.Join(".PKr", "file_tree.json")
 
 type FileTree struct {
 	Nodes []Node
@@ -21,12 +21,10 @@ type Node struct {
 	Hash     string `json:"hash"`
 }
 
-
-
 func CreateFileTreeIfNotExits(workspace_file_path string) error {
-	tree_file_path := workspace_file_path + TREE_REL_PATH
+	tree_file_path := filepath.Join(workspace_file_path, TREE_REL_PATH)
 	if _, err := os.Stat(tree_file_path); os.IsExist(err) {
-		fmt.Println("~ workspaceConfig.jso already Exists")
+		fmt.Println("~ tree_file already Exists")
 		return err
 	}
 
@@ -44,7 +42,6 @@ func CreateFileTreeIfNotExits(workspace_file_path string) error {
 		log.Println("Error: ", err)
 		log.Println("Source: CreateFileTreeIfNotExits()")
 	}
-
 
 	return nil
 }
@@ -93,7 +90,7 @@ func GetNewTree(workspace_file_path string) (FileTree, error) {
 }
 
 func ReadFromTreeFile(workspace_config_path string) (FileTree, error) {
-	file, err := os.Open(workspace_config_path + TREE_REL_PATH)
+	file, err := os.Open(filepath.Join(workspace_config_path, TREE_REL_PATH))
 	if err != nil {
 		AddUsersLogEntry("error in opening PKR config file.... pls check if .PKr/workspaceConfig.json available ")
 		return FileTree{}, err
@@ -122,7 +119,7 @@ func WriteToFileTree(workspace_config_path string, FileTree FileTree) error {
 	}
 
 	// fmt.Println(string(jsonData))
-	err = os.WriteFile(workspace_config_path + TREE_REL_PATH, jsonData, 0777)
+	err = os.WriteFile(filepath.Join(workspace_config_path, TREE_REL_PATH), jsonData, 0777)
 	if err != nil {
 		log.Println("error occured in storing data in userconfig file")
 		log.Println(err)
@@ -131,7 +128,6 @@ func WriteToFileTree(workspace_config_path string, FileTree FileTree) error {
 
 	return nil
 }
-
 
 func CompareTrees(oldTree, newTree FileTree, new_hash string) Updates {
 	// Build lookup maps
@@ -180,7 +176,7 @@ func CompareTrees(oldTree, newTree FileTree, new_hash string) Updates {
 	}
 
 	return Updates{
-		Hash:   new_hash,
+		Hash:    new_hash,
 		Changes: changes,
 	}
 }
