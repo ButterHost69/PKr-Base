@@ -366,6 +366,14 @@ func PullWorkspace(workspace_owner_username, workspace_name string, conn *websoc
 		return
 	}
 	log.Println("Get Data Responded, now storing files into workspace")
+	log.Print("CallGetMetaData Response: ")
+	log.Println("[Response] Len IVBytes: ", len(res.IVBytes))
+	log.Println("[Response] Len KeyBytes: ", len(res.KeyBytes))
+	log.Println("[Response] LenData: ", res.LenData)
+	log.Println("[Response] IsChanges: ", res.IsChanges)
+	log.Println("[Response] RequestHash: ", res.RequestHash)
+	log.Println("[Response] UpdatedHash: ", res.UpdatedHash)
+	log.Println("[Response] Updates: ", res.Updates)
 
 	data_bytes, err := fetchData(workspace_owner_public_ip, workspace_name, res.RequestHash, udp_conn, res.LenData)
 	if err != nil {
