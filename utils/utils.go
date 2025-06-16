@@ -3,10 +3,26 @@ package utils
 import (
 	"fmt"
 	"math/rand"
+	"os"
+	"os/exec"
+	"runtime"
+	"strings"
 	"time"
 
 	fake "github.com/brianvoe/gofakeit/v7"
 )
+
+func ClearScreen() {
+	var cmd *exec.Cmd
+
+	if runtime.GOOS == "windows" {
+		cmd = exec.Command("cmd", "/c", "cls")
+	} else {
+		cmd = exec.Command("clear")
+	}
+	cmd.Stdout = os.Stdout
+	cmd.Run()
+}
 
 func CreateSlug() string {
 	var gamerTag []string
@@ -35,15 +51,7 @@ func PrintProgressBar(progress int, total int, barLength int) {
 	spaces := barLength - hashes
 
 	fmt.Printf("\r[%s%s] %.2f%%",
-		repeat("#", hashes),
-		repeat(" ", spaces),
+		strings.Repeat("#", hashes),
+		strings.Repeat(" ", spaces),
 		percent*100)
-}
-
-func repeat(char string, count int) string {
-	result := ""
-	for range count {
-		result += char
-	}
-	return result
 }
