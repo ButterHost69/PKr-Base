@@ -215,7 +215,7 @@ func GetWorkspaceConnectionsUsingPath(workspace_path string) ([]Connection, erro
 }
 
 func IfValidHash(hash, workspace_path string) (bool, error) {
-	workspace_json, err := ReadFromPKRConfigFile(workspace_path)
+	workspace_json, err := ReadFromPKRConfigFile(filepath.Join(workspace_path, WORKSPACE_CONFIG_FILE_PATH))
 	if err != nil {
 		return false, fmt.Errorf("could not read from config file.\nError: %v", err)
 	}
@@ -225,18 +225,18 @@ func IfValidHash(hash, workspace_path string) (bool, error) {
 			return true, nil
 		}
 	}
-
 	return false, nil
 }
 
 func AppendWorkspaceUpdates(updates Updates, workspace_path string) error {
-	workspace_json, err := ReadFromPKRConfigFile(workspace_path)
+	workspace_config_path := filepath.Join(workspace_path, WORKSPACE_CONFIG_FILE_PATH)
+	workspace_json, err := ReadFromPKRConfigFile(workspace_config_path)
 	if err != nil {
 		return fmt.Errorf("could not read from config file.\nError: %v", err)
 	}
 
 	workspace_json.AllUpdates = append(workspace_json.AllUpdates, updates)
-	if err := writeToPKRConfigFile(workspace_path, workspace_json); err != nil {
+	if err := writeToPKRConfigFile(workspace_config_path, workspace_json); err != nil {
 		return fmt.Errorf("error in writing the update hash to file: %s.\nError: %v", workspace_path, err)
 	}
 	return nil
@@ -245,7 +245,7 @@ func AppendWorkspaceUpdates(updates Updates, workspace_path string) error {
 func MergeUpdates(workspace_path, start_hash, end_hash string) (Updates, error) {
 	mupdates := Updates{}
 
-	workspace_json, err := ReadFromPKRConfigFile(workspace_path)
+	workspace_json, err := ReadFromPKRConfigFile(filepath.Join(workspace_path, WORKSPACE_CONFIG_FILE_PATH))
 	if err != nil {
 		return mupdates, fmt.Errorf("could not read from config file.\nError: %v", err)
 	}
@@ -263,7 +263,7 @@ func MergeUpdates(workspace_path, start_hash, end_hash string) (Updates, error) 
 			continue
 		}
 
-		if merge == true {
+		if merge {
 			for _, change := range update.Changes {
 				update, exist := updates_list[change.FilePath]
 				if exist {

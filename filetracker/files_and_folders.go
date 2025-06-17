@@ -21,7 +21,7 @@ func CleanFilesFromWorkspace(workspace_path string) error {
 
 	log.Printf("Deleting All Files at: %s\n\n", workspace_path)
 	for _, file := range files {
-		if file.Name() != ".PKr" && file.Name() != "PKr-Base.exe" && file.Name() != "PKr-Cli.exe" && file.Name() != "tmp" && file.Name() != "PKr-Base" && file.Name() != "PKr-Cli"{
+		if file.Name() != ".PKr" && file.Name() != "PKr-Base.exe" && file.Name() != "PKr-Cli.exe" && file.Name() != "tmp" && file.Name() != "PKr-Base" && file.Name() != "PKr-Cli" {
 			if err = os.RemoveAll(path.Join([]string{workspace_path, file.Name()}...)); err != nil {
 				return err
 			}
@@ -53,7 +53,7 @@ func FolderTree(folder_path string) (map[string]string, error) {
 			return err
 		}
 
-		if info.Name() == ".PKr" || info.Name() == "PKr-Base.exe" || info.Name() == "PKr-Cli.exe" || info.Name() == "tmp" || info.Name() == "PKr-Base" || info.Name() == "PKr-Cli"{
+		if info.Name() == ".PKr" || info.Name() == "PKr-Base.exe" || info.Name() == "PKr-Cli.exe" || info.Name() == "tmp" || info.Name() == "PKr-Base" || info.Name() == "PKr-Cli" {
 			return filepath.SkipDir
 		}
 		if info.IsDir() {
@@ -82,7 +82,7 @@ func FolderTree(folder_path string) (map[string]string, error) {
 	return result, err
 }
 
-func IfUpdateHashCached(workspace_path, update_hash string) (bool, error) {
+func AreUpdatesCached(workspace_path, update_hash string) (bool, error) {
 	entries, err := os.ReadDir(filepath.Join(workspace_path, ".PKr", "Files", "Changes"))
 	if err != nil {
 		return false, err
@@ -93,10 +93,8 @@ func IfUpdateHashCached(workspace_path, update_hash string) (bool, error) {
 			if entry.Name() == update_hash {
 				return true, nil
 			}
-
 		}
 	}
-
 	return false, nil
 }
 

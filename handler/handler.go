@@ -208,7 +208,7 @@ func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.G
 		requestedHash = changes_hash_name
 
 		log.Println("Checking if Required Hash File Name already Generated")
-		ifPresent, err := filetracker.IfUpdateHashCached(workspace_path, changes_hash_name)
+		ifPresent, err := filetracker.AreUpdatesCached(workspace_path, changes_hash_name)
 		if err != nil {
 			log.Println("Unable to Fetch Update Hashes:", err)
 			log.Println("Source: GetMetaData()")

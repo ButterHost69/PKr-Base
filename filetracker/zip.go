@@ -2,7 +2,6 @@ package filetracker
 
 import (
 	"archive/zip"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -129,7 +128,7 @@ func ZipData(workspace_path string, destination_path string) (string, error) {
 
 	writer := zip.NewWriter(zip_file)
 
-	addFilesToZip(writer, workspace_path+string(os.PathSeparator), "")
+	addFilesToZip(writer, workspace_path, "")
 
 	if err = writer.Close(); err != nil {
 		return "", err
@@ -176,7 +175,7 @@ func UnzipData(src, dest string) error {
 					return err
 				}
 			}
-			unzipfile, err := os.Create(file.Name)
+			unzipfile, err := os.Create(filepath.Join(dest, file.Name))
 			if err != nil {
 				return err
 			}
@@ -207,20 +206,9 @@ func ZipUpdates(updates config.Updates, workspace_path string, hash string) (err
 			files = append(files, changes.FilePath)
 		}
 	}
-	storeFolderPath := filepath.Join(workspace_path, ".PKr", "Files", "Changes", hash)
-	info, err := os.Stat(storeFolderPath)
-	if os.IsNotExist(err) {
-		fmt.Println("Directory does not exist.")
-	} else if err != nil {
-		fmt.Println("Error checking directory:", err)
-	} else if info.IsDir() {
-		fmt.Println("Directory exists")
-		return errors.New("zip already exists")
-	} else {
-		fmt.Println("Path exists but is not a directory.")
-	}
 
 	// Create current change cache folder -> in Changes
+	storeFolderPath := filepath.Join(workspace_path, ".PKr", "Files", "Changes", hash)
 	if err = os.Mkdir(storeFolderPath, 0777); err != nil {
 		log.Println("Could not Create the Dir: ")
 		log.Println("Error: ", err)
