@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"log"
+	"path/filepath"
 
 	"os"
 
@@ -91,7 +92,7 @@ func (h *ClientHandler) InitNewWorkSpaceConnection(req models.InitWorkspaceConne
 
 	// Save Public Key
 	log.Println("Storing Public Keys ...")
-	keysPath, err := config.StorePublicKeys(file_path+"\\.PKr\\keys\\", string(publicKey))
+	keysPath, err := config.StorePublicKeys(req.MyUsername, filepath.Join(file_path, ".PKr", "keys")+string(filepath.Separator), string(publicKey))
 	if err != nil {
 		log.Println("Failed to Store Public Keys at '.PKr\\keys':", err)
 		log.Println("Source: InitNewWorkSpaceConnection()")
@@ -101,7 +102,7 @@ func (h *ClientHandler) InitNewWorkSpaceConnection(req models.InitWorkspaceConne
 
 	// Store the New Connection in the .PKr Config file
 	connection.PublicKeyPath = keysPath
-	if err := config.AddConnectionToPKRConfigFile(file_path+"\\.PKr\\workspaceConfig.json", connection); err != nil {
+	if err := config.AddConnectionToPKRConfigFile(filepath.Join(file_path, ".PKr", "workspaceConfig.json"), connection); err != nil {
 		log.Println("Failed to Add Connection to .PKr Config File:", err)
 		log.Println("Source: InitNewWorkSpaceConnection()")
 		return ErrInternalSeverError
@@ -112,6 +113,10 @@ func (h *ClientHandler) InitNewWorkSpaceConnection(req models.InitWorkspaceConne
 	return nil
 }
 
+// TODO: Send Updated File Structure too...
+// Compare Provided Hash File Structure and The Current File Structure Hash
+// Compres and Hash those files - Store them
+// Send that Hash
 func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.GetMetaDataResponse) error {
 	password, err := encrypt.DecryptData(req.WorkspacePassword)
 	if err != nil {
@@ -143,7 +148,7 @@ func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.G
 	}
 
 	// Reading Last Hash from Config
-	conf, err := config.ReadFromPKRConfigFile(workspace_path + "\\.PKr\\workspaceConfig.json")
+	conf, err := config.ReadFromPKRConfigFile(filepath.Join(workspace_path, ".PKr", "workspaceConfig.json"))
 	if err != nil {
 		log.Println("Error while Reading from PKr Config File:", err)
 		log.Println("Source: GetMetaData()")
@@ -167,7 +172,7 @@ func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.G
 	}
 
 	// For req.LastHash == "" or When User Clones
-	zip_destination_path := workspace_path + "\\.PKr\\Files\\Current\\"
+	zip_destination_path := filepath.Join(workspace_path, ".PKr", "Files", "Current") + string(filepath.Separator)
 	zipped_filepath := zip_destination_path + conf.LastHash + ".enc"
 
 	key, err := os.ReadFile(zip_destination_path + "AES_KEY")

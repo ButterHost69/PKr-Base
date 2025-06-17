@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/ButterHost69/PKr-Base/config"
 	"github.com/ButterHost69/PKr-Base/utils"
@@ -56,7 +57,7 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 	}
 	log.Println("Workspace Path:", workspace_path)
 
-	zip_enc_path := workspace_path + "\\.PKr\\Files\\Current\\" + workspace_hash + ".enc"
+	zip_enc_path := filepath.Join(workspace_path, ".PKr", "Files", "Current", workspace_hash+".enc")
 	log.Println("Destination FilePath to share:", zip_enc_path)
 
 	fileInfo, err := os.Stat(zip_enc_path)

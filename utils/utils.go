@@ -8,8 +8,6 @@ import (
 	"runtime"
 	"strings"
 	"time"
-
-	fake "github.com/brianvoe/gofakeit/v7"
 )
 
 func ClearScreen() {
@@ -22,15 +20,6 @@ func ClearScreen() {
 	}
 	cmd.Stdout = os.Stdout
 	cmd.Run()
-}
-
-func CreateSlug() string {
-	var gamerTag []string
-	for range 1024 {
-		gamerTag = append(gamerTag, fake.Gamertag())
-	}
-	g := rand.Intn(1024)
-	return gamerTag[g]
 }
 
 func RandomString(n int) string {

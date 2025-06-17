@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/rpc"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -164,7 +165,7 @@ func fetchAndStoreDataIntoWorkspace(workspace_owner_public_ip, workspace_name st
 	}
 	log.Println("Workspace Path: ", workspace_path)
 
-	zip_file_path := workspace_path + "\\.PKr\\" + res.UpdatedHash + ".zip"
+	zip_file_path := filepath.Join(workspace_path, ".PKr", res.UpdatedHash+".zip")
 
 	// Create Zip File
 	zip_file_obj, err := os.Create(zip_file_path)
@@ -298,7 +299,7 @@ func fetchAndStoreDataIntoWorkspace(workspace_owner_public_ip, workspace_name st
 	}
 
 	// Unzip Content
-	if err = filetracker.UnzipData(zip_file_path, workspace_path+"\\"); err != nil {
+	if err = filetracker.UnzipData(zip_file_path, workspace_path+string(filepath.Separator)); err != nil {
 		log.Println("Error while Unzipping Data into Workspace:", err)
 		log.Println("Source: fetchAndStoreDataIntoWorkspace()")
 		return err

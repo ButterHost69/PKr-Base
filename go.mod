@@ -4,7 +4,6 @@ go 1.24.0
 
 require (
 	github.com/ButterHost69/kcp-go v1.0.10
-	github.com/brianvoe/gofakeit/v7 v7.2.1
 	github.com/ccding/go-stun v0.1.5
 	github.com/gorilla/websocket v1.5.3
 	google.golang.org/grpc v1.73.0

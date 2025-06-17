@@ -9,16 +9,14 @@ import (
 	"encoding/pem"
 	"errors"
 	"log"
+	"path/filepath"
 
 	"os"
 )
 
 var (
-	KEY_SIZE = 4096
-)
-
-const (
-	PRIVATE_KEYS_PATH = "tmp/mykeys/privatekey.pem"
+	KEY_SIZE          = 4096
+	PRIVATE_KEYS_PATH = filepath.Join("tmp", "mykeys", "privatekey.pem")
 )
 
 func GenerateRSAKeys() (*rsa.PrivateKey, *rsa.PublicKey) {
