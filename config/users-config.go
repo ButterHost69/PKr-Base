@@ -22,7 +22,7 @@ var (
 var MY_USERNAME string
 
 func CreateUserIfNotExists(username string) {
-	if _, err := os.Stat(filepath.Join(ROOT_DIR, "userConfig.json")); os.IsNotExist(err) {
+	if _, err := os.Stat(CONFIG_FILE); os.IsNotExist(err) {
 		fmt.Println("!! 'tmp' No such DIR exists ")
 
 		usconf := UsersConfig{User: username}
@@ -35,7 +35,7 @@ func CreateUserIfNotExists(username string) {
 		if err = os.Mkdir(ROOT_DIR, 0777); err != nil {
 			fmt.Println("~ Folder tmp exists")
 		}
-		err = os.WriteFile(filepath.Join(ROOT_DIR, "userConfig.json"), jsonbytes, 0777)
+		err = os.WriteFile(CONFIG_FILE, jsonbytes, 0777)
 		if err != nil {
 			log.Fatal(err.Error())
 		}
