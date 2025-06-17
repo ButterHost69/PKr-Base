@@ -130,8 +130,10 @@ func connectToAnotherUser(workspace_owner_username string, conn *websocket.Conn)
 	}
 
 	// KCP Params for Congestion Control
-	kcp_conn.SetWindowSize(128, 512)
-	kcp_conn.SetNoDelay(1, 10, 1, 1)
+	kcp_conn.SetWindowSize(128, 1024)
+	kcp_conn.SetNoDelay(1, 10, 2, 1)
+	kcp_conn.SetACKNoDelay(true)
+	kcp_conn.SetDSCP(46)
 
 	return client_handler_name, workspace_owner_public_ip, udp_conn, kcp_conn, nil
 }
@@ -225,11 +227,14 @@ func fetchData(workspace_owner_public_ip, workspace_name, workspace_hash string,
 		log.Println("Source: fetchData()")
 		return nil, err
 	}
+	defer kcp_conn.Close()
 	log.Println("Connected Successfully to Workspace Owner")
 
 	// KCP Params for Congestion Control
-	kcp_conn.SetWindowSize(128, 512)
-	kcp_conn.SetNoDelay(1, 10, 1, 1)
+	kcp_conn.SetWindowSize(128, 1024)
+	kcp_conn.SetNoDelay(1, 10, 2, 1)
+	kcp_conn.SetACKNoDelay(true)
+	kcp_conn.SetDSCP(46)
 
 	// Sending the Type of Session
 	kpc_buff := [3]byte{'K', 'C', 'P'}
@@ -307,7 +312,6 @@ func PullWorkspace(workspace_owner_username, workspace_name string, conn *websoc
 		log.Println("Source: pullWorkspace()")
 		return
 	}
-	defer kcp_conn.Close()
 
 	rpc_buff := [3]byte{'R', 'P', 'C'}
 	_, err = kcp_conn.Write(rpc_buff[:])
@@ -336,7 +340,6 @@ func PullWorkspace(workspace_owner_username, workspace_name string, conn *websoc
 
 	// Creating RPC Client
 	rpc_client := rpc.NewClient(kcp_conn)
-	defer rpc_client.Close()
 
 	rpcClientHandler := dialer.ClientCallHandler{}
 
@@ -374,6 +377,9 @@ func PullWorkspace(workspace_owner_username, workspace_name string, conn *websoc
 	log.Println("[Response] RequestHash: ", res.RequestHash)
 	log.Println("[Response] UpdatedHash: ", res.UpdatedHash)
 	log.Println("[Response] Updates: ", res.Updates)
+
+	kcp_conn.Close()
+	rpc_client.Close()
 
 	data_bytes, err := fetchData(workspace_owner_public_ip, workspace_name, res.RequestHash, udp_conn, res.LenData)
 	if err != nil {

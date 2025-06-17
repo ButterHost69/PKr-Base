@@ -99,7 +99,7 @@ func StartNewNewServer(udp_conn *net.UDPConn, clientHandlerName string) {
 	}
 	log.Println("Started New KCP Server Started ...")
 
-	err = kcp_lis.SetReadDeadline(time.Now().Add(10 * time.Minute))
+	err = kcp_lis.SetReadDeadline(time.Now().Add(5 * time.Minute))
 	if err != nil {
 		log.Println("Error while Setting Deadline for KCP Listener:", err)
 		log.Println("Source: StartNewNewServer()")
@@ -119,8 +119,10 @@ func StartNewNewServer(udp_conn *net.UDPConn, clientHandlerName string) {
 		log.Println("New Incoming Connection in NewNewServer from:", kcp_session.RemoteAddr())
 
 		// KCP Params for Congestion Control
-		kcp_session.SetWindowSize(128, 512)
-		kcp_session.SetNoDelay(1, 10, 1, 1)
+		kcp_session.SetWindowSize(128, 1024)
+		kcp_session.SetNoDelay(1, 10, 2, 1)
+		kcp_session.SetACKNoDelay(true)
+		kcp_session.SetDSCP(46)
 
 		go func() {
 			log.Println("Deciding the Type of Session ...")
