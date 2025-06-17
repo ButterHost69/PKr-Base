@@ -4,6 +4,7 @@ import (
 	"log"
 	"net"
 	"strings"
+	"time"
 )
 
 const (
@@ -15,7 +16,8 @@ func WorkspaceOwnerUdpNatPunching(conn *net.UDPConn, peerAddr, clientHandlerName
 	log.Println("Attempting to Dial Peer ...")
 	peerUDPAddr, err := net.ResolveUDPAddr("udp", peerAddr)
 	if err != nil {
-		log.Println("Error while resolving UDP Addr\nSource: UdpNatPunching\nError:", err)
+		log.Println("Error while resolving UDP Addr:", err)
+		log.Println("Source: WorkspaceOwnerUdpNatPunching()")
 		return err
 	}
 
@@ -24,12 +26,30 @@ func WorkspaceOwnerUdpNatPunching(conn *net.UDPConn, peerAddr, clientHandlerName
 		conn.WriteToUDP([]byte("Punch"+";"+clientHandlerName), peerUDPAddr)
 	}
 
+	err = conn.SetReadDeadline(time.Now().Add(30 * time.Second))
+	if err != nil {
+		log.Println("Error while Setting Deadline during UDP NAT Hole Punching:", err)
+		log.Println("Source: WorkspaceOwnerUdpNatPunching()")
+		return err
+	}
+
+	// Reset Read Deadline, else it'll close conn during data transfers
+	defer func() {
+		err = conn.SetReadDeadline(time.Time{})
+		if err != nil {
+			log.Println("Error while Setting Deadline after UDP NAT Hole Punching:", err)
+			log.Println("Source: WorkspaceOwnerUdpNatPunching()")
+			return
+		}
+	}()
+
 	var buff [512]byte
 	for {
 		n, addr, err := conn.ReadFromUDP(buff[0:])
 		if err != nil {
-			log.Println("Error while reading from Udp\nSource: UdpNatPunching\nError:", err)
-			continue
+			log.Println("Error while reading from Udp:", err)
+			log.Println("Source: WorkspaceOwnerUdpNatPunching()")
+			return err
 		}
 		msg := string(buff[:n])
 		log.Printf("Received message: %s from %v\n", msg, addr)
@@ -40,7 +60,8 @@ func WorkspaceOwnerUdpNatPunching(conn *net.UDPConn, peerAddr, clientHandlerName
 			if msg == "Punch" {
 				_, err = conn.WriteToUDP([]byte("Punch ACK"+";"+clientHandlerName), peerUDPAddr)
 				if err != nil {
-					log.Println("Error while Writing 'Punch ACK;clientHandlerName'\nSource: UdpNatPunching\nError:", err)
+					log.Println("Error while Writing 'Punch ACK;clientHandlerName':", err)
+					log.Println("Source: WorkspaceOwnerUdpNatPunching()")
 					continue
 				}
 				log.Println("Connection Established with", addr.String())
@@ -62,7 +83,8 @@ func WorkspaceListenerUdpNatHolePunching(conn *net.UDPConn, peerAddr string) (st
 	log.Println("Attempting to Dial Peer ...")
 	peerUDPAddr, err := net.ResolveUDPAddr("udp", peerAddr)
 	if err != nil {
-		log.Println("Error while resolving UDP Addr\nSource: UdpNatPunching\nError:", err)
+		log.Println("Error while resolving UDP Addr:", err)
+		log.Println("Source: WorkspaceListenerUdpNatHolePunching()")
 		return "", err
 	}
 
@@ -71,12 +93,30 @@ func WorkspaceListenerUdpNatHolePunching(conn *net.UDPConn, peerAddr string) (st
 		conn.WriteToUDP([]byte("Punch"), peerUDPAddr)
 	}
 
+	err = conn.SetReadDeadline(time.Now().Add(30 * time.Second))
+	if err != nil {
+		log.Println("Error while Setting Deadline during UDP NAT Hole Punching:", err)
+		log.Println("Source: WorkspaceListenerUdpNatHolePunching()")
+		return "", err
+	}
+
+	// Reset Read Deadline, else it'll close conn during data transfers
+	defer func() {
+		err = conn.SetReadDeadline(time.Time{})
+		if err != nil {
+			log.Println("Error while Setting Deadline after UDP NAT Hole Punching:", err)
+			log.Println("Source: WorkspaceListenerUdpNatHolePunching()")
+			return
+		}
+	}()
+
 	var buff [512]byte
 	for {
 		n, addr, err := conn.ReadFromUDP(buff[0:])
 		if err != nil {
-			log.Println("Error while reading from Udp\nSource: UdpNatPunching\nError:", err)
-			continue
+			log.Println("Error while reading from Udp:", err)
+			log.Println("Source: WorkspaceListenerUdpNatHolePunching()")
+			return "", err
 		}
 		msg := string(buff[:n])
 		log.Printf("Received message: %s from %v\n", msg, addr)
@@ -88,7 +128,8 @@ func WorkspaceListenerUdpNatHolePunching(conn *net.UDPConn, peerAddr string) (st
 				clientHandlerName := strings.Split(msg, ";")[1]
 				_, err = conn.WriteToUDP([]byte("Punch ACK"), peerUDPAddr)
 				if err != nil {
-					log.Println("Error while Writing Punch ACK\nSource: UdpNatPunching\nError:", err)
+					log.Println("Error while Writing Punch ACK:", err)
+					log.Println("Source: WorkspaceListenerUdpNatHolePunching()")
 					continue
 				}
 				log.Println("Connection Established with", addr.String())
