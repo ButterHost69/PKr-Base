@@ -343,12 +343,14 @@ func (server *Server) ServeCodec(codec ServerCodec) {
 		}
 		wg.Add(1)
 		go service.call(server, sending, wg, mtype, req, argv, replyv, codec)
+		// MY CHANGE START
 		// Close RPC after responding to "GetMetaData"
 		if mtype.method.Name == "GetMetaData" {
 			wg.Wait()
 			codec.Close()
 			return
 		}
+		// MY CHANGE END
 	}
 	// We've seen that there are no more requests.
 	// Wait for responses to be sent before closing codec.
