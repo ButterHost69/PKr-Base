@@ -41,6 +41,7 @@ func CreateFileTreeIfNotExits(workspace_file_path string) error {
 		log.Println("Could Not Write File Tree")
 		log.Println("Error: ", err)
 		log.Println("Source: CreateFileTreeIfNotExits()")
+		return err
 	}
 
 	return nil

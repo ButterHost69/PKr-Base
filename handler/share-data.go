@@ -57,9 +57,9 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 	}
 	log.Println("Workspace Path:", workspace_path)
 
-	// Check if hash is last hash -> Send The .Pkr/Files/Current dir 
+	// Check if hash is last hash -> Send The .Pkr/Files/Current dir
 	// TODO: Else Check in Changes Hash, Send it (should be there;to be created during metadata)
-	config, err := config.ReadFromPKRConfigFile(filepath.Join(workspace_path, ".PKr", "workspaceConfig.json"))
+	config_file, err := config.ReadFromPKRConfigFile(filepath.Join(workspace_path, ".PKr", "workspaceConfig.json"))
 	if err != nil {
 		log.Println("Failed to Get Workspace  Config:", err)
 		log.Println("Source: GetDataHandler()")
@@ -67,29 +67,53 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 		return
 	}
 
-	config.LastHash = strings.TrimSpace(config.LastHash)
+	config_file.LastHash = strings.TrimSpace(config_file.LastHash)
 	workspace_hash = strings.TrimSpace(workspace_hash)
 
 	destination_filepath := ""
-	if workspace_hash == config.LastHash {
+	if workspace_hash == config_file.LastHash {
 		log.Println("Requested Hash is of the Snapshot")
 		destination_filepath = filepath.Join(workspace_path, ".PKr", "Files", "Current", workspace_hash+".enc")
 		log.Println("Updated Destination File Path: ", destination_filepath)
 	} else {
-		// TODO: Complete this
-		log.Println("Requested Hash is of the Changes or Garbage")
-		log.Println("Implementation Remaining")
-		
+		log.Println("Checking if Requested Hash is of the Changes ...")
+
+		changes_cache_path := filepath.Join(workspace_path, ".PKr", "Files", "Changes")
+		entries, err := os.ReadDir(changes_cache_path)
+		if err != nil {
+			log.Println("Failed to Read Dir From Workspace Changes Cache:", err)
+			log.Println("Source: GetDataHandler()")
+			sendErrorMessage(kcp_session, "Internal Server Error")
+			return
+		}
+
+		if_present := false
+		for _, entry := range entries {
+			if entry.IsDir() && entry.Name() == workspace_hash {
+				if_present = true
+			}
+		}
+
+		if if_present {
+			log.Println("Provided Hash is Present in the Workspace Changes Cache")
+			destination_filepath = filepath.Join(workspace_path, ".PKr", "Files", "Changes", workspace_hash, workspace_hash+".enc")
+			log.Println("Destination File Path is set: ", destination_filepath)
+		} else {
+			log.Println("Garbage Hash")
+			log.Println("Provided Hash: ", workspace_hash)
+			log.Println("Last Config Hash: ", config_file.LastHash)
+			sendErrorMessage(kcp_session, "Internal Server Error")
+			return
+		}
 	}
 
-	if destination_filepath == ""{
+	if destination_filepath == "" {
 		log.Println("Garbage Hash")
 		log.Println("Provided Hash: ", workspace_hash)
-		log.Println("Last Config Hash: ", config.LastHash)
+		log.Println("Last Config Hash: ", config_file.LastHash)
 		sendErrorMessage(kcp_session, "Internal Server Error")
 		return
 	}
-
 
 	log.Println("Destination FilePath to share:", destination_filepath)
 
