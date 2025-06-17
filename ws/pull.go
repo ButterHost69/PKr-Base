@@ -164,7 +164,7 @@ func fetchAndStoreDataIntoWorkspace(workspace_owner_public_ip, workspace_name st
 	}
 	log.Println("Workspace Path: ", workspace_path)
 
-	zip_file_path := workspace_path + "\\.PKr\\" + res.NewHash + ".zip"
+	zip_file_path := workspace_path + "\\.PKr\\" + res.UpdatedHash + ".zip"
 
 	// Create Zip File
 	zip_file_obj, err := os.Create(zip_file_path)
@@ -212,7 +212,7 @@ func fetchAndStoreDataIntoWorkspace(workspace_owner_public_ip, workspace_name st
 		return err
 	}
 
-	_, err = kcp_conn.Write([]byte(res.NewHash))
+	_, err = kcp_conn.Write([]byte(res.UpdatedHash))
 	if err != nil {
 		log.Println("Error while Sending Workspace Name to Workspace Owner:", err)
 		log.Println("Source: fetchAndStoreDataIntoWorkspace()")
@@ -392,7 +392,7 @@ func PullWorkspace(workspace_owner_username, workspace_name string, conn *websoc
 	}
 
 	// Update tmp/userConfig.json
-	err = config.UpdateLastHashInGetWorkspaceFolderToUserConfig(workspace_name, res.NewHash)
+	err = config.UpdateLastHashInGetWorkspaceFolderToUserConfig(workspace_name, res.UpdatedHash)
 	if err != nil {
 		log.Println("Error while Registering New GetWorkspace:", err)
 		log.Println("Source: pullWorkspace()")

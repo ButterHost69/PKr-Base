@@ -223,11 +223,11 @@ func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.G
 	log.Println("Done with Everything now returning Response")
 
 	res.LenData = int(file_info.Size())
-	res.NewHash = conf.LastHash
+	res.UpdatedHash = conf.LastHash
 	res.KeyBytes = []byte(encrypt_key)
 	res.IVBytes = []byte(encrypt_iv)
 
-	log.Println(res.NewHash)
+	log.Println(res.UpdatedHash)
 	log.Println(len(string(res.KeyBytes)))
 	log.Println(len(string(res.IVBytes)))
 	log.Println("Length of Data:", res.LenData)
