@@ -48,6 +48,16 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 	workspace_hash := string(buff[:n])
 	log.Println("Workspace Hash:", workspace_hash)
 
+	// Read Data Request Type (Pull/Clone)
+	n, err = kcp_session.Read(buff[:])
+	if err != nil {
+		log.Println("Error while Reading Workspace Hash:", err)
+		log.Println("Source: GetDataHandler()")
+		return
+	}
+	data_req_type := string(buff[:n])
+	log.Println("Data Request Type(Clone/Pull):", data_req_type)
+
 	workspace_path, err := config.GetSendWorkspaceFilePath(workspace_name)
 	if err != nil {
 		log.Println("Failed to Get Workspace Path from Config:", err)
@@ -57,8 +67,19 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 	}
 	log.Println("Workspace Path:", workspace_path)
 
-	zip_enc_path := filepath.Join(workspace_path, ".PKr", "Files", "Current", workspace_hash+".enc")
-	log.Println("Destination FilePath to share:", zip_enc_path)
+	var zip_enc_path string
+	if data_req_type == "Clone" {
+		zip_enc_path = filepath.Join(workspace_path, ".PKr", "Files", "Current", workspace_hash+".enc")
+	} else if data_req_type == "Pull" {
+		zip_enc_path = filepath.Join(workspace_path, ".PKr", "Files", "Changes", workspace_hash, workspace_hash+".enc")
+	} else {
+		log.Println("Invalid Data Request Type Sent from User")
+		log.Println("Source: GetDataHandler()")
+		sendErrorMessage(kcp_session, "Invalid Data Request Type Sent")
+		return
+	}
+
+	log.Println("Zip Enc FilePath to share:", zip_enc_path)
 
 	fileInfo, err := os.Stat(zip_enc_path)
 	if err == nil {

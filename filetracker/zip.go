@@ -2,7 +2,6 @@ package filetracker
 
 import (
 	"archive/zip"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -129,7 +128,7 @@ func ZipData(workspace_path string, destination_path string) (string, error) {
 
 	writer := zip.NewWriter(zip_file)
 
-	addFilesToZip(writer, workspace_path+string(filepath.Separator), "")
+	addFilesToZip(writer, workspace_path, "")
 
 	if err = writer.Close(); err != nil {
 		return "", err
@@ -169,32 +168,32 @@ func UnzipData(src, dest string) error {
 	for count, file := range zipper.File {
 		if file.FileInfo().IsDir() {
 			continue
-		} else {
-			dir, _ := filepath.Split(file.Name)
-			if dir != "" {
-				if err := os.MkdirAll(dir, 0777); err != nil {
-					return err
-				}
-			}
-			unzipfile, err := os.Create(file.Name)
-			if err != nil {
-				return err
-			}
-			defer unzipfile.Close()
-
-			content, err := file.Open()
-			if err != nil {
-				return err
-			}
-			defer content.Close()
-
-			_, err = io.Copy(unzipfile, content)
-			if err != nil {
-				return err
-			}
-			totalfiles += 1
-			log.Printf("%d] File: %s\n", count, unzipfile.Name())
 		}
+		abs_path := filepath.Join(dest, file.Name)
+		dir, _ := filepath.Split(abs_path)
+		if dir != "" {
+			if err := os.MkdirAll(dir, 0777); err != nil {
+				return err
+			}
+		}
+		unzipfile, err := os.Create(abs_path)
+		if err != nil {
+			return err
+		}
+		defer unzipfile.Close()
+
+		content, err := file.Open()
+		if err != nil {
+			return err
+		}
+		defer content.Close()
+
+		_, err = io.Copy(unzipfile, content)
+		if err != nil {
+			return err
+		}
+		totalfiles += 1
+		log.Printf("%d] File: %s\n", count, file.Name)
 	}
 	log.Printf("\nTotal Files Recieved: %d\n", totalfiles)
 	return nil
@@ -207,20 +206,9 @@ func ZipUpdates(updates config.Updates, workspace_path string, hash string) (err
 			files = append(files, changes.FilePath)
 		}
 	}
-	storeFolderPath := filepath.Join(workspace_path, ".PKr", "Files", "Changes", hash)
-	info, err := os.Stat(storeFolderPath)
-	if os.IsNotExist(err) {
-		fmt.Println("Directory does not exist.")
-	} else if err != nil {
-		fmt.Println("Error checking directory:", err)
-	} else if info.IsDir() {
-		fmt.Println("Directory exists")
-		return errors.New("zip already exists")
-	} else {
-		fmt.Println("Path exists but is not a directory.")
-	}
 
 	// Create current change cache folder -> in Changes
+	storeFolderPath := filepath.Join(workspace_path, ".PKr", "Files", "Changes", hash)
 	if err = os.Mkdir(storeFolderPath, 0777); err != nil {
 		log.Println("Could not Create the Dir: ")
 		log.Println("Error: ", err)

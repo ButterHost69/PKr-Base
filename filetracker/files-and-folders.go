@@ -3,6 +3,7 @@ package filetracker
 import (
 	"fmt"
 	"io"
+	"io/fs"
 	"io/ioutil"
 	"log"
 	"os"
@@ -82,44 +83,92 @@ func FolderTree(folder_path string) (map[string]string, error) {
 	return result, err
 }
 
-func IfUpdateHashCached(workspace_path, update_hash string) (bool, error) {
+func AreUpdatesCached(workspace_path, update_hash string) (bool, error) {
 	entries, err := os.ReadDir(filepath.Join(workspace_path, ".PKr", "Files", "Changes"))
 	if err != nil {
 		return false, err
 	}
 
 	for _, entry := range entries {
-		if entry.IsDir() {
-			if entry.Name() == update_hash {
-				return true, nil
-			}
-
+		if entry.IsDir() && entry.Name() == update_hash {
+			return true, nil
 		}
 	}
-
 	return false, nil
+}
+
+func ClearEmptyDir(root string) error {
+	return filepath.WalkDir(root, func(path string, dir_entry fs.DirEntry, err error) error {
+		if err != nil {
+			if os.IsNotExist(err) {
+				return filepath.SkipDir
+			}
+			return err
+		}
+
+		if dir_entry.IsDir() {
+			// Check if the directory is empty
+			empty, err := isDirEmpty(path)
+			if err != nil {
+				log.Println("Error while Checking whether Dir is Empty or not:", err)
+				log.Println("Source: ClearEmptyDir()")
+				return err
+			}
+			if empty {
+				fmt.Println("Deleting empty directory:", path)
+				return os.Remove(path)
+			}
+		}
+		return nil
+	})
+}
+
+// isDirEmpty checks whether a directory is empty
+func isDirEmpty(name string) (bool, error) {
+	f, err := os.Open(name)
+	if err != nil && !os.IsNotExist(err) {
+		return false, err
+	}
+	defer f.Close()
+
+	// Read one entry from the directory
+	_, err = f.Readdir(1)
+	if err == nil {
+		return false, nil // Not empty
+	}
+	if err == io.EOF {
+		return true, nil // Empty
+	}
+	return false, err
 }
 
 func UpdateFilesFromWorkspace(workspace_path string, content_path string, changes map[string]string) error {
 	for relPath, changeType := range changes {
-		workspaceFile := filepath.Join(workspace_path, relPath)
+		workspace_file := filepath.Join(workspace_path, relPath)
 
 		switch changeType {
 		case "Removed":
-			err := os.Remove(workspaceFile)
+			err := os.Remove(workspace_file)
 			if err != nil && !os.IsNotExist(err) {
-				return fmt.Errorf("failed to remove %s: %v", workspaceFile, err)
+				return fmt.Errorf("failed to remove %s: %v", workspace_file, err)
+			}
+			dir, _ := filepath.Split(workspace_file)
+
+			err = ClearEmptyDir(dir)
+			if err != nil && !os.IsNotExist(err) {
+				log.Printf("failed to clear empty dirs in '%s' dir: %v\n", dir, err)
+				log.Println("Ignorning this Error")
 			}
 
 		case "Updated":
 			sourceFile := filepath.Join(content_path, relPath)
 
 			// Make sure the parent directory exists
-			if err := os.MkdirAll(filepath.Dir(workspaceFile), 0755); err != nil {
-				return fmt.Errorf("failed to create directory for %s: %v", workspaceFile, err)
+			if err := os.MkdirAll(filepath.Dir(workspace_file), 0755); err != nil {
+				return fmt.Errorf("failed to create directory for %s: %v", workspace_file, err)
 			}
 
-			err := copyFile(sourceFile, workspaceFile)
+			err := copyFile(sourceFile, workspace_file)
 			if err != nil {
 				return fmt.Errorf("failed to update %s: %v", relPath, err)
 			}

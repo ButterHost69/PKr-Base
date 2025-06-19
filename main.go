@@ -30,7 +30,7 @@ func init() {
 		os.Exit(1)
 	}
 
-	// TODO: Handle multiple server urls
+	// Will Pick the last server from user config & maitain ws connection with that
 	for _, server := range servers {
 		escaped_username := url.QueryEscape(server.Username)
 		escaped_password := url.QueryEscape(server.Password)

@@ -165,8 +165,7 @@ func fetchAndStoreDataIntoWorkspace(workspace_owner_public_ip, workspace_name st
 	}
 	log.Println("Workspace Path: ", workspace_path)
 
-	zip_file_path := filepath.Join(workspace_path, ".PKr", res.UpdatedHash+".zip")
-
+	zip_file_path := filepath.Join(workspace_path, ".PKr", res.RequestHash+".zip")
 	// Create Zip File
 	zip_file_obj, err := os.Create(zip_file_path)
 	if err != nil {
@@ -213,13 +212,20 @@ func fetchAndStoreDataIntoWorkspace(workspace_owner_public_ip, workspace_name st
 		return err
 	}
 
-	_, err = kcp_conn.Write([]byte(res.UpdatedHash))
+	_, err = kcp_conn.Write([]byte(res.RequestHash))
 	if err != nil {
 		log.Println("Error while Sending Workspace Name to Workspace Owner:", err)
 		log.Println("Source: fetchAndStoreDataIntoWorkspace()")
 		return err
 	}
 	log.Println("Workspace Name & Hash Sent to Workspace Owner")
+
+	_, err = kcp_conn.Write([]byte("Pull"))
+	if err != nil {
+		log.Println("Error while Sending 'Pull' to Workspace Owner:", err)
+		log.Println("Source: fetchAndStoreDataIntoWorkspace()")
+		return err
+	}
 
 	buffer := make([]byte, DATA_CHUNK)
 
@@ -292,15 +298,24 @@ func fetchAndStoreDataIntoWorkspace(workspace_owner_public_ip, workspace_name st
 		// Not Returning Error because, we got data, we don't care if workspace owner now is offline or not responding
 	}
 
-	if err = filetracker.CleanFilesFromWorkspace(workspace_path); err != nil {
-		log.Println("Error while Cleaning Workspace :", err)
+	unzip_dest := filepath.Join(workspace_path, ".PKr", "Contents", res.RequestHash)
+	err = os.MkdirAll(unzip_dest, 0666)
+	if err != nil {
+		log.Println("Error while Creating .PKr/Hash Directory:", err)
 		log.Println("Source: fetchAndStoreDataIntoWorkspace()")
 		return err
 	}
 
 	// Unzip Content
-	if err = filetracker.UnzipData(zip_file_path, workspace_path+string(filepath.Separator)); err != nil {
+	if err = filetracker.UnzipData(zip_file_path, unzip_dest); err != nil {
 		log.Println("Error while Unzipping Data into Workspace:", err)
+		log.Println("Source: fetchAndStoreDataIntoWorkspace()")
+		return err
+	}
+
+	err = filetracker.UpdateFilesFromWorkspace(workspace_path, unzip_dest, res.Updates)
+	if err != nil {
+		log.Println("Error while Updating Files From Workspace:", err)
 		log.Println("Source: fetchAndStoreDataIntoWorkspace()")
 		return err
 	}
@@ -311,6 +326,14 @@ func fetchAndStoreDataIntoWorkspace(workspace_owner_public_ip, workspace_name st
 		log.Println("Error while Removing the Zip File After Use:", err)
 		log.Println("Source: fetchAndStoreDataIntoWorkspace()")
 		// No need to return err, else it won't register in configs
+	}
+
+	// Remove files from the place where changes were temporarily un-zipped
+	err = os.RemoveAll(unzip_dest)
+	if err != nil {
+		log.Println("Error while Removing the Files from '.PKr/Hash/':", err)
+		log.Println("Source: fetchAndStoreDataIntoWorkspace()")
+		return err
 	}
 	return nil
 }
@@ -355,11 +378,18 @@ func PullWorkspace(workspace_owner_username, workspace_name string, conn *websoc
 	rpc_client := rpc.NewClient(kcp_conn)
 	rpcClientHandler := dialer.ClientCallHandler{}
 
-	log.Println("Calling Get Public Key")
-	// Get Public Key of Workspace Owner
-	public_key, err := rpcClientHandler.CallGetPublicKey(client_handler_name, rpc_client)
+	workspace_path, err := config.GetGetWorkspaceFilePath(workspace_name)
 	if err != nil {
-		log.Println("Error while Calling GetPublicKey:", err)
+		log.Println("Error while Fetching Workspace Path from Config:", err)
+		log.Println("Source: Pull()")
+		return
+	}
+
+	// Get Public Key of Workspace Owner
+	log.Println("Fetching Public Key of Workspace Owner .PKr/Keys")
+	public_key, err := os.ReadFile(filepath.Join(workspace_path, ".PKr", "Keys", workspace_owner_username+".pem"))
+	if err != nil {
+		log.Println("Error while Getting Public Key of Workspace Owner from .PKr/Keys:", err)
 		log.Println("Source: pullWorkspace()")
 		return
 	}
@@ -381,6 +411,11 @@ func PullWorkspace(workspace_owner_username, workspace_name string, conn *websoc
 		return
 	}
 	log.Println("Get Data Responded, now storing files into workspace")
+	log.Println(res.IsChanges)
+	log.Println(res.LenData)
+	log.Println(res.RequestHash)
+	log.Println(res.UpdatedHash)
+	log.Println(res.Updates)
 
 	kcp_conn.Close()
 	rpc_client.Close()
