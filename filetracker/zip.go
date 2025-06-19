@@ -25,7 +25,7 @@ func zippToInfiniteSize(workspace_path string) (string, error) {
 	// 2024-01-20.zip
 	zipFileName := strings.Split(time.Now().String(), " ")[0] + ".zip"
 
-	file, err := os.Create(filepath.Join(workspace_path, ".PKr", zipFileName))
+	file, err := os.Create(workspace_path + "\\.PKr\\" + zipFileName)
 	if err != nil {
 		return "", err
 	}

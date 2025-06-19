@@ -375,16 +375,7 @@ func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.G
 	if err != nil {
 		log.Println("Failed to Fetch IV Keys:", err)
 		log.Println("Source: GetMetaData()")
-		return err
-	}
-
-	log.Println("Reading Latest Snapshot Hash AES Key")
-	log.Println("AES Key Loc: ", aeskey_path)
-	aeskey_data, err := os.ReadFile(aeskey_path)
-	if err != nil {
-		log.Println("Error reading AES Key:", err)
-		log.Println("Source: GetMetaData()")
-		return err
+		return ErrInternalSeverError
 	}
 
 	log.Println("Fetching Public Key of Listener")
@@ -402,15 +393,15 @@ func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.G
 		return ErrInternalSeverError
 	}
 
-	log.Println("Encrypting AES Keys")
-	encrypt_key, err := encrypt.EncryptData(string(aeskey_data), string(public_key))
+	log.Println("Encrypting Key")
+	encrypt_key, err := encrypt.EncryptData(string(key), string(public_key))
 	if err != nil {
 		log.Println("Failed to Encrypt AES Keys using Listener's Public Key:", err)
 		log.Println("Source: GetMetaData()")
 		return ErrInternalSeverError
 	}
 
-	encrypt_iv, err := encrypt.EncryptData(string(iv_data), string(public_key))
+	encrypt_iv, err := encrypt.EncryptData(string(iv), string(public_key))
 	if err != nil {
 		log.Println("Failed to Encrypt IV Keys using Listener's Public Key:", err)
 		log.Println("Source: GetMetaData()")
@@ -436,5 +427,4 @@ func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.G
 
 	log.Println("Done with Everything now returning Response")
 	return nil
-
 }

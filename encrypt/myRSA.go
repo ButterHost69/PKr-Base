@@ -19,7 +19,6 @@ var (
 	PRIVATE_KEYS_PATH = filepath.Join("tmp", "mykeys", "privatekey.pem")
 )
 
-
 func GenerateRSAKeys() (*rsa.PrivateKey, *rsa.PublicKey) {
 	privateKey, err := rsa.GenerateKey(rand.Reader, KEY_SIZE)
 	if err != nil {

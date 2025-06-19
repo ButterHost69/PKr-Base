@@ -156,7 +156,7 @@ func AddLogEntry(workspace_name string, isSendWorkspace bool, log_entry any) err
 	}
 
 	// Adds the ".Pkr/logs.txt"
-	workspace_path = filepath.Join(workspace_path, LOGS_PKR_FILE_PATH)
+	workspace_path += "\\" + LOGS_PKR_FILE_PATH
 
 	// Opens or Creates the Log File
 	file, err := os.OpenFile(workspace_path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
