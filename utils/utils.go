@@ -3,19 +3,23 @@ package utils
 import (
 	"fmt"
 	"math/rand"
+	"os"
+	"os/exec"
+	"runtime"
 	"strings"
 	"time"
-
-	fake "github.com/brianvoe/gofakeit/v7"
 )
 
-func CreateSlug() string {
-	var gamerTag []string
-	for range 1024 {
-		gamerTag = append(gamerTag, fake.Gamertag())
+func ClearScreen() {
+	var cmd *exec.Cmd
+
+	if runtime.GOOS == "windows" {
+		cmd = exec.Command("cmd", "/c", "cls")
+	} else {
+		cmd = exec.Command("clear")
 	}
-	g := rand.Intn(1024)
-	return gamerTag[g]
+	cmd.Stdout = os.Stdout
+	cmd.Run()
 }
 
 func RandomString(n int) string {

@@ -143,9 +143,9 @@ func ZipData(workspace_path string, destination_path string) (string, error) {
 	zip_file.Close()
 
 	hashFileName = hashFileName + ".zip"
-	fullHashFilePath := filepath.Join(destination_path, hashFileName)
+	fullHashFilePath := destination_path + filepath.Join(destination_path, hashFileName)
 
-	workspace_split := strings.Split(workspace_path, string(os.PathSeparator))
+	workspace_split := strings.Split(workspace_path, string(filepath.Separator))
 	workspace_name := workspace_split[len(workspace_split)-1]
 
 	if err = os.Rename(fullZipPath, fullHashFilePath); err != nil {
@@ -168,32 +168,32 @@ func UnzipData(src, dest string) error {
 	for count, file := range zipper.File {
 		if file.FileInfo().IsDir() {
 			continue
-		} else {
-			dir, _ := filepath.Split(file.Name)
-			if dir != "" {
-				if err := os.MkdirAll(dir, 0777); err != nil {
-					return err
-				}
-			}
-			unzipfile, err := os.Create(filepath.Join(dest, file.Name))
-			if err != nil {
-				return err
-			}
-			defer unzipfile.Close()
-
-			content, err := file.Open()
-			if err != nil {
-				return err
-			}
-			defer content.Close()
-
-			_, err = io.Copy(unzipfile, content)
-			if err != nil {
-				return err
-			}
-			totalfiles += 1
-			log.Printf("%d] File: %s\n", count, unzipfile.Name())
 		}
+		abs_path := filepath.Join(dest, file.Name)
+		dir, _ := filepath.Split(abs_path)
+		if dir != "" {
+			if err := os.MkdirAll(dir, 0777); err != nil {
+				return err
+			}
+		}
+		unzipfile, err := os.Create(abs_path)
+		if err != nil {
+			return err
+		}
+		defer unzipfile.Close()
+
+		content, err := file.Open()
+		if err != nil {
+			return err
+		}
+		defer content.Close()
+
+		_, err = io.Copy(unzipfile, content)
+		if err != nil {
+			return err
+		}
+		totalfiles += 1
+		log.Printf("%d] File: %s\n", count, file.Name)
 	}
 	log.Printf("\nTotal Files Recieved: %d\n", totalfiles)
 	return nil

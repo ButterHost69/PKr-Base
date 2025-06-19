@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ButterHost69/PKr-Base/utils"
+	"github.com/ButterHost69/PKr-Base/encrypt"
 )
 
 const (
@@ -75,8 +75,8 @@ func GetConnectionsPublicKeyUsingUsername(workspace_path, username string) (stri
 	return "", fmt.Errorf("no such ip exists : %v", username)
 }
 
-func StorePublicKeys(workspace_keys_path string, key string) (string, error) {
-	keyPath := filepath.Join(workspace_keys_path, utils.CreateSlug()+".pem")
+func StorePublicKeys(username, workspace_keys_path string, key string) (string, error) {
+	keyPath := filepath.Join(workspace_keys_path, username+".pem")
 	file, err := os.OpenFile(keyPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		return "", err
@@ -99,8 +99,8 @@ func StorePublicKeys(workspace_keys_path string, key string) (string, error) {
 func ReadFromPKRConfigFile(workspace_config_path string) (PKRConfig, error) {
 	file, err := os.Open(workspace_config_path)
 	if err != nil {
-		// AddUsersLogEntry("error in opening PKR config file.... pls check if .PKr/workspaceConfig.json available ")
 		log.Println("error in opening PKR config file.... pls check if .PKr/workspaceConfig.json available ")
+		// AddUsersLogEntry("error in opening PKR config file.... pls check if .PKr/workspaceConfig.json available ")
 		return PKRConfig{}, err
 	}
 	defer file.Close()
@@ -109,7 +109,8 @@ func ReadFromPKRConfigFile(workspace_config_path string) (PKRConfig, error) {
 	decoder := json.NewDecoder(file)
 	err = decoder.Decode(&pkrConfig)
 	if err != nil {
-		AddUsersLogEntry("error in decoding json data")
+		log.Println("error in decoding json data")
+		// AddUsersLogEntry("error in decoding json data")
 		return PKRConfig{}, err
 	}
 
@@ -171,8 +172,6 @@ func AddLogEntry(workspace_name string, isSendWorkspace bool, log_entry any) err
 	return nil
 }
 
-// func RegisterNewPushEntry(workspace_name, workspace_path)
-
 func UpdateLastHash(workspace_name, zipfile_path string) error {
 	workspace_path, err := GetSendWorkspaceFilePath(workspace_name)
 	if err != nil {
@@ -196,8 +195,7 @@ func UpdateLastHash(workspace_name, zipfile_path string) error {
 }
 
 func ReadPublicKey() (string, error) {
-	keyPath := filepath.Join(MY_KEYS_PATH, "publickey.pem")
-	keyData, err := os.ReadFile(keyPath)
+	keyData, err := os.ReadFile(filepath.Join(MY_KEYS_PATH, "publickey.pem"))
 	if err != nil {
 		return "", err
 	}
@@ -225,6 +223,7 @@ func IfValidHash(hash, workspace_path string) (bool, error) {
 			return true, nil
 		}
 	}
+
 	return false, nil
 }
 
@@ -243,11 +242,11 @@ func AppendWorkspaceUpdates(updates Updates, workspace_path string) error {
 }
 
 func MergeUpdates(workspace_path, start_hash, end_hash string) (Updates, error) {
-	mupdates := Updates{}
+	merged_updates := Updates{}
 
 	workspace_json, err := ReadFromPKRConfigFile(filepath.Join(workspace_path, WORKSPACE_CONFIG_FILE_PATH))
 	if err != nil {
-		return mupdates, fmt.Errorf("could not read from config file.\nError: %v", err)
+		return merged_updates, fmt.Errorf("could not read from config file.\nError: %v", err)
 	}
 
 	type HashType struct {
@@ -255,21 +254,24 @@ func MergeUpdates(workspace_path, start_hash, end_hash string) (Updates, error) 
 		Type string
 	}
 
+	log.Println("Merge Updates Func:")
 	updates_list := make(map[string]HashType)
 	merge := false
 	for _, update := range workspace_json.AllUpdates {
+		log.Println(update)
 		if update.Hash == start_hash {
 			merge = true
+			log.Println("Skipping from here:", update)
 			continue
 		}
 
 		if merge {
+			log.Println("Merging from here:", update)
 			for _, change := range update.Changes {
 				update, exist := updates_list[change.FilePath]
 				if exist {
 					if update.Type == "Updated" && change.Type == "Removed" {
 						delete(updates_list, change.FilePath)
-						continue
 					}
 				} else {
 					updates_list[change.FilePath] = HashType{
@@ -286,17 +288,22 @@ func MergeUpdates(workspace_path, start_hash, end_hash string) (Updates, error) 
 
 	fmt.Println("Update List: ", updates_list)
 	merged_changes := []FileChange{}
+	files_hash_list := []string{}
 	for path, hash_type := range updates_list {
 		merged_changes = append(merged_changes, FileChange{
 			FilePath: path,
 			FileHash: hash_type.Hash,
 			Type:     hash_type.Type,
 		})
+		if hash_type.Type == "Updated" {
+			files_hash_list = append(files_hash_list, path)
+			files_hash_list = append(files_hash_list, hash_type.Hash)
+		}
 	}
+	fmt.Println("Merged Updates Func's Files_Hash_List:", files_hash_list)
 
-	// FIXME: Generate Hash with the Changed Files as a combo
-	mupdates.Hash = "ChangeMeLater"
-	mupdates.Changes = merged_changes
+	merged_updates.Hash = encrypt.GeneratHashFromFileNames(files_hash_list)
+	merged_updates.Changes = merged_changes
 
-	return mupdates, nil
+	return merged_updates, nil
 }

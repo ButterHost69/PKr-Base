@@ -50,39 +50,7 @@ func AESEncrypt(source_filepath string, destination_filepath string, key []byte,
 	stream := cipher.NewCTR(block, IV)
 
 	writer := &cipher.StreamWriter{S: stream, W: outputFile}
-
 	if _, err := io.Copy(writer, inputFile); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// func AESDecrypt(){}
-// Needs Work... Later Me will do it
-func decryptFile(filename string, key []byte, iv []byte) error {
-	inputFile, err := os.Open(filename)
-	if err != nil {
-		return err
-	}
-	defer inputFile.Close()
-
-	outputFile, err := os.Create(filename + ".zip")
-	if err != nil {
-		return err
-	}
-	defer outputFile.Close()
-
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return err
-	}
-
-	stream := cipher.NewCTR(block, iv)
-
-	reader := &cipher.StreamReader{S: stream, R: inputFile}
-
-	if _, err := io.Copy(outputFile, reader); err != nil {
 		return err
 	}
 
@@ -93,17 +61,6 @@ func decryptFile(filename string, key []byte, iv []byte) error {
 //
 // Returns []byte
 func AESDecrypt(data []byte, key, iv string) ([]byte, error) {
-	// Convert key and IV from string to []byte
-	// keyBytes, err := hex.DecodeString(key)
-	// if err != nil {
-	// 	return nil, errors.New("invalid key format")
-	// }
-
-	// ivBytes, err := hex.DecodeString(iv)
-	// if err != nil {
-	// 	return nil, errors.New("invalid IV format")
-	// }
-
 	// Create the AES cipher
 	block, err := aes.NewCipher([]byte(key))
 	if err != nil {
@@ -130,7 +87,7 @@ func EncryptDecryptChunk(data, key, iv []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		log.Println("Error while Creating New Cipher Block:", err)
-		log.Println("Source: EncryptDecryptChunk()")
+		log.Println("Source: EncrpytChunk()")
 		return nil, err
 	}
 

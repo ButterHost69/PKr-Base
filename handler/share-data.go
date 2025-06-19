@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/ButterHost69/PKr-Base/config"
 	"github.com/ButterHost69/PKr-Base/utils"
@@ -49,6 +48,16 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 	workspace_hash := string(buff[:n])
 	log.Println("Workspace Hash:", workspace_hash)
 
+	// Read Data Request Type (Pull/Clone)
+	n, err = kcp_session.Read(buff[:])
+	if err != nil {
+		log.Println("Error while Reading Workspace Hash:", err)
+		log.Println("Source: GetDataHandler()")
+		return
+	}
+	data_req_type := string(buff[:n])
+	log.Println("Data Request Type(Clone/Pull):", data_req_type)
+
 	workspace_path, err := config.GetSendWorkspaceFilePath(workspace_name)
 	if err != nil {
 		log.Println("Failed to Get Workspace Path from Config:", err)
@@ -58,67 +67,21 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 	}
 	log.Println("Workspace Path:", workspace_path)
 
-	// Check if hash is last hash -> Send The .Pkr/Files/Current dir
-	// TODO: Else Check in Changes Hash, Send it (should be there;to be created during metadata)
-	config_file, err := config.ReadFromPKRConfigFile(filepath.Join(workspace_path, ".PKr", "workspaceConfig.json"))
-	if err != nil {
-		log.Println("Failed to Get Workspace  Config:", err)
-		log.Println("Source: GetDataHandler()")
-		sendErrorMessage(kcp_session, "Internal Server Error")
-		return
-	}
-
-	config_file.LastHash = strings.TrimSpace(config_file.LastHash)
-	workspace_hash = strings.TrimSpace(workspace_hash)
-
-	destination_filepath := ""
-	if workspace_hash == config_file.LastHash {
-		log.Println("Requested Hash is of the Snapshot")
-		destination_filepath = filepath.Join(workspace_path, ".PKr", "Files", "Current", workspace_hash+".enc")
-		log.Println("Updated Destination File Path: ", destination_filepath)
+	var zip_enc_path string
+	if data_req_type == "Clone" {
+		zip_enc_path = filepath.Join(workspace_path, ".PKr", "Files", "Current", workspace_hash+".enc")
+	} else if data_req_type == "Pull" {
+		zip_enc_path = filepath.Join(workspace_path, ".PKr", "Files", "Changes", workspace_hash, workspace_hash+".enc")
 	} else {
-		log.Println("Checking if Requested Hash is of the Changes ...")
-
-		changes_cache_path := filepath.Join(workspace_path, ".PKr", "Files", "Changes")
-		entries, err := os.ReadDir(changes_cache_path)
-		if err != nil {
-			log.Println("Failed to Read Dir From Workspace Changes Cache:", err)
-			log.Println("Source: GetDataHandler()")
-			sendErrorMessage(kcp_session, "Internal Server Error")
-			return
-		}
-
-		if_present := false
-		for _, entry := range entries {
-			if entry.IsDir() && entry.Name() == workspace_hash {
-				if_present = true
-			}
-		}
-
-		if if_present {
-			log.Println("Provided Hash is Present in the Workspace Changes Cache")
-			destination_filepath = filepath.Join(workspace_path, ".PKr", "Files", "Changes", workspace_hash, workspace_hash+".enc")
-			log.Println("Destination File Path is set: ", destination_filepath)
-		} else {
-			log.Println("Garbage Hash")
-			log.Println("Provided Hash: ", workspace_hash)
-			log.Println("Last Config Hash: ", config_file.LastHash)
-			sendErrorMessage(kcp_session, "Internal Server Error")
-			return
-		}
-	}
-
-	if destination_filepath == ""  {
-		log.Println("Garbage Hash")
-		log.Println("Provided Hash: ", workspace_hash)
-		log.Println("Last Config Hash: ", config_file.LastHash)
-		sendErrorMessage(kcp_session, "Internal Server Error")
+		log.Println("Invalid Data Request Type Sent from User")
+		log.Println("Source: GetDataHandler()")
+		sendErrorMessage(kcp_session, "Invalid Data Request Type Sent")
 		return
 	}
 
-	log.Println("Destination FilePath to share:", destination_filepath)
+	log.Println("Zip Enc FilePath to share:", zip_enc_path)
 
-	fileInfo, err := os.Stat(destination_filepath)
+	fileInfo, err := os.Stat(zip_enc_path)
 	if err == nil {
 		log.Println("Destination File exists")
 	} else if os.IsNotExist(err) {
@@ -133,17 +96,17 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 	}
 
 	log.Println("Opening Destination File")
-	file, err := os.Open(destination_filepath)
+	zip_enc_file_obj, err := os.Open(zip_enc_path)
 	if err != nil {
 		log.Println("Error while Opening Destination File:", err)
 		log.Println("Source: GetDataHandler()")
 		sendErrorMessage(kcp_session, "Internal Server Error")
 		return
 	}
-	defer file.Close()
+	defer zip_enc_file_obj.Close()
 
 	buffer := make([]byte, DATA_CHUNK)
-	reader := bufio.NewReader(file)
+	reader := bufio.NewReader(zip_enc_file_obj)
 
 	len_data_bytes := int(fileInfo.Size())
 	log.Println("Length of File:", len_data_bytes)
@@ -154,6 +117,31 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 		utils.PrintProgressBar(offset, len_data_bytes, 100)
 
 		n, err := reader.Read(buffer)
+		if err != nil {
+			if err == io.EOF {
+				fmt.Println()
+				log.Println("Done Sent, now waiting for ack from listener ...")
+				n, err := kcp_session.Read(buff[:])
+				if err != nil {
+					log.Println("Error while Reading 'Data Received' Message from Listener:", err)
+					log.Println("Source: GetDataHandler()")
+					return
+				}
+				// Data Received
+				msg := string(buff[:n])
+				if msg == "Data Received" {
+					log.Println("Data Transfer Completed:", offset)
+					return
+				}
+				log.Println("Received Unexpected Message:", msg)
+				return
+			}
+			log.Println("Error while Sending Workspace Chunk:", err)
+			log.Println("Source: GetDataHandler()")
+			sendErrorMessage(kcp_session, "Internal Server Error")
+			return
+		}
+
 		if n > 0 {
 			_, err := kcp_session.Write([]byte(buffer[:n]))
 			if err != nil {
@@ -162,29 +150,6 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 				sendErrorMessage(kcp_session, "Internal Server Error")
 				return
 			}
-		}
-		if err == io.EOF {
-			fmt.Println()
-			log.Println("Done Sent, now waiting for ack from listener ...")
-			n, err = kcp_session.Read(buff[:])
-			if err != nil {
-				log.Println("Error while Reading 'Data Received' Message from Listener:", err)
-				log.Println("Source: GetDataHandler()")
-			}
-			//Data Received
-			msg := string(buff[:n])
-			if msg == "Data Received" {
-				log.Println("Data Transfer Completed:", offset)
-				return
-			}
-			log.Println("Received Unexpected Message:", msg)
-			return
-		}
-		if err != nil {
-			log.Println("Error while Sending Workspace Chunk:", err)
-			log.Println("Source: GetDataHandler()")
-			sendErrorMessage(kcp_session, "Internal Server Error")
-			return
 		}
 		offset += n
 	}

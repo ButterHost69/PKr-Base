@@ -25,7 +25,12 @@ func init() {
 		os.Exit(1)
 	}
 
-	// TODO: Handle multiple server urls
+	if len(servers) == 0 {
+		log.Println("No Server're found in Config\nExiting Base ...")
+		os.Exit(1)
+	}
+
+	// Will Pick the last server from user config & maitain ws connection with that
 	for _, server := range servers {
 		escaped_username := url.QueryEscape(server.Username)
 		escaped_password := url.QueryEscape(server.Password)
@@ -100,10 +105,9 @@ func main() {
 
 		err := ws_conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "Bye"))
 		if err != nil {
-			log.Println("Error:", err)
+			log.Println("Error while Writing Close Message to Server via WS:", err)
 			log.Println("Source: main()")
 			return
 		}
-		ws_conn.Close()
 	}
 }

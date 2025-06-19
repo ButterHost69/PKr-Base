@@ -35,6 +35,6 @@ type GetMetaDataResponse struct {
 	Updates   map[string]string // filepath+filename : change(Updated[Created]/Removed)
 	IsChanges bool              // Sending(Hash Prepared) -> True:Changes ; False:EntireWorkspace
 
-	RequestHash string			// Hash of the contents that are to requested and that will be sent
-	UpdatedHash string			// Latest Hash of the entire Workspace
+	RequestHash string // Hash of the contents that are to requested and that will be sent
+	UpdatedHash string // Latest Hash of the entire Workspace
 }

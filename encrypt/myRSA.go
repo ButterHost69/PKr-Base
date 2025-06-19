@@ -15,10 +15,7 @@ import (
 )
 
 var (
-	KEY_SIZE = 4096
-)
-
-var (
+	KEY_SIZE          = 4096
 	PRIVATE_KEYS_PATH = filepath.Join("tmp", "mykeys", "privatekey.pem")
 )
 

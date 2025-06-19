@@ -11,43 +11,37 @@ import (
 	"github.com/ButterHost69/PKr-Base/encrypt"
 )
 
-const (
-	ROOT_DIR     = "tmp"
-)
+const ROOT_DIR = "tmp"
 
 var (
 	MY_KEYS_PATH = filepath.Join(ROOT_DIR, "mykeys")
-	CONFIG_FILE  = filepath.Join(ROOT_DIR,"userConfig.json")
-	LOG_FILE     = filepath.Join(ROOT_DIR + "logs.txt")
+	CONFIG_FILE  = filepath.Join(ROOT_DIR, "userConfig.json")
+	LOG_FILE     = filepath.Join(ROOT_DIR, "logs.txt")
 )
 
 var MY_USERNAME string
 
-// FIXME: NOT IMPORTANT : Remove Prints - return stuff
-
-func CreateUserIfNotExists() {
-	if _, err := os.Stat(filepath.Join(ROOT_DIR + "userConfig.json")); os.IsNotExist(err) {
+func CreateUserIfNotExists(username string) {
+	if _, err := os.Stat(CONFIG_FILE); os.IsNotExist(err) {
 		fmt.Println("!! 'tmp' No such DIR exists ")
 
-		usconf := UsersConfig{
-			User: "temporary",
-		}
-
+		usconf := UsersConfig{User: username}
 		jsonbytes, err := json.Marshal(usconf)
 		if err != nil {
 			fmt.Println("~ Unable to Parse Username to Json")
+			panic(err)
 		}
 
 		if err = os.Mkdir(ROOT_DIR, 0777); err != nil {
 			fmt.Println("~ Folder tmp exists")
 		}
-		err = os.WriteFile(ROOT_DIR+"/userConfig.json", jsonbytes, 0777)
+		err = os.WriteFile(CONFIG_FILE, jsonbytes, 0777)
 		if err != nil {
 			log.Fatal(err.Error())
 		}
 
 		if err = os.Mkdir(MY_KEYS_PATH, 0777); err != nil {
-			fmt.Println("~ Folder tmp exists")
+			fmt.Println("~ Folder tmp/mykeys exists")
 		}
 
 		private_key, public_key := encrypt.GenerateRSAKeys()
@@ -56,10 +50,12 @@ func CreateUserIfNotExists() {
 		}
 
 		if err = encrypt.StorePrivateKeyInFile(filepath.Join(MY_KEYS_PATH, "privatekey.pem"), private_key); err != nil {
+			fmt.Println("Error while Storing Private Key in File")
 			panic(err.Error())
 		}
 
 		if err = encrypt.StorePublicKeyInFile(filepath.Join(MY_KEYS_PATH, "publickey.pem"), public_key); err != nil {
+			fmt.Println("Error while Storing Public Key in File")
 			panic(err.Error())
 		}
 
