@@ -24,7 +24,7 @@ message RegisterWorkspaceRequest {
     string username = 1;
     string password = 2;
     string workspace_name = 3;
-    string last_hash = 4;
+    int32 last_push_num = 4;
 }
 
 message RegisterWorkspaceResponse {}
@@ -55,7 +55,7 @@ message NotifyNewPushToListenersRequest {
     string workspace_owner_username = 1;
     string workspace_owner_password = 2;
     string workspace_name = 3;
-    string new_workspace_hash = 4;
+    int32 new_workspace_push_num = 4;
 }
 
 message NotifyNewPushToListenersResponse {}

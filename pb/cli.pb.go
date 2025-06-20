@@ -114,7 +114,7 @@ type RegisterWorkspaceRequest struct {
 	Username      string                 `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
 	Password      string                 `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
 	WorkspaceName string                 `protobuf:"bytes,3,opt,name=workspace_name,json=workspaceName,proto3" json:"workspace_name,omitempty"`
-	LastHash      string                 `protobuf:"bytes,4,opt,name=last_hash,json=lastHash,proto3" json:"last_hash,omitempty"`
+	LastPushNum   int32                  `protobuf:"varint,4,opt,name=last_push_num,json=lastPushNum,proto3" json:"last_push_num,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -170,11 +170,11 @@ func (x *RegisterWorkspaceRequest) GetWorkspaceName() string {
 	return ""
 }
 
-func (x *RegisterWorkspaceRequest) GetLastHash() string {
+func (x *RegisterWorkspaceRequest) GetLastPushNum() int32 {
 	if x != nil {
-		return x.LastHash
+		return x.LastPushNum
 	}
-	return ""
+	return 0
 }
 
 type RegisterWorkspaceResponse struct {
@@ -450,7 +450,7 @@ type NotifyNewPushToListenersRequest struct {
 	WorkspaceOwnerUsername string                 `protobuf:"bytes,1,opt,name=workspace_owner_username,json=workspaceOwnerUsername,proto3" json:"workspace_owner_username,omitempty"`
 	WorkspaceOwnerPassword string                 `protobuf:"bytes,2,opt,name=workspace_owner_password,json=workspaceOwnerPassword,proto3" json:"workspace_owner_password,omitempty"`
 	WorkspaceName          string                 `protobuf:"bytes,3,opt,name=workspace_name,json=workspaceName,proto3" json:"workspace_name,omitempty"`
-	NewWorkspaceHash       string                 `protobuf:"bytes,4,opt,name=new_workspace_hash,json=newWorkspaceHash,proto3" json:"new_workspace_hash,omitempty"`
+	NewWorkspacePushNum    int32                  `protobuf:"varint,4,opt,name=new_workspace_push_num,json=newWorkspacePushNum,proto3" json:"new_workspace_push_num,omitempty"`
 	unknownFields          protoimpl.UnknownFields
 	sizeCache              protoimpl.SizeCache
 }
@@ -506,11 +506,11 @@ func (x *NotifyNewPushToListenersRequest) GetWorkspaceName() string {
 	return ""
 }
 
-func (x *NotifyNewPushToListenersRequest) GetNewWorkspaceHash() string {
+func (x *NotifyNewPushToListenersRequest) GetNewWorkspacePushNum() int32 {
 	if x != nil {
-		return x.NewWorkspaceHash
+		return x.NewWorkspacePushNum
 	}
-	return ""
+	return 0
 }
 
 type NotifyNewPushToListenersResponse struct {
@@ -817,12 +817,12 @@ const file_proto_cli_proto_rawDesc = "" +
 	"\x0fRegisterRequest\x12\x1a\n" +
 	"\busername\x18\x01 \x01(\tR\busername\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\"\x12\n" +
-	"\x10RegisterResponse\"\x96\x01\n" +
+	"\x10RegisterResponse\"\x9d\x01\n" +
 	"\x18RegisterWorkspaceRequest\x12\x1a\n" +
 	"\busername\x18\x01 \x01(\tR\busername\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\x12%\n" +
-	"\x0eworkspace_name\x18\x03 \x01(\tR\rworkspaceName\x12\x1b\n" +
-	"\tlast_hash\x18\x04 \x01(\tR\blastHash\"\x1b\n" +
+	"\x0eworkspace_name\x18\x03 \x01(\tR\rworkspaceName\x12\"\n" +
+	"\rlast_push_num\x18\x04 \x01(\x05R\vlastPushNum\"\x1b\n" +
 	"\x19RegisterWorkspaceResponse\"\xdb\x01\n" +
 	"\x1eRegisterUserToWorkspaceRequest\x12+\n" +
 	"\x11listener_username\x18\x01 \x01(\tR\x10listenerUsername\x12+\n" +
@@ -838,12 +838,12 @@ const file_proto_cli_proto_rawDesc = "" +
 	"\x18workspace_owner_username\x18\x05 \x01(\tR\x16workspaceOwnerUsername\"\x9c\x01\n" +
 	" RequestPunchFromReceiverResponse\x129\n" +
 	"\x19workspace_owner_public_ip\x18\x01 \x01(\tR\x16workspaceOwnerPublicIp\x12=\n" +
-	"\x1bworkspace_owner_public_port\x18\x02 \x01(\tR\x18workspaceOwnerPublicPort\"\xea\x01\n" +
+	"\x1bworkspace_owner_public_port\x18\x02 \x01(\tR\x18workspaceOwnerPublicPort\"\xf1\x01\n" +
 	"\x1fNotifyNewPushToListenersRequest\x128\n" +
 	"\x18workspace_owner_username\x18\x01 \x01(\tR\x16workspaceOwnerUsername\x128\n" +
 	"\x18workspace_owner_password\x18\x02 \x01(\tR\x16workspaceOwnerPassword\x12%\n" +
-	"\x0eworkspace_name\x18\x03 \x01(\tR\rworkspaceName\x12,\n" +
-	"\x12new_workspace_hash\x18\x04 \x01(\tR\x10newWorkspaceHash\"\"\n" +
+	"\x0eworkspace_name\x18\x03 \x01(\tR\rworkspaceName\x123\n" +
+	"\x16new_workspace_push_num\x18\x04 \x01(\x05R\x13newWorkspacePushNum\"\"\n" +
 	" NotifyNewPushToListenersResponse\"Q\n" +
 	"\x17GetAllWorkspacesRequest\x12\x1a\n" +
 	"\busername\x18\x01 \x01(\tR\busername\x12\x1a\n" +
