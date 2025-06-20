@@ -2,10 +2,12 @@ package main
 
 import (
 	"log"
+	"net"
 	"net/url"
 	"os"
 	"os/signal"
 	"strings"
+	"time"
 
 	"github.com/ButterHost69/PKr-Base/config"
 	"github.com/ButterHost69/PKr-Base/dialer"
@@ -55,12 +57,41 @@ func main() {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	ws_conn, _, err := websocket.DefaultDialer.Dial(WEBSOCKET_SERVER_ADDR_WITH_QUERY.String(), nil)
-	if err != nil {
-		log.Println("Error while Dialing Websocket Connection to Server:", err)
-		log.Println("Source: main()")
-		return
+	var server_err error
+	ws_conn, _, server_err := websocket.DefaultDialer.Dial(WEBSOCKET_SERVER_ADDR_WITH_QUERY.String(), nil)
+	for server_err != nil {
+		// Check if error is because server is offline
+		if opErr, ok := server_err.(*net.OpError); ok {
+			// Check if it's a syscall error underneath
+			if sysErr, ok := opErr.Err.(*os.SyscallError); ok {
+				if strings.Contains(sysErr.Error(), "actively refused") {
+					log.Println("Server seems offline")
+					log.Println("Failed to Connect to PKr-Server")
+					log.Println("Will be retrying in 5 Mins")
+
+					ws_conn, _, server_err = websocket.DefaultDialer.Dial(WEBSOCKET_SERVER_ADDR_WITH_QUERY.String(), nil)
+					select {
+					case <-time.After(5 * time.Minute):
+						ws_conn, _, server_err = websocket.DefaultDialer.Dial(WEBSOCKET_SERVER_ADDR_WITH_QUERY.String(), nil)
+
+					case <-interrupt:
+						log.Println("Interrupt received. Exiting Program...")
+						return
+					}
+					continue
+				}
+			} else {
+				log.Println("Error while Dialing Websocket Connection to Server: ", server_err)
+				log.Println("Source: main()")
+				return
+			}
+		} else {
+			log.Println("Error while Dialing Websocket Connection to Server: ", server_err)
+			log.Println("Source: main()")
+			return
+		}
 	}
+
 	defer ws_conn.Close()
 	log.Println("Connected to Server")
 
