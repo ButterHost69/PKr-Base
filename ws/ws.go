@@ -119,13 +119,14 @@ func ReadJSONMessage(done chan struct{}, conn *websocket.Conn) {
 
 		log.Printf("Message: %#v", msg)
 
-		if msg.MessageType == "NotifyToPunchRequest" {
+		switch msg.MessageType {
+		case "NotifyToPunchRequest":
 			log.Println("NotifyToPunchRequest Called")
 			go handleNotifyToPunchRequest(conn, msg)
-		} else if msg.MessageType == "NotifyNewPushToListeners" {
+		case "NotifyNewPushToListeners":
 			log.Println("NotifyNewPushToListeners Called")
 			go handleNotifyNewPushToListeners(msg, conn)
-		} else if msg.MessageType == "RequestPunchFromReceiverResponse" {
+		case "RequestPunchFromReceiverResponse":
 			log.Println("RequestPunchFromReceiverResponse Called")
 			go handleRequestPunchFromReceiverResponse(msg)
 		}

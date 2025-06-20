@@ -47,10 +47,12 @@ func PrintProgressBar(progress int, total int, barLength int) {
 		percent*100)
 }
 
+// 192.168.65.1 & 192.168.137.1 are used as VM-Bridge, so ignoring those IP's
 func isPrivateIPv4(ip net.IP) bool {
 	return ip[0] == 10 ||
 		(ip[0] == 172 && ip[1] >= 16 && ip[1] <= 31) ||
-		(ip[0] == 192 && ip[1] == 168)
+		(ip[0] == 192 && ip[1] == 168 && ip[2] != 65 && ip[3] != 1) ||
+		(ip[0] == 192 && ip[1] == 168 && ip[2] != 137 && ip[3] != 1)
 }
 
 func ReturnListOfPrivateIPs() ([]string, error) {
