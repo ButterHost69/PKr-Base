@@ -52,13 +52,20 @@ func ZipData(workspace_path string, destination_path string, zip_file_name strin
 	zipFileName := zip_file_name + ".zip"
 	fullZipPath := filepath.Join(destination_path, zipFileName)
 
+	// Ensure the destination directory exists
+	err := os.MkdirAll(destination_path, os.ModePerm)
+	if err != nil {
+		log.Println("Error creating destination directory:", err)
+		log.Println("Source: ZipData()")
+		return err
+	}
+
 	zip_file, err := os.Create(fullZipPath)
 	if err != nil {
 		log.Println("Error while Creating Zip File:", err)
 		log.Println("Source: ZipData()")
 		return err
 	}
-	defer zip_file.Close()
 
 	writer := zip.NewWriter(zip_file)
 	addFilesToZip(writer, workspace_path, "")
@@ -68,6 +75,7 @@ func ZipData(workspace_path string, destination_path string, zip_file_name strin
 		log.Println("Source: ZipData()")
 		return err
 	}
+	zip_file.Close()
 	return nil
 }
 
