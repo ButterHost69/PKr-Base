@@ -2,17 +2,13 @@ package filetracker
 
 import (
 	"archive/zip"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
-	"time"
 
 	"github.com/ButterHost69/PKr-Base/config"
-	"github.com/ButterHost69/PKr-Base/encrypt"
 )
 
 func addFilesToZip(writer *zip.Writer, dirpath string, relativepath string) error {
@@ -47,45 +43,23 @@ func addFilesToZip(writer *zip.Writer, dirpath string, relativepath string) erro
 	return nil
 }
 
-func ZipData(workspace_path string, destination_path string) (string, error) {
-	zipFileName := strings.Split(time.Now().String(), " ")[0] + ".zip"
+func ZipData(workspace_path string, destination_path string, zip_file_name string) error {
+	zipFileName := zip_file_name + ".zip"
 	fullZipPath := filepath.Join(destination_path, zipFileName)
 
 	zip_file, err := os.Create(fullZipPath)
 	if err != nil {
-		// config.AddLogEntry(workspace_name, err)
-		return "", err
+		return err
 	}
+	defer zip_file.Close()
 
 	writer := zip.NewWriter(zip_file)
-
 	addFilesToZip(writer, workspace_path, "")
 
 	if err = writer.Close(); err != nil {
-		return "", err
+		return err
 	}
-
-	hashFileName, err := encrypt.GenerateHashWithFileIO(zip_file)
-	// hashFileName, err := encrypt.GenerateHashWithFilePath(fullZipPath)
-	if err != nil {
-		return "", err
-	}
-
-	zip_file.Close()
-
-	hashFileName = hashFileName + ".zip"
-	fullHashFilePath := destination_path + filepath.Join(destination_path, hashFileName)
-
-	workspace_split := strings.Split(workspace_path, string(filepath.Separator))
-	workspace_name := workspace_split[len(workspace_split)-1]
-
-	if err = os.Rename(fullZipPath, fullHashFilePath); err != nil {
-		logdata := fmt.Sprintf("could rename zip file to new hash name: %s | zipped file path: %s.\nError: %v", fullHashFilePath, fullZipPath, err)
-		config.AddLogEntry(workspace_name, true, logdata)
-		return "", err
-	}
-
-	return hashFileName, nil
+	return nil
 }
 
 func UnzipData(src, dest string) error {
