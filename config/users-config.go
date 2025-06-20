@@ -236,7 +236,7 @@ func AddUsersLogEntry(log_entry any) error {
 	workspace_path := LOG_FILE
 
 	// Opens or Creates the Log File
-	file, err := os.OpenFile(workspace_path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	file, err := os.OpenFile(workspace_path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0600)
 	if err != nil {
 		return err
 	}

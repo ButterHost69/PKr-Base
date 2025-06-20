@@ -61,7 +61,7 @@ func StorePrivateKeyInFile(filepath string, pkey *rsa.PrivateKey) error {
 		return errors.New("~ Private Key Could Not Be Converted To []Byte")
 	}
 
-	return os.WriteFile(filepath, private_pem_key, 0666)
+	return os.WriteFile(filepath, private_pem_key, 0600)
 }
 
 func StorePublicKeyInFile(filepath string, pbkey *rsa.PublicKey) error {
@@ -71,7 +71,7 @@ func StorePublicKeyInFile(filepath string, pbkey *rsa.PublicKey) error {
 		return errors.New("~ Private Key Could Not Be Converted To []Byte")
 	}
 
-	return os.WriteFile(filepath, public_pem_key, 0666)
+	return os.WriteFile(filepath, public_pem_key, 0600)
 }
 
 func DecryptData(cipherText string) (string, error) {

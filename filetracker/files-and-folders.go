@@ -9,6 +9,8 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sort"
+	"strings"
 
 	"github.com/ButterHost69/PKr-Base/encrypt"
 )
@@ -98,29 +100,46 @@ func AreUpdatesCached(workspace_path, update_push_range string) (bool, error) {
 }
 
 func ClearEmptyDir(root string) error {
-	return filepath.WalkDir(root, func(path string, dir_entry fs.DirEntry, err error) error {
+	var dirs []string
+
+	// Collect all directories
+	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
-			if os.IsNotExist(err) {
-				return filepath.SkipDir
-			}
 			return err
 		}
-
-		if dir_entry.IsDir() {
-			// Check if the directory is empty
-			empty, err := isDirEmpty(path)
-			if err != nil {
-				log.Println("Error while Checking whether Dir is Empty or not:", err)
-				log.Println("Source: ClearEmptyDir()")
-				return err
-			}
-			if empty {
-				fmt.Println("Deleting empty directory:", path)
-				return os.Remove(path)
-			}
+		if d.IsDir() {
+			dirs = append(dirs, path)
 		}
 		return nil
 	})
+	if err != nil {
+		return err
+	}
+
+	// Sort in reverse order to ensure children come before parents
+	sort.Slice(dirs, func(i, j int) bool {
+		return len(strings.Split(dirs[i], string(os.PathSeparator))) >
+			len(strings.Split(dirs[j], string(os.PathSeparator)))
+	})
+	fmt.Println("Dirs:", dirs)
+
+	// Now delete empty directories from bottom up
+	for _, dir := range dirs {
+		empty, err := isDirEmpty(dir)
+		if err != nil {
+			log.Println("Error checking if directory is empty:", err)
+			continue
+		}
+		if empty {
+			fmt.Println("Deleting empty directory:", dir)
+			err = os.Remove(dir)
+			if err != nil {
+				log.Println("Error removing directory:", err)
+			}
+		}
+	}
+
+	return nil
 }
 
 // isDirEmpty checks whether a directory is empty
@@ -152,11 +171,10 @@ func UpdateFilesFromWorkspace(workspace_path string, content_path string, change
 			if err != nil && !os.IsNotExist(err) {
 				return fmt.Errorf("failed to remove %s: %v", workspace_file, err)
 			}
-			dir, _ := filepath.Split(workspace_file)
 
-			err = ClearEmptyDir(dir)
+			err = ClearEmptyDir(workspace_path)
 			if err != nil && !os.IsNotExist(err) {
-				log.Printf("failed to clear empty dirs in '%s' dir: %v\n", dir, err)
+				log.Printf("failed to clear empty dirs in '%s' dir: %v\n", workspace_path, err)
 				log.Println("Ignorning this Error")
 			}
 

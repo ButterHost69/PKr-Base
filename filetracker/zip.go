@@ -134,8 +134,7 @@ func returnZipFileObj(zip_file_reader *zip.ReadCloser, search_file_name string) 
 func ZipUpdates(changes []config.FileChange, src_path string, dst_path string) (err error) {
 	dst_dir, _ := filepath.Split(dst_path)
 	if err = os.Mkdir(dst_dir, 0600); err != nil {
-		log.Println("Could not Create the Dir: ")
-		log.Println("Error: ", err)
+		log.Println("Error Could not Create the Dir:", err)
 		log.Println("Source: ZipUpdates()")
 		return err
 	}
@@ -176,24 +175,19 @@ func ZipUpdates(changes []config.FileChange, src_path string, dst_path string) (
 		}
 
 		log.Println("Zip File Obj:", zip_file_obj.Name)
-
 		zip_file_obj_reader, err := zip_file_obj.Open()
 		if err != nil {
 			return err
 		}
 		defer zip_file_obj_reader.Close()
 
-		// Copy the file header to preserve metadata
-		header := zip_file_obj.FileHeader
-		header.Method = zip.Deflate
-
-		dstWriterEntry, err := writer.CreateHeader(&header)
+		new_file, err := writer.Create(zip_file_obj.Name)
 		if err != nil {
 			return err
 		}
 
 		// Copy the contents
-		_, err = io.Copy(dstWriterEntry, zip_file_obj_reader)
+		_, err = io.Copy(new_file, zip_file_obj_reader)
 		if err != nil {
 			return err
 		}

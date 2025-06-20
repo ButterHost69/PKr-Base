@@ -75,7 +75,7 @@ func GetConnectionsPublicKeyUsingUsername(workspace_path, username string) (stri
 
 func StorePublicKeys(username, workspace_keys_path string, key string) (string, error) {
 	keyPath := filepath.Join(workspace_keys_path, username+".pem")
-	file, err := os.OpenFile(keyPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	file, err := os.OpenFile(keyPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0600)
 	if err != nil {
 		return "", err
 	}
@@ -157,7 +157,7 @@ func AddLogEntry(workspace_name string, isSendWorkspace bool, log_entry any) err
 	workspace_path += "\\" + LOGS_PKR_FILE_PATH
 
 	// Opens or Creates the Log File
-	file, err := os.OpenFile(workspace_path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	file, err := os.OpenFile(workspace_path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0600)
 	if err != nil {
 		return err
 	}
@@ -234,11 +234,11 @@ func MergeUpdates(workspace_path string, start_push_num, end_push_num int) ([]Fi
 		for _, change := range workspace_conf.AllUpdates[i].Changes {
 			update, exists := updates_list[change.FilePath]
 			if exists {
-				if update.Type == "Updates" && change.Type == "Removed" {
+				if update.Type == "Updated" && change.Type == "Removed" {
 					delete(updates_list, change.FilePath)
 				}
 			} else {
-				updates_list[change.FileHash] = FileChange{
+				updates_list[change.FilePath] = FileChange{
 					FilePath: change.FilePath,
 					FileHash: change.FileHash,
 					Type:     change.Type,

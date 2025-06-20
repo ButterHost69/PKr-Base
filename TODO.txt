@@ -1,31 +1,17 @@
 TODO:
-1.	// Create loggers for Base
+1. Retry pull after some time if it fails
+
+2. Also include Private IP during Request Punch from Receiver & if Public IP is same then send request to private ip
+
+3.	// Create loggers for Base
 	logger1 := log.New(file1, "LOG1: ", log.Ldate|log.Ltime|log.Lshortfile)
 	logger2 := log.New(file2, "LOG2: ", log.Ldate|log.Ltime|log.Lshortfile)
 
-2. Add description to each push
-
-3. Listeners can fetch workspace from other listeners
-
 4. We can remove AllConnections from PKrConfig
 
-5. Also include Private IP during Request Punch from Receiver & if Public IP is same then send request to private ip
+5. Also add a list of "Avoid files" like ".env" or any other secret files
 
-6. Also add a list of "Avoid files" like ".env" or any other secret files
-
-7. Retry pull after some time if it fails
-
-8. Properly clean empty folder, From child to parent order
-   Parent Empty folders're not deleted
-
-9. MergeUpdates func doesn't work well it needs modifications
-Sol. 	Unique Push number is required
-	& store that push number of client side
-	& send req of last push no while pulling data
-
-10. Also ONLY ZIP DATA WHILE PUSH OR INIT
-    Else users'll get modified data or Un Push Data
-
+6. Listeners can fetch workspace from other listeners
 
 ---------------------------------------------------------------
 

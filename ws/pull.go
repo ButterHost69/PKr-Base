@@ -165,7 +165,7 @@ func fetchAndStoreDataIntoWorkspace(workspace_owner_public_ip, workspace_name st
 	}
 	log.Println("Workspace Path: ", workspace_path)
 
-	zip_file_path := filepath.Join(workspace_path, ".PKr", res.RequestPushRange+".zip")
+	zip_file_path := filepath.Join(workspace_path, ".PKr", "Contents", res.RequestPushRange+".zip")
 	// Create Zip File
 	zip_file_obj, err := os.Create(zip_file_path)
 	if err != nil {
@@ -299,7 +299,7 @@ func fetchAndStoreDataIntoWorkspace(workspace_owner_public_ip, workspace_name st
 	}
 
 	unzip_dest := filepath.Join(workspace_path, ".PKr", "Contents", res.RequestPushRange)
-	err = os.MkdirAll(unzip_dest, 0666)
+	err = os.MkdirAll(unzip_dest, 0600)
 	if err != nil {
 		log.Println("Error while Creating .PKr/Push Num Directory:", err)
 		log.Println("Source: fetchAndStoreDataIntoWorkspace()")
@@ -325,7 +325,7 @@ func fetchAndStoreDataIntoWorkspace(workspace_owner_public_ip, workspace_name st
 	if err != nil {
 		log.Println("Error while Removing the Zip File After Use:", err)
 		log.Println("Source: fetchAndStoreDataIntoWorkspace()")
-		// No need to return err, else it won't register in configs
+		return err
 	}
 
 	// Remove files from the place where changes were temporarily un-zipped

@@ -169,12 +169,22 @@ func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.G
 	}
 
 	zip_destination_path := filepath.Join(workspace_path, ".PKr", "Files", "Current") + string(filepath.Separator)
-	zip_enc_filepath := zip_destination_path + strconv.Itoa(workspace_conf.LastPushNum) + ".enc"
 
 	res.RequestPushRange = strconv.Itoa(workspace_conf.LastPushNum)
 	res.Updates = nil
 
-	if req.LastPushNum != -1 {
+	// LastPushNum = -1 => Requesting for first time,i.e, Clone
+	if req.LastPushNum == -1 {
+		log.Println("Clone")
+		file_info, err := os.Stat(zip_destination_path + strconv.Itoa(workspace_conf.LastPushNum) + ".zip")
+		if err != nil {
+			log.Println("Failed to Get FileInfo of Zip File:", err)
+			log.Println("Source: GetMetaData()")
+			return ErrInternalSeverError
+		}
+		res.LenData = int(file_info.Size())
+	} else {
+		var zip_enc_filepath string
 		res.Updates = map[string]string{}
 		log.Println("Pull")
 
@@ -188,17 +198,9 @@ func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.G
 		log.Println("Merged Changes:", merged_changes)
 
 		log.Println("Generating Changes Push Name ...")
-		files_hash_list := []string{}
 		for _, changes := range merged_changes {
 			res.Updates[changes.FilePath] = changes.Type
-			if changes.Type == "Updated" {
-				log.Println(changes.FilePath)
-				files_hash_list = append(files_hash_list, changes.FilePath)
-				files_hash_list = append(files_hash_list, changes.FileHash)
-				res.Updates[changes.FilePath] = changes.Type
-			}
 		}
-		log.Println("Files Hash List:", files_hash_list)
 		log.Println("Res.Updates:", res.Updates)
 		res.RequestPushRange = strconv.Itoa(req.LastPushNum) + "-" + strconv.Itoa(workspace_conf.LastPushNum)
 		log.Println("Request Push Range:", res.RequestPushRange)
@@ -217,8 +219,8 @@ func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.G
 		} else {
 			log.Println("Generating Changes Zip")
 			last_push_num_str := strconv.Itoa(workspace_conf.LastPushNum)
-			src_path := filepath.Join(workspace_path, ".PKr", "Current", last_push_num_str, last_push_num_str+".zip")
-			dst_path := filepath.Join(workspace_path, ".PKr", "Changes", res.RequestPushRange, res.RequestPushRange+".zip")
+			src_path := filepath.Join(workspace_path, ".PKr", "Files", "Current", last_push_num_str+".zip")
+			dst_path := filepath.Join(workspace_path, ".PKr", "Files", "Changes", res.RequestPushRange, res.RequestPushRange+".zip")
 
 			err = filetracker.ZipUpdates(merged_changes, src_path, dst_path)
 			if err != nil {
@@ -270,6 +272,13 @@ func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.G
 			zip_destination_path = changes_path + string(filepath.Separator)
 			zip_enc_filepath = zip_destination_path + res.RequestPushRange + ".enc"
 		}
+		file_info, err := os.Stat(zip_enc_filepath)
+		if err != nil {
+			log.Println("Failed to Get FileInfo of Encrypted Zip File:", err)
+			log.Println("Source: GetMetaData()")
+			return ErrInternalSeverError
+		}
+		res.LenData = int(file_info.Size())
 	}
 
 	key, err := os.ReadFile(zip_destination_path + "AES_KEY")
@@ -316,16 +325,8 @@ func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.G
 		return ErrInternalSeverError
 	}
 
-	file_info, err := os.Stat(zip_enc_filepath)
-	if err != nil {
-		log.Println("Failed to Get FileInfo of Encrypted Zip File:", err)
-		log.Println("Source: GetMetaData()")
-		return ErrInternalSeverError
-	}
-
 	res.KeyBytes = []byte(encrypt_key)
 	res.IVBytes = []byte(encrypt_iv)
-	res.LenData = int(file_info.Size())
 
 	res.LastPushNum = workspace_conf.LastPushNum
 	res.LastPushDesc = workspace_conf.AllUpdates[workspace_conf.LastPushNum].PushDesc

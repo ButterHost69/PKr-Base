@@ -25,6 +25,89 @@ func sendErrorMessage(kcp_session *kcp.UDPSession, error_msg string) {
 	}
 }
 
+func handleClone(kcp_session *kcp.UDPSession, zip_path string, len_data_bytes int, workspace_path string) {
+	curr_dir := filepath.Join(workspace_path, ".PKr", "Files", "Current") + string(filepath.Separator)
+	key, err := os.ReadFile(curr_dir + "AES_KEY")
+	if err != nil {
+		log.Println("Error while Reading AES Key:", err)
+		log.Println("Source: handleClone()")
+		return
+	}
+
+	iv, err := os.ReadFile(curr_dir + "AES_IV")
+	if err != nil {
+		log.Println("Error while Reading AES IV:", err)
+		log.Println("Source: handleClone()")
+		return
+	}
+
+	log.Println("Opening Destination File")
+	zip_file_obj, err := os.Open(zip_path)
+	if err != nil {
+		log.Println("Error while Opening Destination File:", err)
+		log.Println("Source: GetDataHandler()")
+		sendErrorMessage(kcp_session, "Internal Server Error")
+		return
+	}
+	defer zip_file_obj.Close()
+
+	var buff [512]byte
+	buffer := make([]byte, DATA_CHUNK)
+	reader := bufio.NewReader(zip_file_obj)
+	log.Println("Length of File:", len_data_bytes)
+
+	log.Println("Preparing to Transfer Data")
+	offset := 0
+	for {
+		utils.PrintProgressBar(offset, len_data_bytes, 100)
+
+		n, err := reader.Read(buffer)
+		if err != nil {
+			if err == io.EOF {
+				fmt.Println()
+				log.Println("Done Sent, now waiting for ack from listener ...")
+				n, err := kcp_session.Read(buff[:])
+				if err != nil {
+					log.Println("Error while Reading 'Data Received' Message from Listener:", err)
+					log.Println("Source: GetDataHandler()")
+					return
+				}
+				// Data Received
+				msg := string(buff[:n])
+				if msg == "Data Received" {
+					log.Println("Data Transfer Completed:", offset)
+					return
+				}
+				log.Println("Received Unexpected Message:", msg)
+				return
+			}
+			log.Println("Error while Sending Workspace Chunk:", err)
+			log.Println("Source: GetDataHandler()")
+			sendErrorMessage(kcp_session, "Internal Server Error")
+			return
+		}
+
+		if n > 0 {
+			buffer, err = encrypt.EncryptDecryptChunk(buffer[:n], key, iv)
+			if err != nil {
+				log.Println("Error while Encrypting Data Chunk ...:", err)
+				log.Println("Source: handleClone()")
+				return
+			}
+
+			_, err := kcp_session.Write([]byte(buffer[:n]))
+			if err != nil {
+				log.Println("Error while Sending Data:", err)
+				log.Println("Source: GetDataHandler()")
+				sendErrorMessage(kcp_session, "Internal Server Error")
+				return
+			}
+		}
+		offset += n
+	}
+
+}
+
 func GetDataHandler(kcp_session *kcp.UDPSession) {
 	log.Println("Get Data Handler Called")
 	log.Println("Reading Workspace Name ...")
@@ -68,19 +151,32 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 	}
 	log.Println("Workspace Path:", workspace_path)
 
-	var zip_enc_path string
-	switch data_req_type {
-	case "Clone":
-		zip_enc_path = filepath.Join(workspace_path, ".PKr", "Files", "Current", workspace_push_num+".enc")
-	case "Pull":
-		zip_enc_path = filepath.Join(workspace_path, ".PKr", "Files", "Changes", workspace_push_num, workspace_push_num+".enc")
-	default:
+	if data_req_type == "Clone" {
+		zip_path := filepath.Join(workspace_path, ".PKr", "Files", "Current", workspace_push_num+".zip")
+		fileInfo, err := os.Stat(zip_path)
+		if err == nil {
+			log.Println("Destination File exists")
+		} else if os.IsNotExist(err) {
+			log.Println("Destination File does not exist")
+			sendErrorMessage(kcp_session, "Incorrect Workspace Name/Push Num")
+			return
+		} else {
+			log.Println("Error while checking Existence of Destination file:", err)
+			log.Println("Source: GetDataHandler()")
+			sendErrorMessage(kcp_session, "Internal Server Error")
+			return
+		}
+
+		handleClone(kcp_session, zip_path, int(fileInfo.Size()), workspace_path)
+		return
+	} else if data_req_type != "Pull" {
 		log.Println("Invalid Data Request Type Sent from User")
 		log.Println("Source: GetDataHandler()")
 		sendErrorMessage(kcp_session, "Invalid Data Request Type Sent")
 		return
 	}
 
+	zip_enc_path := filepath.Join(workspace_path, ".PKr", "Files", "Changes", workspace_push_num, workspace_push_num+".enc")
 	log.Println("Zip Enc FilePath to share:", zip_enc_path)
 
 	fileInfo, err := os.Stat(zip_enc_path)
@@ -88,7 +184,7 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 		log.Println("Destination File exists")
 	} else if os.IsNotExist(err) {
 		log.Println("Destination File does not exist")
-		sendErrorMessage(kcp_session, "Incorrect Workspace Name/Push Num")
+		sendErrorMessage(kcp_session, "Incorrect Workspace Name/Push Num Range")
 		return
 	} else {
 		log.Println("Error while checking Existence of Destination file:", err)
@@ -98,17 +194,17 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 	}
 
 	log.Println("Opening Destination File")
-	zip_enc_file_obj, err := os.Open(zip_enc_path)
+	zip_file_obj, err := os.Open(zip_enc_path)
 	if err != nil {
 		log.Println("Error while Opening Destination File:", err)
 		log.Println("Source: GetDataHandler()")
 		sendErrorMessage(kcp_session, "Internal Server Error")
 		return
 	}
-	defer zip_enc_file_obj.Close()
+	defer zip_file_obj.Close()
 
 	buffer := make([]byte, DATA_CHUNK)
-	reader := bufio.NewReader(zip_enc_file_obj)
+	reader := bufio.NewReader(zip_file_obj)
 
 	len_data_bytes := int(fileInfo.Size())
 	log.Println("Length of File:", len_data_bytes)
