@@ -10,7 +10,7 @@ service CliService {
     rpc RequestPunchFromReceiver (RequestPunchFromReceiverRequest) returns (RequestPunchFromReceiverResponse) {}
     rpc NotifyNewPushToListeners (NotifyNewPushToListenersRequest) returns (NotifyNewPushToListenersResponse) {}
     rpc GetAllWorkspaces (GetAllWorkspacesRequest) returns (GetAllWorkspacesResponse) {}
-    rpc GetLastHashOfWorkspace (GetLastHashOfWorkspaceRequest) returns (GetLastHashOfWorkspaceResponse) {}
+    rpc GetLastPushNumOfWorkspace (GetLastPushNumOfWorkspaceRequest) returns (GetLastPushNumOfWorkspaceResponse) {}
 }
 
 message RegisterRequest {
@@ -74,13 +74,13 @@ message GetAllWorkspacesResponse {
     repeated WorkspaceInfo workspaces = 1;    
 }
 
-message GetLastHashOfWorkspaceRequest {
+message GetLastPushNumOfWorkspaceRequest {
     string workspace_owner = 1;
     string workspace_name = 2;
     string listener_username = 3;
     string listener_password = 4;
 }
 
-message GetLastHashOfWorkspaceResponse {
-    string last_hash = 1;
+message GetLastPushNumOfWorkspaceResponse {
+    int32 last_push_num = 1;
 }

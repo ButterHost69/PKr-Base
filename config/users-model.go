@@ -26,5 +26,5 @@ type GetWorkspaceFolder struct {
 	WorkspaceName      string `json:"workspace_name"`
 	WorkspacePassword  string `json:"workspace_password"`
 	WorkspacePath      string `json:"workspace_path"`
-	LastHash           string `json:"last_hash"`
+	LastPushNum        int    `json:"last_push_num"`
 }

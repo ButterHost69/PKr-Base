@@ -84,7 +84,7 @@ func main() {
 	for _, get_workspace := range SERVER.GetWorkspaces {
 		log.Println("GET Workspace: ")
 		log.Println(get_workspace)
-		are_there_new_changes, err := dialer.CheckForNewChanges(gRPC_cli_service_client, get_workspace.WorkspaceName, get_workspace.WorkspaceOwnerName, SERVER.Username, SERVER.Password, get_workspace.LastHash)
+		are_there_new_changes, err := dialer.CheckForNewChanges(gRPC_cli_service_client, get_workspace.WorkspaceName, get_workspace.WorkspaceOwnerName, SERVER.Username, SERVER.Password, get_workspace.LastPushNum)
 		if err != nil {
 			log.Println("Error while Checking For New Changes:", err)
 			log.Println("Source: main()")

@@ -9,12 +9,13 @@ import (
 	"path/filepath"
 
 	"github.com/ButterHost69/PKr-Base/config"
+	"github.com/ButterHost69/PKr-Base/encrypt"
 	"github.com/ButterHost69/PKr-Base/utils"
 	"github.com/ButterHost69/kcp-go"
 )
 
-const DATA_CHUNK = 1024                        // 1KB
-const FLUSH_AFTER_EVERY_X_MB = 5 * 1024 * 1024 // 5 MB
+const DATA_CHUNK = encrypt.DATA_CHUNK
+const FLUSH_AFTER_EVERY_X_MB = encrypt.FLUSH_AFTER_EVERY_X_MB
 
 func sendErrorMessage(kcp_session *kcp.UDPSession, error_msg string) {
 	_, err := kcp_session.Write([]byte(error_msg))

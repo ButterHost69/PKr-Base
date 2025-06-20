@@ -165,7 +165,7 @@ func fetchAndStoreDataIntoWorkspace(workspace_owner_public_ip, workspace_name st
 	}
 	log.Println("Workspace Path: ", workspace_path)
 
-	zip_file_path := filepath.Join(workspace_path, ".PKr", res.RequestHash+".zip")
+	zip_file_path := filepath.Join(workspace_path, ".PKr", res.RequestPushRange+".zip")
 	// Create Zip File
 	zip_file_obj, err := os.Create(zip_file_path)
 	if err != nil {
@@ -212,13 +212,13 @@ func fetchAndStoreDataIntoWorkspace(workspace_owner_public_ip, workspace_name st
 		return err
 	}
 
-	_, err = kcp_conn.Write([]byte(res.RequestHash))
+	_, err = kcp_conn.Write([]byte(res.RequestPushRange))
 	if err != nil {
 		log.Println("Error while Sending Workspace Name to Workspace Owner:", err)
 		log.Println("Source: fetchAndStoreDataIntoWorkspace()")
 		return err
 	}
-	log.Println("Workspace Name & Hash Sent to Workspace Owner")
+	log.Println("Workspace Name & Push Num Sent to Workspace Owner")
 
 	_, err = kcp_conn.Write([]byte("Pull"))
 	if err != nil {
@@ -298,7 +298,7 @@ func fetchAndStoreDataIntoWorkspace(workspace_owner_public_ip, workspace_name st
 		// Not Returning Error because, we got data, we don't care if workspace owner now is offline or not responding
 	}
 
-	unzip_dest := filepath.Join(workspace_path, ".PKr", "Contents", res.RequestHash)
+	unzip_dest := filepath.Join(workspace_path, ".PKr", "Contents", res.RequestPushRange)
 	err = os.MkdirAll(unzip_dest, 0666)
 	if err != nil {
 		log.Println("Error while Creating .PKr/Hash Directory:", err)
@@ -364,12 +364,13 @@ func PullWorkspace(workspace_owner_username, workspace_name string, conn *websoc
 		return
 	}
 
-	var workspace_password, last_hash string
+	var workspace_password string
+	var last_push_num int
 	for _, server := range user_config.ServerLists {
 		for _, workspace := range server.GetWorkspaces {
 			if workspace.WorkspaceName == workspace_name && workspace.WorkspaceOwnerName == workspace_owner_username {
 				workspace_password = workspace.WorkspacePassword
-				last_hash = workspace.LastHash
+				last_push_num = workspace.LastPushNum
 			}
 		}
 	}
@@ -404,17 +405,17 @@ func PullWorkspace(workspace_owner_username, workspace_name string, conn *websoc
 
 	log.Println("Calling GetMetaData ...")
 	// Calling GetMetaData
-	res, err := rpcClientHandler.CallGetMetaData(MY_USERNAME, MY_SERVER_IP, workspace_name, encrypted_password, last_hash, client_handler_name, rpc_client)
+	res, err := rpcClientHandler.CallGetMetaData(MY_USERNAME, MY_SERVER_IP, workspace_name, encrypted_password, client_handler_name, last_push_num, rpc_client)
 	if err != nil {
 		log.Println("Error while Calling GetMetaData:", err)
 		log.Println("Source: pullWorkspace()")
 		return
 	}
 	log.Println("Get Data Responded, now storing files into workspace")
-	log.Println(res.IsChanges)
+	log.Println(res.LastPushNum)
+	log.Println(res.LastPushDesc)
 	log.Println(res.LenData)
-	log.Println(res.RequestHash)
-	log.Println(res.UpdatedHash)
+	log.Println(res.RequestPushRange)
 	log.Println(res.Updates)
 
 	kcp_conn.Close()
@@ -428,7 +429,7 @@ func PullWorkspace(workspace_owner_username, workspace_name string, conn *websoc
 	}
 
 	// Update tmp/userConfig.json
-	err = config.UpdateLastHashInGetWorkspaceFolderToUserConfig(workspace_name, res.UpdatedHash)
+	err = config.UpdateLastPushNumInGetWorkspaceFolderToUserConfig(workspace_name, res.LastPushNum)
 	if err != nil {
 		log.Println("Error while Registering New GetWorkspace:", err)
 		log.Println("Source: pullWorkspace()")

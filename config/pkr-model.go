@@ -3,7 +3,7 @@ package config
 type PKRConfig struct {
 	WorkspaceName  string       `json:"workspace_name"`
 	AllConnections []Connection `json:"all_connections"`
-	LastHash       string       `json:"last_hash"`
+	LastPushNum    int          `json:"last_push_num"`
 	AllUpdates     []Updates    `json:"all_updates"`
 }
 
@@ -13,9 +13,11 @@ type FileChange struct {
 	Type     string `json:"type"` //Updated ; Removed [Created and Updated are the same -> When File Created -> Tag as Updated]
 	// Because They will be replaced Anyway
 }
+
 type Updates struct {
-	Hash    string       `json:"hash"`
-	Changes []FileChange `json:"file_change"`
+	PushNum  int          `json:"push_num"`
+	PushDesc string       `json:"push_desc"`
+	Changes  []FileChange `json:"file_change"`
 }
 
 type Connection struct {

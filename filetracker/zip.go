@@ -15,93 +15,24 @@ import (
 	"github.com/ButterHost69/PKr-Base/encrypt"
 )
 
-// I dont Know if this works. Check it later
-// I copied From : https://gosamples.dev/zip-file/
-// CHEECHK THIISS LAAATTERRR
-// Running This Function Twice Makes a Zip File Whose Size keeps increasing until the Entire Disk
-// is filled
-// Dont USE THISSSSS
-func zippToInfiniteSize(workspace_path string) (string, error) {
-	// 2024-01-20.zip
-	zipFileName := strings.Split(time.Now().String(), " ")[0] + ".zip"
-
-	file, err := os.Create(workspace_path + "\\.PKr\\" + zipFileName)
-	if err != nil {
-		return "", err
-	}
-	defer file.Close()
-
-	writer := zip.NewWriter(file)
-
-	// This Might Break in Linux...
-	return zipFileName, filepath.Walk(workspace_path,
-		func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-
-			header, err := zip.FileInfoHeader(info)
-			if err != nil {
-				return err
-			}
-
-			header.Method = zip.Deflate
-
-			relPath, err := filepath.Rel(filepath.Dir(workspace_path), path)
-			if err != nil {
-				return err
-			}
-			header.Name = relPath
-
-			if info.IsDir() {
-				header.Name += "/"
-			}
-
-			headerWriter, err := writer.CreateHeader(header)
-			if err != nil {
-				return err
-			}
-
-			if info.IsDir() {
-				return nil
-			}
-
-			f, err := os.Open(path)
-			if err != nil {
-				return err
-			}
-
-			defer f.Close()
-
-			_, err = io.Copy(headerWriter, f)
-			return err
-		})
-}
-
 func addFilesToZip(writer *zip.Writer, dirpath string, relativepath string) error {
 	files, err := ioutil.ReadDir(dirpath)
 	if err != nil {
-		// log.Println(err)
 		return err
 	}
 
 	for _, file := range files {
-		// Comment This Later ... Only For Debugging
-		// config.AddUsersLogEntry(log.Sprintf("File: %s", file.Name()))
-		// ..........
 		if file.Name() == ".PKr" || file.Name() == "PKr-Base.exe" || file.Name() == "PKr-Cli.exe" || file.Name() == "tmp" || file.Name() == "PKr-Base" || file.Name() == "PKr-Cli" {
 			continue
 		} else if !file.IsDir() {
 			content, err := os.ReadFile(filepath.Join(dirpath, file.Name()))
 
 			if err != nil {
-				// log.Println(err)
 				return err
 			}
 
 			file, err := writer.Create(filepath.Join(relativepath, file.Name()))
 			if err != nil {
-				// log.Println(err)
 				return err
 			}
 			file.Write(content)
@@ -199,82 +130,61 @@ func UnzipData(src, dest string) error {
 	return nil
 }
 
-func ZipUpdates(updates config.Updates, workspace_path string, hash string) (err error) {
-	files := []string{}
-	for _, changes := range updates.Changes {
-		if changes.Type == "Updated" {
-			files = append(files, changes.FilePath)
+func returnZipFileObj(zip_file_reader *zip.ReadCloser, search_file_name string) *zip.File {
+	for _, file := range zip_file_reader.File {
+		log.Println("Zip File:", file.Name)
+		if file.Name == search_file_name {
+			return file
 		}
 	}
+	return nil
+}
 
-	// Create current change cache folder -> in Changes
-	storeFolderPath := filepath.Join(workspace_path, ".PKr", "Files", "Changes", hash)
-	if err = os.Mkdir(storeFolderPath, 0777); err != nil {
+func ZipUpdates(changes []config.FileChange, src_path string, dst_path string) (err error) {
+	dst_dir, _ := filepath.Split(dst_path)
+	if err = os.Mkdir(dst_dir, 0600); err != nil {
 		log.Println("Could not Create the Dir: ")
 		log.Println("Error: ", err)
-		log.Println("Source: ZipHashUpdates()")
+		log.Println("Source: ZipUpdates()")
 		return err
 	}
 
-	// Create Zip File
-	zipFilePath := filepath.Join(storeFolderPath, hash+".zip")
-	zipFile, err := os.Create(zipFilePath)
+	log.Println("Zipping Updates ...")
+	// Open Src Zip File
+	src_zip_file, err := zip.OpenReader(src_path)
 	if err != nil {
-		log.Printf("Error Could Not Create File %v: %v\n", zipFilePath, err)
-		log.Println("Source: ZipHashUpdates()")
+		log.Println("Error while Opening Source Zip File:", err)
+		log.Println("Source: ZipUpdates()")
 		return err
 	}
-	defer zipFile.Close()
+	defer src_zip_file.Close()
 
-	writer := zip.NewWriter(zipFile)
+	// Create Dest Zip File
+	dst_zip_file, err := os.Create(dst_path)
+	if err != nil {
+		log.Printf("Error Could Not Create File %v: %v\n", dst_path, err)
+		log.Println("Source: ZipUpdates()")
+		return err
+	}
+	defer dst_zip_file.Close()
+
+	// Dest Zip Writer
+	writer := zip.NewWriter(dst_zip_file)
 	defer writer.Close()
 
-	for _, relPath := range files {
-		filePath := filepath.Join(workspace_path, relPath)
-
-		// Open source file
-		file, err := os.Open(filePath)
-		if err != nil {
-			log.Println("Could Not Open source file")
-			log.Println("Source: ZipHashUpdates()")
-			return err
+	for _, change := range changes {
+		if change.Type != "Updated" {
+			continue
 		}
-		defer file.Close()
+		log.Println("Change.FilePath:", change.FilePath)
 
-		info, err := file.Stat()
+		zip_file_obj := returnZipFileObj(src_zip_file, filepath.Join(src_path, change.FilePath))
+		err = writer.Copy(zip_file_obj)
 		if err != nil {
-			log.Println("Could Not see File Stats")
-			log.Println("Source: ZipHashUpdates()")
-			return err
-		}
-
-		// Create zip header
-		header, err := zip.FileInfoHeader(info)
-		if err != nil {
-			log.Println("Could Not Create zip header")
-			log.Println("Source: ZipHashUpdates()")
-			return err
-		}
-		header.Name = relPath
-		header.Method = zip.Deflate
-
-		// Create writer for file
-		writerPart, err := writer.CreateHeader(header)
-		if err != nil {
-			log.Println("Could Not Create writer for file")
-			log.Println("Source: ZipHashUpdates()")
-
-			return err
-		}
-
-		// Copy file contents to zip
-		_, err = io.Copy(writerPart, file)
-		if err != nil {
-			log.Println("Could Not Create writer for file")
-			log.Println("Source: ZipHashUpdates()")
+			log.Println("Error while Copying Zip.File obj into New Dest Zip Writer:", err)
+			log.Println("Source: ZipUpdates()")
 			return err
 		}
 	}
-
 	return nil
 }

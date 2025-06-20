@@ -1,7 +1,7 @@
 package encrypt
 
 import (
-	"bytes"
+	"bufio"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -9,6 +9,9 @@ import (
 	"log"
 	"os"
 )
+
+const DATA_CHUNK = 1024                        // 1KB
+const FLUSH_AFTER_EVERY_X_MB = 5 * 1024 * 1024 // 5 MB
 
 func AESGenerakeKey(length int) ([]byte, error) {
 	// keep length 16, 24, 32 -> 128, 192, 256 respectively
@@ -29,59 +32,6 @@ func AESGenerateIV() ([]byte, error) {
 	return iv, nil
 }
 
-func AESEncrypt(source_filepath string, destination_filepath string, key []byte, IV []byte) error {
-	inputFile, err := os.Open(source_filepath)
-	if err != nil {
-		return err
-	}
-	defer inputFile.Close()
-
-	outputFile, err := os.Create(destination_filepath)
-	if err != nil {
-		return err
-	}
-	defer outputFile.Close()
-
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return err
-	}
-
-	stream := cipher.NewCTR(block, IV)
-
-	writer := &cipher.StreamWriter{S: stream, W: outputFile}
-	if _, err := io.Copy(writer, inputFile); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Take file in []byte, key and iv in string
-//
-// Returns []byte
-func AESDecrypt(data []byte, key, iv string) ([]byte, error) {
-	// Create the AES cipher
-	block, err := aes.NewCipher([]byte(key))
-	if err != nil {
-		return nil, err
-	}
-
-	// Create a new stream for decryption
-	stream := cipher.NewCTR(block, []byte(iv))
-
-	// Create a buffer to hold the decrypted data
-	var decryptedData bytes.Buffer
-	writer := &cipher.StreamWriter{S: stream, W: &decryptedData}
-
-	// Write the decrypted data to the buffer
-	if _, err := writer.Write(data); err != nil {
-		return nil, err
-	}
-
-	return decryptedData.Bytes(), nil
-}
-
 // Same func for Encrypt & Decrypt
 func EncryptDecryptChunk(data, key, iv []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
@@ -96,4 +46,85 @@ func EncryptDecryptChunk(data, key, iv []byte) ([]byte, error) {
 	stream.XORKeyStream(encrypted_decrypted, data)
 
 	return encrypted_decrypted, nil
+}
+
+func EncryptZipFileAndStore(zipped_filepath, zip_enc_path string, key, iv []byte) error {
+	zipped_filepath_obj, err := os.Open(zipped_filepath)
+	if err != nil {
+		log.Println("Failed to Open Zipped File:", err)
+		log.Println("Source: encryptZipFileAndStore()")
+		return err
+	}
+	defer zipped_filepath_obj.Close()
+
+	zip_enc_file_obj, err := os.Create(zip_enc_path)
+	if err != nil {
+		log.Println("Failed to Create & Open Enc Zipped File:", err)
+		log.Println("Source: encryptZipFileAndStore()")
+		return err
+	}
+	defer zip_enc_file_obj.Close()
+
+	buffer := make([]byte, DATA_CHUNK)
+	reader := bufio.NewReader(zipped_filepath_obj)
+	writer := bufio.NewWriter(zip_enc_file_obj)
+
+	// Reading from Zip File, Encrypting it & Writing it to Enc Zip File
+	offset := 0
+	for {
+		n, err := reader.Read(buffer)
+		if err != nil {
+			if err == io.EOF {
+				log.Println("File Encryption Completed ...")
+				break
+			}
+			log.Println("Error while Reading Zip File:", err)
+			log.Println("Source: encryptZipFileAndStore()")
+			return err
+		}
+		encrypted, err := EncryptDecryptChunk(buffer[:n], key, iv)
+		if err != nil {
+			log.Println("Failed to Encrypt Chunk:", err)
+			log.Println("Source: encryptZipFileAndStore()")
+			return err
+		}
+
+		_, err = writer.Write(encrypted)
+		if err != nil {
+			log.Println("Failed to Write Chunk to File:", err)
+			log.Println("Source: encryptZipFileAndStore()")
+			return err
+		}
+
+		// Flush buffer to disk after 'FLUSH_AFTER_EVERY_X_CHUNK'
+		if offset%FLUSH_AFTER_EVERY_X_MB == 0 {
+			err = writer.Flush()
+			if err != nil {
+				log.Println("Error flushing 'writer' after X KB/MB buffer:", err)
+				log.Println("Soure: encryptZipFileAndStore()")
+				return err
+			}
+		}
+		offset += n
+	}
+
+	// Flush buffer to disk at end
+	err = writer.Flush()
+	if err != nil {
+		log.Println("Error flushing 'writer' buffer:", err)
+		log.Println("Soure: encryptZipFileAndStore()")
+		return err
+	}
+	zipped_filepath_obj.Close() // Close Obj now, so we can delete zip file
+	zip_enc_file_obj.Close()
+
+	// Removing Zip File
+	err = os.Remove(zipped_filepath)
+	if err != nil {
+		log.Println("Error deleting zip file:", err)
+		log.Println("Source: encryptZipFileAndStore()")
+		return err
+	}
+	log.Println("Removed Zip File - ", zipped_filepath)
+	return nil
 }

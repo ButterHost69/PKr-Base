@@ -11,7 +11,6 @@ import (
 )
 
 func GenerateHashWithFilePath(file_path string) (string, error) {
-
 	f, err := os.Open(file_path)
 	if err != nil {
 		return "", fmt.Errorf("could not generate hash of the file.\nError: %e", err)
@@ -28,7 +27,6 @@ func GenerateHashWithFilePath(file_path string) (string, error) {
 }
 
 func GenerateHashWithFileIO(file *os.File) (string, error) {
-
 	_, err := file.Seek(0, 0)
 	if err != nil {
 		return "", err

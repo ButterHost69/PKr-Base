@@ -132,7 +132,7 @@ func WriteToFileTree(workspace_tree_path string, FileTree FileTree) error {
 	return nil
 }
 
-func CompareTrees(oldTree, newTree FileTree, new_hash string) Updates {
+func CompareTrees(oldTree, newTree FileTree) []FileChange {
 	// Build lookup maps
 	oldMap := make(map[string]string)
 	newMap := make(map[string]string)
@@ -177,9 +177,5 @@ func CompareTrees(oldTree, newTree FileTree, new_hash string) Updates {
 			})
 		}
 	}
-
-	return Updates{
-		Hash:    new_hash,
-		Changes: changes,
-	}
+	return changes
 }

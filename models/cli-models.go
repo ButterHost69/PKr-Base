@@ -24,7 +24,7 @@ type GetMetaDataRequest struct {
 	Username string
 	ServerIP string
 
-	LastHash string
+	LastPushNum int // -1 => Cloning for First Time
 }
 
 type GetMetaDataResponse struct {
@@ -32,9 +32,8 @@ type GetMetaDataResponse struct {
 	KeyBytes []byte
 	IVBytes  []byte
 
-	Updates   map[string]string // filepath+filename : change(Updated[Created]/Removed)
-	IsChanges bool              // Sending(Hash Prepared) -> True:Changes ; False:EntireWorkspace
-
-	RequestHash string // Hash of the contents that are to requested and that will be sent
-	UpdatedHash string // Latest Hash of the entire Workspace
+	Updates          map[string]string // {"fileA": "Updated", "fileB": "Removed"}, Updated & Created're treated equally
+	RequestPushRange string            // "Request Push Range" is to be sent during GetData, i.e., "2-5", Push2 to Push5
+	LastPushNum      int               // Latest Push Num of the Entire Workspace
+	LastPushDesc     string            // Latest Push Desc of the Entire Workspace
 }

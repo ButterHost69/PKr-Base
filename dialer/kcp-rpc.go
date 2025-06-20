@@ -49,14 +49,14 @@ func (h *ClientCallHandler) CallInitNewWorkSpaceConnection(workspace_name, my_us
 	return nil
 }
 
-func (h *ClientCallHandler) CallGetMetaData(my_username, server_ip, workspace_name, workspace_password, last_hash, clientHandlerName string, rpc_client *rpc.Client) (*models.GetMetaDataResponse, error) {
+func (h *ClientCallHandler) CallGetMetaData(my_username, server_ip, workspace_name, workspace_password, clientHandlerName string, last_push_num int, rpc_client *rpc.Client) (*models.GetMetaDataResponse, error) {
 	var req models.GetMetaDataRequest
 	var res models.GetMetaDataResponse
 
 	req.Username = my_username
 	req.WorkspaceName = workspace_name
 	req.WorkspacePassword = workspace_password
-	req.LastHash = last_hash
+	req.LastPushNum = last_push_num
 	req.ServerIP = server_ip
 
 	ctx, cancel := context.WithTimeout(context.Background(), CONTEXT_TIMEOUT)

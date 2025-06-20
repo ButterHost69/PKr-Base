@@ -83,14 +83,14 @@ func FolderTree(folder_path string) (map[string]string, error) {
 	return result, err
 }
 
-func AreUpdatesCached(workspace_path, update_hash string) (bool, error) {
+func AreUpdatesCached(workspace_path, update_push_range string) (bool, error) {
 	entries, err := os.ReadDir(filepath.Join(workspace_path, ".PKr", "Files", "Changes"))
 	if err != nil {
 		return false, err
 	}
 
 	for _, entry := range entries {
-		if entry.IsDir() && entry.Name() == update_hash {
+		if entry.IsDir() && entry.Name() == update_push_range {
 			return true, nil
 		}
 	}

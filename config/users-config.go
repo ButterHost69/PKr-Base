@@ -97,7 +97,7 @@ func RegisterNewSendWorkspace(server_alias, workspace_name, workspace_path, work
 	return nil
 }
 
-func RegisterNewGetWorkspace(server_alias, workspace_name, workspace_owner_name, workspace_path, workspace_password, last_hash string) error {
+func RegisterNewGetWorkspace(server_alias, workspace_name, workspace_owner_name, workspace_path, workspace_password string, last_push_num int) error {
 	userConfig, err := ReadFromUserConfigFile()
 	if err != nil {
 		fmt.Println("Error in reading From the UserConfig File...")
@@ -109,7 +109,7 @@ func RegisterNewGetWorkspace(server_alias, workspace_name, workspace_owner_name,
 		WorkspaceName:      workspace_name,
 		WorkspacePath:      workspace_path,
 		WorkspacePassword:  workspace_password,
-		LastHash:           last_hash,
+		LastPushNum:        last_push_num,
 	}
 
 	for idx, server := range userConfig.ServerLists {
@@ -249,7 +249,7 @@ func AddUsersLogEntry(log_entry any) error {
 }
 
 // Update Last Hash (Used during Pulls)
-func UpdateLastHashInGetWorkspaceFolderToUserConfig(workspace_name, last_hash string) error {
+func UpdateLastPushNumInGetWorkspaceFolderToUserConfig(workspace_name string, last_push_num int) error {
 	userConfig, err := ReadFromUserConfigFile()
 	if err != nil {
 		log.Println("Error while reading User Config File:", err)
@@ -260,7 +260,7 @@ func UpdateLastHashInGetWorkspaceFolderToUserConfig(workspace_name, last_hash st
 	for idx, server := range userConfig.ServerLists {
 		for widx, workspace := range server.GetWorkspaces {
 			if workspace.WorkspaceName == workspace_name {
-				userConfig.ServerLists[idx].GetWorkspaces[widx].LastHash = last_hash
+				userConfig.ServerLists[idx].GetWorkspaces[widx].LastPushNum = last_push_num
 				break
 			}
 		}

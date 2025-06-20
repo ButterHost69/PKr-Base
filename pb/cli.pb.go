@@ -697,7 +697,7 @@ func (x *GetAllWorkspacesResponse) GetWorkspaces() []*WorkspaceInfo {
 	return nil
 }
 
-type GetLastHashOfWorkspaceRequest struct {
+type GetLastPushNumOfWorkspaceRequest struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
 	WorkspaceOwner   string                 `protobuf:"bytes,1,opt,name=workspace_owner,json=workspaceOwner,proto3" json:"workspace_owner,omitempty"`
 	WorkspaceName    string                 `protobuf:"bytes,2,opt,name=workspace_name,json=workspaceName,proto3" json:"workspace_name,omitempty"`
@@ -707,20 +707,20 @@ type GetLastHashOfWorkspaceRequest struct {
 	sizeCache        protoimpl.SizeCache
 }
 
-func (x *GetLastHashOfWorkspaceRequest) Reset() {
-	*x = GetLastHashOfWorkspaceRequest{}
+func (x *GetLastPushNumOfWorkspaceRequest) Reset() {
+	*x = GetLastPushNumOfWorkspaceRequest{}
 	mi := &file_proto_cli_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetLastHashOfWorkspaceRequest) String() string {
+func (x *GetLastPushNumOfWorkspaceRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetLastHashOfWorkspaceRequest) ProtoMessage() {}
+func (*GetLastPushNumOfWorkspaceRequest) ProtoMessage() {}
 
-func (x *GetLastHashOfWorkspaceRequest) ProtoReflect() protoreflect.Message {
+func (x *GetLastPushNumOfWorkspaceRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_proto_cli_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -732,60 +732,60 @@ func (x *GetLastHashOfWorkspaceRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetLastHashOfWorkspaceRequest.ProtoReflect.Descriptor instead.
-func (*GetLastHashOfWorkspaceRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetLastPushNumOfWorkspaceRequest.ProtoReflect.Descriptor instead.
+func (*GetLastPushNumOfWorkspaceRequest) Descriptor() ([]byte, []int) {
 	return file_proto_cli_proto_rawDescGZIP(), []int{13}
 }
 
-func (x *GetLastHashOfWorkspaceRequest) GetWorkspaceOwner() string {
+func (x *GetLastPushNumOfWorkspaceRequest) GetWorkspaceOwner() string {
 	if x != nil {
 		return x.WorkspaceOwner
 	}
 	return ""
 }
 
-func (x *GetLastHashOfWorkspaceRequest) GetWorkspaceName() string {
+func (x *GetLastPushNumOfWorkspaceRequest) GetWorkspaceName() string {
 	if x != nil {
 		return x.WorkspaceName
 	}
 	return ""
 }
 
-func (x *GetLastHashOfWorkspaceRequest) GetListenerUsername() string {
+func (x *GetLastPushNumOfWorkspaceRequest) GetListenerUsername() string {
 	if x != nil {
 		return x.ListenerUsername
 	}
 	return ""
 }
 
-func (x *GetLastHashOfWorkspaceRequest) GetListenerPassword() string {
+func (x *GetLastPushNumOfWorkspaceRequest) GetListenerPassword() string {
 	if x != nil {
 		return x.ListenerPassword
 	}
 	return ""
 }
 
-type GetLastHashOfWorkspaceResponse struct {
+type GetLastPushNumOfWorkspaceResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	LastHash      string                 `protobuf:"bytes,1,opt,name=last_hash,json=lastHash,proto3" json:"last_hash,omitempty"`
+	LastPushNum   int32                  `protobuf:"varint,1,opt,name=last_push_num,json=lastPushNum,proto3" json:"last_push_num,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetLastHashOfWorkspaceResponse) Reset() {
-	*x = GetLastHashOfWorkspaceResponse{}
+func (x *GetLastPushNumOfWorkspaceResponse) Reset() {
+	*x = GetLastPushNumOfWorkspaceResponse{}
 	mi := &file_proto_cli_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetLastHashOfWorkspaceResponse) String() string {
+func (x *GetLastPushNumOfWorkspaceResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetLastHashOfWorkspaceResponse) ProtoMessage() {}
+func (*GetLastPushNumOfWorkspaceResponse) ProtoMessage() {}
 
-func (x *GetLastHashOfWorkspaceResponse) ProtoReflect() protoreflect.Message {
+func (x *GetLastPushNumOfWorkspaceResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_proto_cli_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -797,16 +797,16 @@ func (x *GetLastHashOfWorkspaceResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetLastHashOfWorkspaceResponse.ProtoReflect.Descriptor instead.
-func (*GetLastHashOfWorkspaceResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetLastPushNumOfWorkspaceResponse.ProtoReflect.Descriptor instead.
+func (*GetLastPushNumOfWorkspaceResponse) Descriptor() ([]byte, []int) {
 	return file_proto_cli_proto_rawDescGZIP(), []int{14}
 }
 
-func (x *GetLastHashOfWorkspaceResponse) GetLastHash() string {
+func (x *GetLastPushNumOfWorkspaceResponse) GetLastPushNum() int32 {
 	if x != nil {
-		return x.LastHash
+		return x.LastPushNum
 	}
-	return ""
+	return 0
 }
 
 var File_proto_cli_proto protoreflect.FileDescriptor
@@ -854,14 +854,14 @@ const file_proto_cli_proto_rawDesc = "" +
 	"\x18GetAllWorkspacesResponse\x124\n" +
 	"\n" +
 	"workspaces\x18\x01 \x03(\v2\x14.proto.WorkspaceInfoR\n" +
-	"workspaces\"\xc9\x01\n" +
-	"\x1dGetLastHashOfWorkspaceRequest\x12'\n" +
+	"workspaces\"\xcc\x01\n" +
+	" GetLastPushNumOfWorkspaceRequest\x12'\n" +
 	"\x0fworkspace_owner\x18\x01 \x01(\tR\x0eworkspaceOwner\x12%\n" +
 	"\x0eworkspace_name\x18\x02 \x01(\tR\rworkspaceName\x12+\n" +
 	"\x11listener_username\x18\x03 \x01(\tR\x10listenerUsername\x12+\n" +
-	"\x11listener_password\x18\x04 \x01(\tR\x10listenerPassword\"=\n" +
-	"\x1eGetLastHashOfWorkspaceResponse\x12\x1b\n" +
-	"\tlast_hash\x18\x01 \x01(\tR\blastHash2\xaf\x05\n" +
+	"\x11listener_password\x18\x04 \x01(\tR\x10listenerPassword\"G\n" +
+	"!GetLastPushNumOfWorkspaceResponse\x12\"\n" +
+	"\rlast_push_num\x18\x01 \x01(\x05R\vlastPushNum2\xb8\x05\n" +
 	"\n" +
 	"CliService\x12=\n" +
 	"\bRegister\x12\x16.proto.RegisterRequest\x1a\x17.proto.RegisterResponse\"\x00\x12X\n" +
@@ -869,8 +869,8 @@ const file_proto_cli_proto_rawDesc = "" +
 	"\x17RegisterUserToWorkspace\x12%.proto.RegisterUserToWorkspaceRequest\x1a&.proto.RegisterUserToWorkspaceResponse\"\x00\x12m\n" +
 	"\x18RequestPunchFromReceiver\x12&.proto.RequestPunchFromReceiverRequest\x1a'.proto.RequestPunchFromReceiverResponse\"\x00\x12m\n" +
 	"\x18NotifyNewPushToListeners\x12&.proto.NotifyNewPushToListenersRequest\x1a'.proto.NotifyNewPushToListenersResponse\"\x00\x12U\n" +
-	"\x10GetAllWorkspaces\x12\x1e.proto.GetAllWorkspacesRequest\x1a\x1f.proto.GetAllWorkspacesResponse\"\x00\x12g\n" +
-	"\x16GetLastHashOfWorkspace\x12$.proto.GetLastHashOfWorkspaceRequest\x1a%.proto.GetLastHashOfWorkspaceResponse\"\x00B\x06Z\x04./pbb\x06proto3"
+	"\x10GetAllWorkspaces\x12\x1e.proto.GetAllWorkspacesRequest\x1a\x1f.proto.GetAllWorkspacesResponse\"\x00\x12p\n" +
+	"\x19GetLastPushNumOfWorkspace\x12'.proto.GetLastPushNumOfWorkspaceRequest\x1a(.proto.GetLastPushNumOfWorkspaceResponse\"\x00B\x06Z\x04./pbb\x06proto3"
 
 var (
 	file_proto_cli_proto_rawDescOnce sync.Once
@@ -886,21 +886,21 @@ func file_proto_cli_proto_rawDescGZIP() []byte {
 
 var file_proto_cli_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_proto_cli_proto_goTypes = []any{
-	(*RegisterRequest)(nil),                  // 0: proto.RegisterRequest
-	(*RegisterResponse)(nil),                 // 1: proto.RegisterResponse
-	(*RegisterWorkspaceRequest)(nil),         // 2: proto.RegisterWorkspaceRequest
-	(*RegisterWorkspaceResponse)(nil),        // 3: proto.RegisterWorkspaceResponse
-	(*RegisterUserToWorkspaceRequest)(nil),   // 4: proto.RegisterUserToWorkspaceRequest
-	(*RegisterUserToWorkspaceResponse)(nil),  // 5: proto.RegisterUserToWorkspaceResponse
-	(*RequestPunchFromReceiverRequest)(nil),  // 6: proto.RequestPunchFromReceiverRequest
-	(*RequestPunchFromReceiverResponse)(nil), // 7: proto.RequestPunchFromReceiverResponse
-	(*NotifyNewPushToListenersRequest)(nil),  // 8: proto.NotifyNewPushToListenersRequest
-	(*NotifyNewPushToListenersResponse)(nil), // 9: proto.NotifyNewPushToListenersResponse
-	(*GetAllWorkspacesRequest)(nil),          // 10: proto.GetAllWorkspacesRequest
-	(*WorkspaceInfo)(nil),                    // 11: proto.WorkspaceInfo
-	(*GetAllWorkspacesResponse)(nil),         // 12: proto.GetAllWorkspacesResponse
-	(*GetLastHashOfWorkspaceRequest)(nil),    // 13: proto.GetLastHashOfWorkspaceRequest
-	(*GetLastHashOfWorkspaceResponse)(nil),   // 14: proto.GetLastHashOfWorkspaceResponse
+	(*RegisterRequest)(nil),                   // 0: proto.RegisterRequest
+	(*RegisterResponse)(nil),                  // 1: proto.RegisterResponse
+	(*RegisterWorkspaceRequest)(nil),          // 2: proto.RegisterWorkspaceRequest
+	(*RegisterWorkspaceResponse)(nil),         // 3: proto.RegisterWorkspaceResponse
+	(*RegisterUserToWorkspaceRequest)(nil),    // 4: proto.RegisterUserToWorkspaceRequest
+	(*RegisterUserToWorkspaceResponse)(nil),   // 5: proto.RegisterUserToWorkspaceResponse
+	(*RequestPunchFromReceiverRequest)(nil),   // 6: proto.RequestPunchFromReceiverRequest
+	(*RequestPunchFromReceiverResponse)(nil),  // 7: proto.RequestPunchFromReceiverResponse
+	(*NotifyNewPushToListenersRequest)(nil),   // 8: proto.NotifyNewPushToListenersRequest
+	(*NotifyNewPushToListenersResponse)(nil),  // 9: proto.NotifyNewPushToListenersResponse
+	(*GetAllWorkspacesRequest)(nil),           // 10: proto.GetAllWorkspacesRequest
+	(*WorkspaceInfo)(nil),                     // 11: proto.WorkspaceInfo
+	(*GetAllWorkspacesResponse)(nil),          // 12: proto.GetAllWorkspacesResponse
+	(*GetLastPushNumOfWorkspaceRequest)(nil),  // 13: proto.GetLastPushNumOfWorkspaceRequest
+	(*GetLastPushNumOfWorkspaceResponse)(nil), // 14: proto.GetLastPushNumOfWorkspaceResponse
 }
 var file_proto_cli_proto_depIdxs = []int32{
 	11, // 0: proto.GetAllWorkspacesResponse.workspaces:type_name -> proto.WorkspaceInfo
@@ -910,14 +910,14 @@ var file_proto_cli_proto_depIdxs = []int32{
 	6,  // 4: proto.CliService.RequestPunchFromReceiver:input_type -> proto.RequestPunchFromReceiverRequest
 	8,  // 5: proto.CliService.NotifyNewPushToListeners:input_type -> proto.NotifyNewPushToListenersRequest
 	10, // 6: proto.CliService.GetAllWorkspaces:input_type -> proto.GetAllWorkspacesRequest
-	13, // 7: proto.CliService.GetLastHashOfWorkspace:input_type -> proto.GetLastHashOfWorkspaceRequest
+	13, // 7: proto.CliService.GetLastPushNumOfWorkspace:input_type -> proto.GetLastPushNumOfWorkspaceRequest
 	1,  // 8: proto.CliService.Register:output_type -> proto.RegisterResponse
 	3,  // 9: proto.CliService.RegisterWorkspace:output_type -> proto.RegisterWorkspaceResponse
 	5,  // 10: proto.CliService.RegisterUserToWorkspace:output_type -> proto.RegisterUserToWorkspaceResponse
 	7,  // 11: proto.CliService.RequestPunchFromReceiver:output_type -> proto.RequestPunchFromReceiverResponse
 	9,  // 12: proto.CliService.NotifyNewPushToListeners:output_type -> proto.NotifyNewPushToListenersResponse
 	12, // 13: proto.CliService.GetAllWorkspaces:output_type -> proto.GetAllWorkspacesResponse
-	14, // 14: proto.CliService.GetLastHashOfWorkspace:output_type -> proto.GetLastHashOfWorkspaceResponse
+	14, // 14: proto.CliService.GetLastPushNumOfWorkspace:output_type -> proto.GetLastPushNumOfWorkspaceResponse
 	8,  // [8:15] is the sub-list for method output_type
 	1,  // [1:8] is the sub-list for method input_type
 	1,  // [1:1] is the sub-list for extension type_name
