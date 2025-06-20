@@ -14,6 +14,8 @@ import (
 func addFilesToZip(writer *zip.Writer, dirpath string, relativepath string) error {
 	files, err := ioutil.ReadDir(dirpath)
 	if err != nil {
+		log.Println("Error while Reading Dir:", err)
+		log.Println("Source: addFilesToZip()")
 		return err
 	}
 
@@ -24,11 +26,15 @@ func addFilesToZip(writer *zip.Writer, dirpath string, relativepath string) erro
 			content, err := os.ReadFile(filepath.Join(dirpath, file.Name()))
 
 			if err != nil {
+				log.Println("Error while Reading File:", err)
+				log.Println("Source: addFilesToZip()")
 				return err
 			}
 
 			file, err := writer.Create(filepath.Join(relativepath, file.Name()))
 			if err != nil {
+				log.Println("Error while Creating Entry in Zip File:", err)
+				log.Println("Source: addFilesToZip()")
 				return err
 			}
 			file.Write(content)
@@ -39,7 +45,6 @@ func addFilesToZip(writer *zip.Writer, dirpath string, relativepath string) erro
 			addFilesToZip(writer, newDirPath, newRelativePath)
 		}
 	}
-
 	return nil
 }
 
@@ -49,6 +54,8 @@ func ZipData(workspace_path string, destination_path string, zip_file_name strin
 
 	zip_file, err := os.Create(fullZipPath)
 	if err != nil {
+		log.Println("Error while Creating Zip File:", err)
+		log.Println("Source: ZipData()")
 		return err
 	}
 	defer zip_file.Close()
@@ -57,6 +64,8 @@ func ZipData(workspace_path string, destination_path string, zip_file_name strin
 	addFilesToZip(writer, workspace_path, "")
 
 	if err = writer.Close(); err != nil {
+		log.Println("Error while Closing zip writer:", err)
+		log.Println("Source: ZipData()")
 		return err
 	}
 	return nil
