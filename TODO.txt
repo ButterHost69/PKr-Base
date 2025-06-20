@@ -18,7 +18,6 @@ TODO:
 8. Properly clean empty folder, From child to parent order
    Parent Empty folders're not deleted
 
-
 9. MergeUpdates func doesn't work well it needs modifications
 Sol. 	Unique Push number is required
 	& store that push number of client side

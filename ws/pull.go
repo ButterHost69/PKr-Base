@@ -203,8 +203,8 @@ func fetchAndStoreDataIntoWorkspace(workspace_owner_public_ip, workspace_name st
 		return err
 	}
 
-	log.Println("Sending Workspace Name & Hash to Workspace Owner")
-	// Sending Workspace Name & Hash
+	log.Println("Sending Workspace Name & Push Num to Workspace Owner")
+	// Sending Workspace Name & Push Num
 	_, err = kcp_conn.Write([]byte(workspace_name))
 	if err != nil {
 		log.Println("Error while Sending Workspace Name to Workspace Owner:", err)
@@ -244,7 +244,7 @@ func fetchAndStoreDataIntoWorkspace(workspace_owner_public_ip, workspace_name st
 		// Check for Errors on Workspace Owner's Side
 		if n < 30 {
 			msg := string(buffer[:n])
-			if msg == "Incorrect Workspace Name/Hash" || msg == "Internal Server Error" {
+			if msg == "Incorrect Workspace Name/Push Num" || msg == "Internal Server Error" {
 				log.Println("\nError while Reading from Workspace on his/her side:", msg)
 				log.Println("Source: fetchAndStoreDataIntoWorkspace()")
 				return errors.New(msg)
@@ -301,7 +301,7 @@ func fetchAndStoreDataIntoWorkspace(workspace_owner_public_ip, workspace_name st
 	unzip_dest := filepath.Join(workspace_path, ".PKr", "Contents", res.RequestPushRange)
 	err = os.MkdirAll(unzip_dest, 0666)
 	if err != nil {
-		log.Println("Error while Creating .PKr/Hash Directory:", err)
+		log.Println("Error while Creating .PKr/Push Num Directory:", err)
 		log.Println("Source: fetchAndStoreDataIntoWorkspace()")
 		return err
 	}
@@ -331,7 +331,7 @@ func fetchAndStoreDataIntoWorkspace(workspace_owner_public_ip, workspace_name st
 	// Remove files from the place where changes were temporarily un-zipped
 	err = os.RemoveAll(unzip_dest)
 	if err != nil {
-		log.Println("Error while Removing the Files from '.PKr/Hash/':", err)
+		log.Println("Error while Removing the Files from '.PKr/Push Num/':", err)
 		log.Println("Source: fetchAndStoreDataIntoWorkspace()")
 		return err
 	}

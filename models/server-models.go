@@ -17,7 +17,7 @@ type NotifyToPunchResponse struct {
 type NotifyNewPushToListeners struct {
 	WorkspaceOwnerUsername string `json:"workspace_owner_username"`
 	WorkspaceName          string `json:"workspace_name"`
-	NewWorkspaceHash       string `json:"workspace_new_hash"`
+	NewWorkspacePushNum    string `json:"workspace_new_push_num"`
 }
 
 type RequestPunchFromReceiverRequest struct {

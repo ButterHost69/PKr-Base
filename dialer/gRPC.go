@@ -42,7 +42,7 @@ func CheckForNewChanges(grpc_client pb.CliServiceClient, workspace_name, workspa
 		fmt.Println("Source: Install()")
 		return false, err
 	}
-	log.Println("Latest Hash Received from Server:", res.LastPushNum)
-	log.Println("My Latest Hash:", last_push_num)
+	log.Println("Latest Push Num Received from Server:", res.LastPushNum)
+	log.Println("My Latest Push Num:", last_push_num)
 	return res.LastPushNum != int32(last_push_num), nil
 }

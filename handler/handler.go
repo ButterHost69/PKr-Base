@@ -147,7 +147,7 @@ func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.G
 		return ErrInternalSeverError
 	}
 
-	// Reading Last Hash from Config
+	// Reading Last Push Num from Config
 	workspace_conf, err := config.ReadFromPKRConfigFile(filepath.Join(workspace_path, ".PKr", "workspaceConfig.json"))
 	if err != nil {
 		log.Println("Error while Reading from PKr Config File:", err)
@@ -178,7 +178,7 @@ func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.G
 		res.Updates = map[string]string{}
 		log.Println("Pull")
 
-		log.Println("Merging Required Updates between the Hashes")
+		log.Println("Merging Required Updates between the Pushes")
 		merged_changes, err := config.MergeUpdates(workspace_path, req.LastPushNum, workspace_conf.LastPushNum)
 		if err != nil {
 			log.Println("Unable to Merge Updates:", err)
@@ -187,7 +187,7 @@ func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.G
 		}
 		log.Println("Merged Changes:", merged_changes)
 
-		log.Println("Generating Changes Hash Name ...")
+		log.Println("Generating Changes Push Name ...")
 		files_hash_list := []string{}
 		for _, changes := range merged_changes {
 			res.Updates[changes.FilePath] = changes.Type

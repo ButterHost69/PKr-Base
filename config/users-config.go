@@ -248,12 +248,12 @@ func AddUsersLogEntry(log_entry any) error {
 	return nil
 }
 
-// Update Last Hash (Used during Pulls)
+// Update Last Push Num (Used during Pulls)
 func UpdateLastPushNumInGetWorkspaceFolderToUserConfig(workspace_name string, last_push_num int) error {
 	userConfig, err := ReadFromUserConfigFile()
 	if err != nil {
 		log.Println("Error while reading User Config File:", err)
-		log.Println("Source: UpdateLastHashInGetWorkspaceFolderToUserConfig()")
+		log.Println("Source: UpdateLastPushNumInGetWorkspaceFolderToUserConfig()")
 		return err
 	}
 
@@ -268,7 +268,7 @@ func UpdateLastPushNumInGetWorkspaceFolderToUserConfig(workspace_name string, la
 
 	if err := writeToUserConfigFile(userConfig); err != nil {
 		log.Println("Error while writing User Config File:", err)
-		log.Println("Source: UpdateLastHashInGetWorkspaceFolderToUserConfig()")
+		log.Println("Source: UpdateLastPushNumInGetWorkspaceFolderToUserConfig()")
 		return err
 	}
 	return nil

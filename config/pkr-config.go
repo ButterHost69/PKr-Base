@@ -184,7 +184,7 @@ func UpdateLastPushNum(workspace_name string, last_push_num int) error {
 
 	workspace_json.LastPushNum = last_push_num
 	if err := writeToPKRConfigFile(workspace_path, workspace_json); err != nil {
-		return fmt.Errorf("error in writing the update hash to file: %s.\nError: %v", workspace_path, err)
+		return fmt.Errorf("error in writing the update push num to file: %s.\nError: %v", workspace_path, err)
 	}
 	return nil
 }
@@ -216,7 +216,7 @@ func AppendWorkspaceUpdates(updates Updates, workspace_path string) error {
 
 	workspace_json.AllUpdates = append(workspace_json.AllUpdates, updates)
 	if err := writeToPKRConfigFile(workspace_config_path, workspace_json); err != nil {
-		return fmt.Errorf("error in writing the update hash to file: %s.\nError: %v", workspace_path, err)
+		return fmt.Errorf("error in writing new update to workspace_conf\nError: %v", err)
 	}
 	return nil
 }

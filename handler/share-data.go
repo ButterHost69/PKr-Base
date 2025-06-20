@@ -38,21 +38,21 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 	}
 	workspace_name := string(buff[:n])
 	log.Println("Workspace Name:", workspace_name)
-	log.Println("Reading Workspace Hash ...")
+	log.Println("Reading Workspace Push Num ...")
 
 	n, err = kcp_session.Read(buff[:])
 	if err != nil {
-		log.Println("Error while Reading Workspace Hash:", err)
+		log.Println("Error while Reading Workspace Push Num:", err)
 		log.Println("Source: GetDataHandler()")
 		return
 	}
-	workspace_hash := string(buff[:n])
-	log.Println("Workspace Hash:", workspace_hash)
+	workspace_push_num := string(buff[:n])
+	log.Println("Workspace Push Num:", workspace_push_num)
 
 	// Read Data Request Type (Pull/Clone)
 	n, err = kcp_session.Read(buff[:])
 	if err != nil {
-		log.Println("Error while Reading Workspace Hash:", err)
+		log.Println("Error while Reading Type of Data Request Type:", err)
 		log.Println("Source: GetDataHandler()")
 		return
 	}
@@ -69,11 +69,12 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 	log.Println("Workspace Path:", workspace_path)
 
 	var zip_enc_path string
-	if data_req_type == "Clone" {
-		zip_enc_path = filepath.Join(workspace_path, ".PKr", "Files", "Current", workspace_hash+".enc")
-	} else if data_req_type == "Pull" {
-		zip_enc_path = filepath.Join(workspace_path, ".PKr", "Files", "Changes", workspace_hash, workspace_hash+".enc")
-	} else {
+	switch data_req_type {
+	case "Clone":
+		zip_enc_path = filepath.Join(workspace_path, ".PKr", "Files", "Current", workspace_push_num+".enc")
+	case "Pull":
+		zip_enc_path = filepath.Join(workspace_path, ".PKr", "Files", "Changes", workspace_push_num, workspace_push_num+".enc")
+	default:
 		log.Println("Invalid Data Request Type Sent from User")
 		log.Println("Source: GetDataHandler()")
 		sendErrorMessage(kcp_session, "Invalid Data Request Type Sent")
@@ -87,7 +88,7 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 		log.Println("Destination File exists")
 	} else if os.IsNotExist(err) {
 		log.Println("Destination File does not exist")
-		sendErrorMessage(kcp_session, "Incorrect Workspace Name/Hash")
+		sendErrorMessage(kcp_session, "Incorrect Workspace Name/Push Num")
 		return
 	} else {
 		log.Println("Error while checking Existence of Destination file:", err)
