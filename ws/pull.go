@@ -10,6 +10,7 @@ import (
 	"net/rpc"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -47,11 +48,20 @@ func connectToAnotherUser(workspace_owner_username string, conn *websocket.Conn)
 	myPublicIPOnly := myPublicIPSplit[0]
 	myPublicPortOnly := myPublicIPSplit[1]
 
+	private_ips, err := utils.ReturnListOfPrivateIPs()
+	if err != nil {
+		log.Println("Error while Fetching the List of Private IPs:", err)
+		log.Println("Source: connectToAnotherUser()")
+		return "", "", nil, nil, err
+	}
+
 	var req_punch_from_receiver_request models.RequestPunchFromReceiverRequest
 	req_punch_from_receiver_request.WorkspaceOwnerUsername = workspace_owner_username
 	req_punch_from_receiver_request.ListenerUsername = MY_USERNAME
 	req_punch_from_receiver_request.ListenerPublicIP = myPublicIPOnly
 	req_punch_from_receiver_request.ListenerPublicPort = myPublicPortOnly
+	req_punch_from_receiver_request.ListenerPrivatePort = strconv.Itoa(local_port)
+	req_punch_from_receiver_request.ListenerPrivateIPList = private_ips
 
 	log.Println("Calling RequestPunchFromReceiverRequest")
 	err = conn.WriteJSON(models.WSMessage{

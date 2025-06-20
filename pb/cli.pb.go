@@ -323,7 +323,9 @@ type RequestPunchFromReceiverRequest struct {
 	ListenerPassword       string                 `protobuf:"bytes,2,opt,name=listener_password,json=listenerPassword,proto3" json:"listener_password,omitempty"`
 	ListenerPublicIp       string                 `protobuf:"bytes,3,opt,name=listener_public_ip,json=listenerPublicIp,proto3" json:"listener_public_ip,omitempty"`
 	ListenerPublicPort     string                 `protobuf:"bytes,4,opt,name=listener_public_port,json=listenerPublicPort,proto3" json:"listener_public_port,omitempty"`
-	WorkspaceOwnerUsername string                 `protobuf:"bytes,5,opt,name=workspace_owner_username,json=workspaceOwnerUsername,proto3" json:"workspace_owner_username,omitempty"`
+	ListenerPrivateIp      []string               `protobuf:"bytes,5,rep,name=listener_private_ip,json=listenerPrivateIp,proto3" json:"listener_private_ip,omitempty"`
+	ListenerPrivatePort    string                 `protobuf:"bytes,6,opt,name=listener_private_port,json=listenerPrivatePort,proto3" json:"listener_private_port,omitempty"`
+	WorkspaceOwnerUsername string                 `protobuf:"bytes,7,opt,name=workspace_owner_username,json=workspaceOwnerUsername,proto3" json:"workspace_owner_username,omitempty"`
 	unknownFields          protoimpl.UnknownFields
 	sizeCache              protoimpl.SizeCache
 }
@@ -386,6 +388,20 @@ func (x *RequestPunchFromReceiverRequest) GetListenerPublicPort() string {
 	return ""
 }
 
+func (x *RequestPunchFromReceiverRequest) GetListenerPrivateIp() []string {
+	if x != nil {
+		return x.ListenerPrivateIp
+	}
+	return nil
+}
+
+func (x *RequestPunchFromReceiverRequest) GetListenerPrivatePort() string {
+	if x != nil {
+		return x.ListenerPrivatePort
+	}
+	return ""
+}
+
 func (x *RequestPunchFromReceiverRequest) GetWorkspaceOwnerUsername() string {
 	if x != nil {
 		return x.WorkspaceOwnerUsername
@@ -394,11 +410,13 @@ func (x *RequestPunchFromReceiverRequest) GetWorkspaceOwnerUsername() string {
 }
 
 type RequestPunchFromReceiverResponse struct {
-	state                    protoimpl.MessageState `protogen:"open.v1"`
-	WorkspaceOwnerPublicIp   string                 `protobuf:"bytes,1,opt,name=workspace_owner_public_ip,json=workspaceOwnerPublicIp,proto3" json:"workspace_owner_public_ip,omitempty"`
-	WorkspaceOwnerPublicPort string                 `protobuf:"bytes,2,opt,name=workspace_owner_public_port,json=workspaceOwnerPublicPort,proto3" json:"workspace_owner_public_port,omitempty"`
-	unknownFields            protoimpl.UnknownFields
-	sizeCache                protoimpl.SizeCache
+	state                     protoimpl.MessageState `protogen:"open.v1"`
+	WorkspaceOwnerPublicIp    string                 `protobuf:"bytes,1,opt,name=workspace_owner_public_ip,json=workspaceOwnerPublicIp,proto3" json:"workspace_owner_public_ip,omitempty"`
+	WorkspaceOwnerPublicPort  string                 `protobuf:"bytes,2,opt,name=workspace_owner_public_port,json=workspaceOwnerPublicPort,proto3" json:"workspace_owner_public_port,omitempty"`
+	WorkspaceOwnerPrivateIp   []string               `protobuf:"bytes,3,rep,name=workspace_owner_private_ip,json=workspaceOwnerPrivateIp,proto3" json:"workspace_owner_private_ip,omitempty"`
+	WorkspaceOwnerPrivatePort string                 `protobuf:"bytes,4,opt,name=workspace_owner_private_port,json=workspaceOwnerPrivatePort,proto3" json:"workspace_owner_private_port,omitempty"`
+	unknownFields             protoimpl.UnknownFields
+	sizeCache                 protoimpl.SizeCache
 }
 
 func (x *RequestPunchFromReceiverResponse) Reset() {
@@ -441,6 +459,20 @@ func (x *RequestPunchFromReceiverResponse) GetWorkspaceOwnerPublicIp() string {
 func (x *RequestPunchFromReceiverResponse) GetWorkspaceOwnerPublicPort() string {
 	if x != nil {
 		return x.WorkspaceOwnerPublicPort
+	}
+	return ""
+}
+
+func (x *RequestPunchFromReceiverResponse) GetWorkspaceOwnerPrivateIp() []string {
+	if x != nil {
+		return x.WorkspaceOwnerPrivateIp
+	}
+	return nil
+}
+
+func (x *RequestPunchFromReceiverResponse) GetWorkspaceOwnerPrivatePort() string {
+	if x != nil {
+		return x.WorkspaceOwnerPrivatePort
 	}
 	return ""
 }
@@ -829,16 +861,20 @@ const file_proto_cli_proto_rawDesc = "" +
 	"\x11listener_password\x18\x02 \x01(\tR\x10listenerPassword\x12%\n" +
 	"\x0eworkspace_name\x18\x03 \x01(\tR\rworkspaceName\x128\n" +
 	"\x18workspace_owner_username\x18\x04 \x01(\tR\x16workspaceOwnerUsername\"!\n" +
-	"\x1fRegisterUserToWorkspaceResponse\"\x95\x02\n" +
+	"\x1fRegisterUserToWorkspaceResponse\"\xf9\x02\n" +
 	"\x1fRequestPunchFromReceiverRequest\x12+\n" +
 	"\x11listener_username\x18\x01 \x01(\tR\x10listenerUsername\x12+\n" +
 	"\x11listener_password\x18\x02 \x01(\tR\x10listenerPassword\x12,\n" +
 	"\x12listener_public_ip\x18\x03 \x01(\tR\x10listenerPublicIp\x120\n" +
-	"\x14listener_public_port\x18\x04 \x01(\tR\x12listenerPublicPort\x128\n" +
-	"\x18workspace_owner_username\x18\x05 \x01(\tR\x16workspaceOwnerUsername\"\x9c\x01\n" +
+	"\x14listener_public_port\x18\x04 \x01(\tR\x12listenerPublicPort\x12.\n" +
+	"\x13listener_private_ip\x18\x05 \x03(\tR\x11listenerPrivateIp\x122\n" +
+	"\x15listener_private_port\x18\x06 \x01(\tR\x13listenerPrivatePort\x128\n" +
+	"\x18workspace_owner_username\x18\a \x01(\tR\x16workspaceOwnerUsername\"\x9a\x02\n" +
 	" RequestPunchFromReceiverResponse\x129\n" +
 	"\x19workspace_owner_public_ip\x18\x01 \x01(\tR\x16workspaceOwnerPublicIp\x12=\n" +
-	"\x1bworkspace_owner_public_port\x18\x02 \x01(\tR\x18workspaceOwnerPublicPort\"\xf1\x01\n" +
+	"\x1bworkspace_owner_public_port\x18\x02 \x01(\tR\x18workspaceOwnerPublicPort\x12;\n" +
+	"\x1aworkspace_owner_private_ip\x18\x03 \x03(\tR\x17workspaceOwnerPrivateIp\x12?\n" +
+	"\x1cworkspace_owner_private_port\x18\x04 \x01(\tR\x19workspaceOwnerPrivatePort\"\xf1\x01\n" +
 	"\x1fNotifyNewPushToListenersRequest\x128\n" +
 	"\x18workspace_owner_username\x18\x01 \x01(\tR\x16workspaceOwnerUsername\x128\n" +
 	"\x18workspace_owner_password\x18\x02 \x01(\tR\x16workspaceOwnerPassword\x12%\n" +
