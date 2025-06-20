@@ -169,13 +169,35 @@ func ZipUpdates(changes []config.FileChange, src_path string, dst_path string) (
 		}
 		log.Println("Change.FilePath:", change.FilePath)
 
-		zip_file_obj := returnZipFileObj(src_zip_file, filepath.Join(src_path, change.FilePath))
-		err = writer.Copy(zip_file_obj)
+		zip_file_obj := returnZipFileObj(src_zip_file, change.FilePath)
+		if zip_file_obj == nil {
+			log.Println(filepath.Join(src_path, change.FilePath), "is nil")
+			return
+		}
+
+		log.Println("Zip File Obj:", zip_file_obj.Name)
+
+		zip_file_obj_reader, err := zip_file_obj.Open()
 		if err != nil {
-			log.Println("Error while Copying Zip.File obj into New Dest Zip Writer:", err)
-			log.Println("Source: ZipUpdates()")
 			return err
 		}
+		defer zip_file_obj_reader.Close()
+
+		// Copy the file header to preserve metadata
+		header := zip_file_obj.FileHeader
+		header.Method = zip.Deflate
+
+		dstWriterEntry, err := writer.CreateHeader(&header)
+		if err != nil {
+			return err
+		}
+
+		// Copy the contents
+		_, err = io.Copy(dstWriterEntry, zip_file_obj_reader)
+		if err != nil {
+			return err
+		}
+
 	}
 	return nil
 }
