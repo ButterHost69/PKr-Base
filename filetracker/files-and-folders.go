@@ -130,7 +130,6 @@ func ClearEmptyDir(root string) error {
 			continue
 		}
 		if empty {
-			fmt.Println("Deleting empty directory:", dir)
 			err = os.Remove(dir)
 			if err != nil {
 				log.Println("Error removing directory:", err)

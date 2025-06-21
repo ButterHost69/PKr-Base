@@ -138,7 +138,6 @@ func ZipUpdates(changes []config.FileChange, src_path string, dst_path string) (
 		return err
 	}
 
-	log.Println("Zipping Updates ...")
 	// Open Src Zip File
 	src_zip_file, err := zip.OpenReader(src_path)
 	if err != nil {
