@@ -123,7 +123,6 @@ func UnzipData(src, dest string) error {
 
 func returnZipFileObj(zip_file_reader *zip.ReadCloser, search_file_name string) *zip.File {
 	for _, file := range zip_file_reader.File {
-		log.Println("Zip File:", file.Name)
 		if file.Name == search_file_name {
 			return file
 		}
@@ -166,7 +165,6 @@ func ZipUpdates(changes []config.FileChange, src_path string, dst_path string) (
 		if change.Type != "Updated" {
 			continue
 		}
-		log.Println("Change.FilePath:", change.FilePath)
 
 		zip_file_obj := returnZipFileObj(src_zip_file, change.FilePath)
 		if zip_file_obj == nil {
@@ -174,7 +172,6 @@ func ZipUpdates(changes []config.FileChange, src_path string, dst_path string) (
 			return
 		}
 
-		log.Println("Zip File Obj:", zip_file_obj.Name)
 		zip_file_obj_reader, err := zip_file_obj.Open()
 		if err != nil {
 			return err

@@ -85,8 +85,6 @@ func GetNewTree(workspace_file_path string) (FileTree, error) {
 		log.Println("Error walking the path:", err)
 		return tree, nil
 	}
-
-	log.Println(tree)
 	return tree, nil
 }
 
@@ -104,11 +102,9 @@ func ReadFromTreeFile(workspace_tree_path string) (FileTree, error) {
 	err = decoder.Decode(&fileTree)
 	if err != nil {
 		log.Println("error in decoding json data")
-		// AddUsersLogEntry("error in decoding json data")
 		return FileTree{}, err
 	}
 
-	// fmt.Println(pkrConfig)
 	return fileTree, nil
 }
 

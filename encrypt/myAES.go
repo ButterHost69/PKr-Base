@@ -75,7 +75,6 @@ func EncryptZipFileAndStore(zipped_filepath, zip_enc_path string, key, iv []byte
 		n, err := reader.Read(buffer)
 		if err != nil {
 			if err == io.EOF {
-				log.Println("File Encryption Completed ...")
 				break
 			}
 			log.Println("Error while Reading Zip File:", err)
@@ -125,6 +124,5 @@ func EncryptZipFileAndStore(zipped_filepath, zip_enc_path string, key, iv []byte
 		log.Println("Source: encryptZipFileAndStore()")
 		return err
 	}
-	log.Println("Removed Zip File - ", zipped_filepath)
 	return nil
 }

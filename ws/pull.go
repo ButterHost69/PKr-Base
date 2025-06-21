@@ -36,17 +36,17 @@ func connectToAnotherUser(workspace_owner_username string, conn *websocket.Conn)
 	log.Println("My Local Port:", local_port)
 
 	// Get My Public IP
-	myPublicIP, err := dialer.GetMyPublicIP(local_port)
+	my_public_IP, err := dialer.GetMyPublicIP(local_port)
 	if err != nil {
 		log.Println("Error while Getting my Public IP:", err)
 		log.Println("Source: connectToAnotherUser()")
 		return "", "", nil, nil, err
 	}
-	log.Println("My Public IP Addr:", myPublicIP)
+	log.Println("My Public IP Addr:", my_public_IP)
 
-	myPublicIPSplit := strings.Split(myPublicIP, ":")
-	myPublicIPOnly := myPublicIPSplit[0]
-	myPublicPortOnly := myPublicIPSplit[1]
+	my_public_IP_split := strings.Split(my_public_IP, ":")
+	my_public_IP_only := my_public_IP_split[0]
+	my_public_port_only := my_public_IP_split[1]
 
 	private_ips, err := utils.ReturnListOfPrivateIPs()
 	if err != nil {
@@ -58,8 +58,8 @@ func connectToAnotherUser(workspace_owner_username string, conn *websocket.Conn)
 	var req_punch_from_receiver_request models.RequestPunchFromReceiverRequest
 	req_punch_from_receiver_request.WorkspaceOwnerUsername = workspace_owner_username
 	req_punch_from_receiver_request.ListenerUsername = MY_USERNAME
-	req_punch_from_receiver_request.ListenerPublicIP = myPublicIPOnly
-	req_punch_from_receiver_request.ListenerPublicPort = myPublicPortOnly
+	req_punch_from_receiver_request.ListenerPublicIP = my_public_IP_only
+	req_punch_from_receiver_request.ListenerPublicPort = my_public_port_only
 	req_punch_from_receiver_request.ListenerPrivatePort = strconv.Itoa(local_port)
 	req_punch_from_receiver_request.ListenerPrivateIPList = private_ips
 
@@ -121,20 +121,36 @@ func connectToAnotherUser(workspace_owner_username string, conn *websocket.Conn)
 		log.Println("Source: connectToAnotherUser()")
 		return "", "", nil, nil, err
 	}
+
 	log.Println("Starting UDP NAT Hole Punching ...")
-
-	workspace_owner_public_ip := req_punch_from_receiver_response.WorkspaceOwnerPublicIP + ":" + req_punch_from_receiver_response.WorkspaceOwnerPublicPort
-	client_handler_name, err := dialer.WorkspaceListenerUdpNatHolePunching(udp_conn, workspace_owner_public_ip)
-	if err != nil {
-		log.Println("Error while Punching to Remote Addr:", err)
-		log.Println("Source: connectToAnotherUser()")
-		return "", "", nil, nil, err
-
+	var workspace_owner_ip, client_handler_name string
+	if req_punch_from_receiver_response.WorkspaceOwnerPublicIP == my_public_IP_only {
+		for _, private_ip := range req_punch_from_receiver_response.WorkspaceOwnerPrivateIPList {
+			workspace_owner_ip = private_ip + ":" + req_punch_from_receiver_response.WorkspaceOwnerPrivatePort
+			client_handler_name, err = dialer.WorkspaceListenerUdpNatHolePunching(udp_conn, workspace_owner_ip)
+			if err != nil {
+				fmt.Println("Error while Punching to Private Remote Addr:", err)
+				fmt.Println("Source: connectToAnotherUser()")
+				udp_conn.Close()
+				return "", "", nil, nil, err
+			}
+			fmt.Println("TEST Sending Request via Private IP")
+			break
+		}
+	} else {
+		workspace_owner_ip = req_punch_from_receiver_response.WorkspaceOwnerPublicIP + ":" + req_punch_from_receiver_response.WorkspaceOwnerPublicPort
+		client_handler_name, err = dialer.WorkspaceListenerUdpNatHolePunching(udp_conn, workspace_owner_ip)
+		if err != nil {
+			fmt.Println("Error while Punching to Public Remote Addr:", err)
+			fmt.Println("Source: connectToAnotherUser()")
+			udp_conn.Close()
+			return "", "", nil, nil, err
+		}
 	}
 	log.Println("UDP NAT Hole Punching Completed Successfully")
 
 	// Creating KCP-Conn, KCP = Reliable UDP
-	kcp_conn, err := kcp.DialWithConnAndOptions(workspace_owner_public_ip, nil, 0, 0, udp_conn)
+	kcp_conn, err := kcp.DialWithConnAndOptions(workspace_owner_ip, nil, 0, 0, udp_conn)
 	if err != nil {
 		log.Println("Error while Dialing KCP Connection to Remote Addr:", err)
 		log.Println("Source: connectToAnotherUser()")
@@ -147,10 +163,10 @@ func connectToAnotherUser(workspace_owner_username string, conn *websocket.Conn)
 	kcp_conn.SetACKNoDelay(true)
 	kcp_conn.SetDSCP(46)
 
-	return client_handler_name, workspace_owner_public_ip, udp_conn, kcp_conn, nil
+	return client_handler_name, workspace_owner_ip, udp_conn, kcp_conn, nil
 }
 
-func fetchAndStoreDataIntoWorkspace(workspace_owner_public_ip, workspace_name string, udp_conn *net.UDPConn, res models.GetMetaDataResponse) error {
+func fetchAndStoreDataIntoWorkspace(workspace_owner_ip, workspace_name string, udp_conn *net.UDPConn, res models.GetMetaDataResponse) error {
 	// Decrypting AES Key
 	key, err := encrypt.DecryptData(string(res.KeyBytes))
 	if err != nil {
@@ -189,7 +205,7 @@ func fetchAndStoreDataIntoWorkspace(workspace_owner_public_ip, workspace_name st
 
 	// Now Transfer Data using KCP ONLY, No RPC in chunks
 	log.Println("Connecting Again to Workspace Owner")
-	kcp_conn, err := kcp.DialWithConnAndOptions(workspace_owner_public_ip, nil, 0, 0, udp_conn)
+	kcp_conn, err := kcp.DialWithConnAndOptions(workspace_owner_ip, nil, 0, 0, udp_conn)
 	if err != nil {
 		log.Println("Error while Dialing Workspace Owner to Get Data:", err)
 		log.Println("Source: fetchAndStoreDataIntoWorkspace()")
@@ -290,7 +306,8 @@ func fetchAndStoreDataIntoWorkspace(workspace_owner_public_ip, workspace_name st
 		offset += n
 		utils.PrintProgressBar(offset, res.LenData, 100)
 	}
-	log.Println("\nData Transfer Completed ...")
+	fmt.Println()
+	log.Println("Data Transfer Completed ...")
 
 	// Flush buffer to disk at end
 	err = writer.Flush()
@@ -352,7 +369,7 @@ func PullWorkspace(workspace_owner_username, workspace_name string, conn *websoc
 	log.Println("Pulling Workspace:", workspace_name)
 	log.Println("Workspace Owner:", workspace_owner_username)
 
-	client_handler_name, workspace_owner_public_ip, udp_conn, kcp_conn, err := connectToAnotherUser(workspace_owner_username, conn)
+	client_handler_name, workspace_owner_ip, udp_conn, kcp_conn, err := connectToAnotherUser(workspace_owner_username, conn)
 	if err != nil {
 		log.Println("Error while Connecting to Another User:", err)
 		log.Println("Source: pullWorkspace()")
@@ -426,12 +443,12 @@ func PullWorkspace(workspace_owner_username, workspace_name string, conn *websoc
 	log.Println(res.LastPushDesc)
 	log.Println(res.LenData)
 	log.Println(res.RequestPushRange)
-	log.Println(res.Updates)
+	// log.Println(res.Updates)
 
 	kcp_conn.Close()
 	rpc_client.Close()
 
-	err = fetchAndStoreDataIntoWorkspace(workspace_owner_public_ip, workspace_name, udp_conn, *res)
+	err = fetchAndStoreDataIntoWorkspace(workspace_owner_ip, workspace_name, udp_conn, *res)
 	if err != nil {
 		log.Println("Error while Fetching Data & Storing it in Workspace:", err)
 		log.Println("Source: pullWorkspace()")

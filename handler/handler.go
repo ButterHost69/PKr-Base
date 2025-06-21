@@ -195,13 +195,13 @@ func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.G
 			log.Println("Source: GetMetaData()")
 			return ErrInternalSeverError
 		}
-		log.Println("Merged Changes:", merged_changes)
+		// log.Println("Merged Changes:", merged_changes)
 
 		log.Println("Generating Changes Push Name ...")
 		for _, changes := range merged_changes {
 			res.Updates[changes.FilePath] = changes.Type
 		}
-		log.Println("Res.Updates:", res.Updates)
+		// log.Println("Res.Updates:", res.Updates)
 		res.RequestPushRange = strconv.Itoa(req.LastPushNum) + "-" + strconv.Itoa(workspace_conf.LastPushNum)
 		log.Println("Request Push Range:", res.RequestPushRange)
 
@@ -335,7 +335,7 @@ func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.G
 	log.Println(res.RequestPushRange)
 	log.Println(res.LastPushNum)
 	log.Println(res.LastPushDesc)
-	log.Println(res.Updates)
+	// log.Println(res.Updates)
 
 	log.Println("Done with Everything now returning Response")
 	return nil

@@ -227,9 +227,7 @@ func MergeUpdates(workspace_path string, start_push_num, end_push_num int) ([]Fi
 		return nil, fmt.Errorf("could not read from config file.\nError: %v", err)
 	}
 
-	log.Println("Merge Updates Func:")
 	updates_list := make(map[string]FileChange)
-
 	for i := start_push_num + 1; i <= end_push_num; i++ {
 		for _, change := range workspace_conf.AllUpdates[i].Changes {
 			update, exists := updates_list[change.FilePath]
@@ -247,7 +245,6 @@ func MergeUpdates(workspace_path string, start_push_num, end_push_num int) ([]Fi
 		}
 	}
 
-	fmt.Println("Update List: ", updates_list)
 	merged_changes := []FileChange{}
 	for _, hash_type := range updates_list {
 		merged_changes = append(merged_changes, hash_type)

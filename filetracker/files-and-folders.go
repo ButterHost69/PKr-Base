@@ -121,7 +121,6 @@ func ClearEmptyDir(root string) error {
 		return len(strings.Split(dirs[i], string(os.PathSeparator))) >
 			len(strings.Split(dirs[j], string(os.PathSeparator)))
 	})
-	fmt.Println("Dirs:", dirs)
 
 	// Now delete empty directories from bottom up
 	for _, dir := range dirs {
@@ -138,7 +137,6 @@ func ClearEmptyDir(root string) error {
 			}
 		}
 	}
-
 	return nil
 }
 
