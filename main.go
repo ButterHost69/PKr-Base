@@ -71,7 +71,7 @@ func main() {
 
 					ws_conn, _, server_err = websocket.DefaultDialer.Dial(WEBSOCKET_SERVER_ADDR_WITH_QUERY.String(), nil)
 					select {
-					case <-time.After(5 * time.Minute):
+					case <-time.After(15 * time.Minute):
 						ws_conn, _, server_err = websocket.DefaultDialer.Dial(WEBSOCKET_SERVER_ADDR_WITH_QUERY.String(), nil)
 
 					case <-interrupt:

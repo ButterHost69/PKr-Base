@@ -1,14 +1,16 @@
 1. Retry pull after some time if it fails
 
-2.	// Create loggers for Base
+2. Delete all un-used Push Changes File
+
+3.  // Create loggers for Base
 	logger1 := log.New(file1, "LOG1: ", log.Ldate|log.Ltime|log.Lshortfile)
 	logger2 := log.New(file2, "LOG2: ", log.Ldate|log.Ltime|log.Lshortfile)
 
-3. We can remove AllConnections from PKrConfig
+4. We can remove AllConnections from PKrConfig
 
-4. Also add a list of "Avoid files" like ".env" or any other secret files
+5. Also add a list of "Avoid files" like ".env" or any other secret files
 
-5. Listeners can fetch workspace from other listeners
+6. Listeners can fetch workspace from other listeners
 
 ---------------------------------------------------------------
 
