@@ -67,7 +67,7 @@ func main() {
 				if strings.Contains(sysErr.Error(), "actively refused") {
 					log.Println("Server seems offline")
 					log.Println("Failed to Connect to PKr-Server")
-					log.Println("Will be retrying in 5 Mins")
+					log.Println("Will be retrying in 15 Mins")
 
 					ws_conn, _, server_err = websocket.DefaultDialer.Dial(WEBSOCKET_SERVER_ADDR_WITH_QUERY.String(), nil)
 					select {
@@ -124,7 +124,20 @@ func main() {
 		log.Println("Are there new changes:", are_there_new_changes)
 
 		if are_there_new_changes {
-			ws.PullWorkspace(get_workspace.WorkspaceOwnerName, get_workspace.WorkspaceName, ws_conn)
+			err = ws.PullWorkspace(get_workspace.WorkspaceOwnerName, get_workspace.WorkspaceName, ws_conn)
+			if err != nil {
+				log.Println("Error while Pulling Data:", err)
+				log.Println("Source: main()")
+
+				log.Println("Will Try Again after 5 minutes")
+				// Try Again only once after 5 minutes
+				time.Sleep(5 * time.Minute)
+				err = ws.PullWorkspace(get_workspace.WorkspaceOwnerName, get_workspace.WorkspaceName, ws_conn)
+				if err != nil {
+					log.Println("Error while Pulling Data Again:", err)
+					log.Println("Source: main()")
+				}
+			}
 		}
 	}
 	log.Println("Done with Checking for New Changes ...")

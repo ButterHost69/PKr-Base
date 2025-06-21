@@ -78,7 +78,20 @@ func handleNotifyNewPushToListeners(msg models.WSMessage, conn *websocket.Conn) 
 	}
 	log.Printf("Res: %#v", noti_new_push)
 
-	PullWorkspace(noti_new_push.WorkspaceOwnerUsername, noti_new_push.WorkspaceName, conn)
+	err = PullWorkspace(noti_new_push.WorkspaceOwnerUsername, noti_new_push.WorkspaceName, conn)
+	if err != nil {
+		log.Println("Error while Pulling Data:", err)
+		log.Println("Source: handleNotifyNewPushToListeners()")
+
+		// Try Again only once after 5 minutes
+		log.Println("Will Try Again after 5 minutes")
+		time.Sleep(5 * time.Minute)
+		err = PullWorkspace(noti_new_push.WorkspaceOwnerUsername, noti_new_push.WorkspaceName, conn)
+		if err != nil {
+			log.Println("Error while Pulling Data Again:", err)
+			log.Println("Source: handleNotifyNewPushToListeners()")
+		}
+	}
 }
 
 func handleRequestPunchFromReceiverResponse(msg models.WSMessage) {

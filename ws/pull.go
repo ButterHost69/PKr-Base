@@ -365,7 +365,7 @@ func fetchAndStoreDataIntoWorkspace(workspace_owner_ip, workspace_name string, u
 	return nil
 }
 
-func PullWorkspace(workspace_owner_username, workspace_name string, conn *websocket.Conn) {
+func PullWorkspace(workspace_owner_username, workspace_name string, conn *websocket.Conn) error {
 	log.Println("Pulling Workspace:", workspace_name)
 	log.Println("Workspace Owner:", workspace_owner_username)
 
@@ -373,7 +373,7 @@ func PullWorkspace(workspace_owner_username, workspace_name string, conn *websoc
 	if err != nil {
 		log.Println("Error while Connecting to Another User:", err)
 		log.Println("Source: pullWorkspace()")
-		return
+		return err
 	}
 
 	rpc_buff := [3]byte{'R', 'P', 'C'}
@@ -381,14 +381,14 @@ func PullWorkspace(workspace_owner_username, workspace_name string, conn *websoc
 	if err != nil {
 		log.Println("Error while Writing the type of Session(KCP-RPC or KCP-Plain):", err)
 		log.Println("Source: pullWorkspace()")
-		return
+		return err
 	}
 
 	user_config, err := config.ReadFromUserConfigFile()
 	if err != nil {
 		log.Println("Error while Reading User Config File:", err)
 		log.Println("Source: pullWorkspace()")
-		return
+		return err
 	}
 
 	var workspace_password string
@@ -410,7 +410,7 @@ func PullWorkspace(workspace_owner_username, workspace_name string, conn *websoc
 	if err != nil {
 		log.Println("Error while Fetching Workspace Path from Config:", err)
 		log.Println("Source: Pull()")
-		return
+		return err
 	}
 
 	// Get Public Key of Workspace Owner
@@ -419,7 +419,7 @@ func PullWorkspace(workspace_owner_username, workspace_name string, conn *websoc
 	if err != nil {
 		log.Println("Error while Getting Public Key of Workspace Owner from .PKr/Keys:", err)
 		log.Println("Source: pullWorkspace()")
-		return
+		return err
 	}
 
 	// Encrypting Workspace Password with Public Key
@@ -427,16 +427,19 @@ func PullWorkspace(workspace_owner_username, workspace_name string, conn *websoc
 	if err != nil {
 		log.Println("Error while Encrypting Workspace Password via Public Key:", err)
 		log.Println("Source: pullWorkspace()")
-		return
+		return err
 	}
 
 	log.Println("Calling GetMetaData ...")
 	// Calling GetMetaData
 	res, err := rpcClientHandler.CallGetMetaData(MY_USERNAME, MY_SERVER_IP, workspace_name, encrypted_password, client_handler_name, last_push_num, rpc_client)
 	if err != nil {
+		if err == handler.ErrUserAlreadyHasLatestWorkspace {
+			return nil
+		}
 		log.Println("Error while Calling GetMetaData:", err)
 		log.Println("Source: pullWorkspace()")
-		return
+		return err
 	}
 	log.Println("Get Data Responded, now storing files into workspace")
 	log.Println(res.LastPushNum)
@@ -452,7 +455,7 @@ func PullWorkspace(workspace_owner_username, workspace_name string, conn *websoc
 	if err != nil {
 		log.Println("Error while Fetching Data & Storing it in Workspace:", err)
 		log.Println("Source: pullWorkspace()")
-		return
+		return err
 	}
 
 	// Update tmp/userConfig.json
@@ -460,7 +463,8 @@ func PullWorkspace(workspace_owner_username, workspace_name string, conn *websoc
 	if err != nil {
 		log.Println("Error while Registering New GetWorkspace:", err)
 		log.Println("Source: pullWorkspace()")
-		return
+		return err
 	}
 	log.Println("Pull Done")
+	return nil
 }
