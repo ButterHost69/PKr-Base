@@ -38,8 +38,8 @@ func CheckForNewChanges(grpc_client pb.CliServiceClient, workspace_name, workspa
 	res, err := grpc_client.GetLastPushNumOfWorkspace(ctx, req)
 	if err != nil {
 		fmt.Println("Error:", err)
-		fmt.Println("Description: Cannot Register User")
-		fmt.Println("Source: Install()")
+		fmt.Println("Description: Error in Getting Last Push Number from Server")
+		fmt.Println("Source: CheckForNewChanges()")
 		return false, err
 	}
 	log.Println("Latest Push Num Received from Server:", res.LastPushNum)

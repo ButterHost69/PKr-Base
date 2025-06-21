@@ -12,6 +12,9 @@
 
 6. Listeners can fetch workspace from other listeners
 
+7. Provide Notifications When a Workspace is Updated [Maybe Using Windows API or something]
+
+8. FUTURE - Wrap this shit that tracks for updates and shii
 ---------------------------------------------------------------
 
 Test:
