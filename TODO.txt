@@ -1,17 +1,14 @@
-TODO:
 1. Retry pull after some time if it fails
 
-2. Also include Private IP during Request Punch from Receiver & if Public IP is same then send request to private ip
-
-3.	// Create loggers for Base
+2.	// Create loggers for Base
 	logger1 := log.New(file1, "LOG1: ", log.Ldate|log.Ltime|log.Lshortfile)
 	logger2 := log.New(file2, "LOG2: ", log.Ldate|log.Ltime|log.Lshortfile)
 
-4. We can remove AllConnections from PKrConfig
+3. We can remove AllConnections from PKrConfig
 
-5. Also add a list of "Avoid files" like ".env" or any other secret files
+4. Also add a list of "Avoid files" like ".env" or any other secret files
 
-6. Listeners can fetch workspace from other listeners
+5. Listeners can fetch workspace from other listeners
 
 ---------------------------------------------------------------
 
