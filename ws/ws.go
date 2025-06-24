@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/ButterHost69/PKr-Base/config"
 	"github.com/ButterHost69/PKr-Base/handler"
 	"github.com/ButterHost69/PKr-Base/models"
 
@@ -113,6 +114,41 @@ func handleRequestPunchFromReceiverResponse(msg models.WSMessage) {
 	log.Printf("Noti To Punch Res: %#v", msg_obj)
 }
 
+func handleWorkspaceOwnerIsOnline(msg models.WSMessage, conn *websocket.Conn) {
+	msg_bytes, err := json.Marshal(msg.Message)
+	if err != nil {
+		log.Println("Error while marshaling:", err)
+		log.Println("Source: handleWorkspaceOwnerIsOnline()")
+		return
+	}
+
+	var msg_obj models.WorkspaceOwnerIsOnline
+	if err := json.Unmarshal(msg_bytes, &msg_obj); err != nil {
+		log.Println("Error while unmarshaling:", err)
+		log.Println("Source: handleWorkspaceOwnerIsOnline()")
+		return
+	}
+
+	user_config, err := config.ReadFromUserConfigFile()
+	if err != nil {
+		log.Println("Error while Reading User Config File:", err)
+		log.Println("Source: handleWorkspaceOwnerIsOnline()")
+		return
+	}
+
+	for _, server := range user_config.ServerLists {
+		for _, workspace := range server.GetWorkspaces {
+			if workspace.WorkspaceOwnerName == msg_obj.WorkspaceOwnerName {
+				err := PullWorkspace(msg_obj.WorkspaceOwnerName, workspace.WorkspaceName, conn)
+				if err != nil {
+					log.Println("Error while Pulling Data:", err)
+					log.Println("Source: handleWorkspaceOwnerIsOnline()")
+				}
+			}
+		}
+	}
+}
+
 func ReadJSONMessage(done chan struct{}, conn *websocket.Conn) {
 	defer close(done)
 
@@ -143,6 +179,9 @@ func ReadJSONMessage(done chan struct{}, conn *websocket.Conn) {
 		case "RequestPunchFromReceiverResponse":
 			log.Println("RequestPunchFromReceiverResponse Called")
 			go handleRequestPunchFromReceiverResponse(msg)
+		case "WorkspaceOwnerIsOnline":
+			log.Println("Workspace Owner is Online Called")
+			go handleWorkspaceOwnerIsOnline(msg, conn)
 		}
 	}
 }

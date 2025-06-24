@@ -42,6 +42,11 @@ type RequestPunchFromReceiverResponse struct {
 	WorkspaceOwnerPrivatePort   string   `json:"workspace_owner_private_port"`
 }
 
+type WorkspaceOwnerIsOnline struct {
+	Error              string `json:"error"`
+	WorkspaceOwnerName string `json:"workspace_owner_username"`
+}
+
 type RequestPunchFromReceiverResponseMap struct {
 	sync.RWMutex
 	Map map[string]RequestPunchFromReceiverResponse
