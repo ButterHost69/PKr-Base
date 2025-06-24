@@ -1,18 +1,15 @@
-1. Send Notification to PKr-Base via Server if Workspace Owner is online
-
-2.  // Create loggers for Base
+1.  // Create loggers for Base
 	logger1 := log.New(file1, "LOG1: ", log.Ldate|log.Ltime|log.Lshortfile)
 	logger2 := log.New(file2, "LOG2: ", log.Ldate|log.Ltime|log.Lshortfile)
 
-3. We can remove AllConnections from PKrConfig
+2. Provide Notifications When a Workspace is Updated [Maybe Using Windows API or something]
 
-4. Also add a list of "Avoid files" like ".env" or any other secret files
+3. Also add a list of "Avoid files" like ".env" or any other secret files
 
-5. Listeners can fetch workspace from other listeners
+4. Listeners can fetch workspace from other listeners
+   For that, we've to remove AllConnections from PKrConfig
 
-6. Provide Notifications When a Workspace is Updated [Maybe Using Windows API or something]
-
-7. FUTURE - Wrap this shit that tracks for updates and shii
+5. FUTURE - Wrap this shit that tracks for updates and shii
 
 ---------------------------------------------------------------
 
@@ -24,5 +21,6 @@ Try to run Base from diff terminal, Experiment this in Windows VM
 Not Imp:
 Maybe tcp punching is possible 
 Make sure that instead of req to stun server make an tcp req to say google.com
+Instead of kcp conn in kcp nat punching, pass tcp conn & check if it works
 
 ---------------------------------------------------------------
