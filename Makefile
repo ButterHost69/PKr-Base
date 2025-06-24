@@ -41,3 +41,5 @@ generate_icon:
 	go install github.com/akavel/rsrc@latest
 	rsrc -ico .\PKrBase.ico -o PKrBase.syso
 
+generate_exe_with_no_terminal:
+	go build -ldflags -H=windowsgui -o NoTerminal.exe
