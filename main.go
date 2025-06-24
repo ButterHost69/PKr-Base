@@ -126,6 +126,10 @@ func main() {
 		if are_there_new_changes {
 			err = ws.PullWorkspace(get_workspace.WorkspaceOwnerName, get_workspace.WorkspaceName, ws_conn)
 			if err != nil {
+				if err.Error() == "workspace owner is offline" {
+					log.Println("Workspace Owner is Offline, Server'll notify when he's online")
+					break
+				}
 				log.Println("Error while Pulling Data:", err)
 				log.Println("Source: main()")
 

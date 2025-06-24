@@ -81,6 +81,10 @@ func handleNotifyNewPushToListeners(msg models.WSMessage, conn *websocket.Conn) 
 
 	err = PullWorkspace(noti_new_push.WorkspaceOwnerUsername, noti_new_push.WorkspaceName, conn)
 	if err != nil {
+		if err.Error() == "workspace owner is offline" {
+			log.Println("Workspace Owner is Offline, Server'll notify when he's online")
+			return
+		}
 		log.Println("Error while Pulling Data:", err)
 		log.Println("Source: handleNotifyNewPushToListeners()")
 

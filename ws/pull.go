@@ -104,10 +104,10 @@ func connectToAnotherUser(workspace_owner_username string, conn *websocket.Conn)
 	}
 
 	if req_punch_from_receiver_response.Error != "" {
-		log.Println("Error Received from Server's WS:", err)
+		log.Println("Error Received from Server's WS:", req_punch_from_receiver_response.Error)
 		log.Println("Description: Could Not Request Punch From Receiver")
 		log.Println("Source: connectToAnotherUser()")
-		return "", "", nil, nil, err
+		return "", "", nil, nil, errors.New(req_punch_from_receiver_response.Error)
 	}
 	log.Println("Called RequestPunchFromReceiverRequest ...")
 
