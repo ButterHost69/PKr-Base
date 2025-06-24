@@ -22,6 +22,7 @@ import (
 	"github.com/ButterHost69/PKr-Base/models"
 	"github.com/ButterHost69/PKr-Base/utils"
 	"github.com/ButterHost69/kcp-go"
+	"github.com/gen2brain/beeep"
 	"github.com/gorilla/websocket"
 )
 
@@ -465,6 +466,24 @@ func PullWorkspace(workspace_owner_username, workspace_name string, conn *websoc
 		log.Println("Source: pullWorkspace()")
 		return err
 	}
+
+	// Play default system beep for notification
+	err = beeep.Beep(beeep.DefaultFreq, 1000)
+	if err != nil {
+		log.Println("Error while Playing Beeep Sound:", err)
+		log.Println("Source: pullWorkspace()")
+		// Not Return Error, else it'll pull workspace again after sometime
+	}
+
+	// Send Notification about new changes're fetched
+	noti_msg := fmt.Sprintf("New Updates of Workspace: %s from User: %s're Fetched!", workspace_name, workspace_owner_username)
+	err = beeep.Notify("Picker", noti_msg, "")
+	if err != nil {
+		log.Println("Error while Sending Push Notification:", err)
+		log.Println("Source: pullWorkspace()")
+		// Not Return Error, else it'll pull workspace again after sometime
+	}
+
 	log.Println("Pull Done")
 	return nil
 }
