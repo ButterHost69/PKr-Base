@@ -53,7 +53,6 @@ func WorkspaceOwnerUdpNatPunching(conn *net.UDPConn, peerAddr, clientHandlerName
 		}
 		msg := string(buff[:n])
 		fmt.Printf("Received message: %s from %v\n", msg, addr)
-		fmt.Println(peerAddr == addr.String())
 
 		if addr.String() == peerAddr {
 			fmt.Println("Expected User Messaged:", addr.String())
@@ -120,7 +119,6 @@ func WorkspaceListenerUdpNatHolePunching(conn *net.UDPConn, peerAddr string) (st
 		}
 		msg := string(buff[:n])
 		fmt.Printf("Received message: %s from %v\n", msg, addr)
-		fmt.Println(peerAddr == addr.String())
 
 		if addr.String() == peerAddr {
 			fmt.Println("Expected User Messaged:", addr.String())

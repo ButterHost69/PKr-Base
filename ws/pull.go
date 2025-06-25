@@ -404,18 +404,11 @@ func PullWorkspace(workspace_owner_username, workspace_name string, conn *websoc
 	rpc_client := rpc.NewClient(kcp_conn)
 	rpcClientHandler := dialer.ClientCallHandler{}
 
-	workspace_path, err := config.GetGetWorkspaceFilePath(workspace_name)
-	if err != nil {
-		logger.LOGGER.Println("Error while Fetching Workspace Path from Config:", err)
-		logger.LOGGER.Println("Source: Pull()")
-		return err
-	}
-
 	// Get Public Key of Workspace Owner
-	logger.LOGGER.Println("Fetching Public Key of Workspace Owner .PKr/Keys")
-	public_key, err := os.ReadFile(filepath.Join(workspace_path, ".PKr", "Keys", workspace_owner_username+".pem"))
+	logger.LOGGER.Println("Fetching Public Key of Workspace Owner")
+	public_key, err := config.GetPublicKeyUsingUsername(workspace_owner_username)
 	if err != nil {
-		logger.LOGGER.Println("Error while Getting Public Key of Workspace Owner from .PKr/Keys:", err)
+		logger.LOGGER.Println("Error while Getting Public Key of Workspace Owner:", err)
 		logger.LOGGER.Println("Source: pullWorkspace()")
 		return err
 	}
