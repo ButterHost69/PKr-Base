@@ -133,14 +133,14 @@ func UpdateLastPushNum(workspace_name string, last_push_num int) error {
 	return nil
 }
 
-func ReadMyPublicKey() (string, error) {
-	keyData, err := os.ReadFile(filepath.Join(MY_KEYS_PATH, "public.pem"))
+func ReadMyPublicKey() ([]byte, error) {
+	public_key_bytes, err := os.ReadFile(filepath.Join(MY_KEYS_PATH, "public.pem"))
 	if err != nil {
 		fmt.Println("Error while Reading My Public Key:", err)
 		fmt.Println("Source: ReadMyPublicKey()")
-		return "", err
+		return nil, err
 	}
-	return string(keyData), nil
+	return public_key_bytes, nil
 }
 
 func AppendWorkspaceUpdates(updates Updates, workspace_path string) error {

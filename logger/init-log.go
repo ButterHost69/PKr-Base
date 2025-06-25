@@ -15,7 +15,7 @@ func InitLogger() error {
 		return errors.New("localappdata path not set in env")
 	}
 
-	dir_name := filepath.Join(local_app_data_path, "PKr")
+	dir_name := filepath.Join(local_app_data_path, "PKr", "Logs")
 	err := os.MkdirAll(dir_name, 0600)
 	if err != nil {
 		log.Printf("Error while Creating '%s' dir: %v\n", dir_name, err)
@@ -23,7 +23,7 @@ func InitLogger() error {
 		return err
 	}
 
-	log_file_path := filepath.Join(local_app_data_path, "PKr", "PKr-Base.log")
+	log_file_path := filepath.Join(dir_name, "PKr-Base.log")
 	log_file, err := os.OpenFile(log_file_path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
 		log.Printf("Error while Opening '%s' file: %v\n", log_file_path, err)
