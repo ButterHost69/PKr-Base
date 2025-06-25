@@ -456,7 +456,7 @@ func PullWorkspace(workspace_owner_username, workspace_name string, conn *websoc
 		return err
 	}
 
-	// Update tmp/userConfig.json
+	// Update user-config.json
 	err = config.UpdateLastPushNumInGetWorkspaceFolderToUserConfig(workspace_name, res.LastPushNum)
 	if err != nil {
 		logger.LOGGER.Println("Error while Registering New GetWorkspace:", err)

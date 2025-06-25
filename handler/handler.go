@@ -53,7 +53,7 @@ func (h *ClientHandler) InitNewWorkSpaceConnection(req models.InitWorkspaceConne
 		logger.LOGGER.Println("Source: InitNewWorkSpaceConnection()")
 		return ErrInternalSeverError
 	}
-	logger.LOGGER.Println("Decrypted Data ...\nAuthenticating ...")
+	logger.LOGGER.Println("Decrypted Data, Now Authenticating ...")
 
 	// Authenticates Workspace Name and Password and Get the Workspace File Path
 	_, err = config.AuthenticateWorkspaceInfo(req.WorkspaceName, password)
@@ -99,7 +99,7 @@ func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.G
 		logger.LOGGER.Println("Source: GetMetaData()")
 		return ErrInternalSeverError
 	}
-	logger.LOGGER.Println("Decrypted Data ...\nAuthenticating ...")
+	logger.LOGGER.Println("Decrypted Data ..., Now Authenticating ...")
 
 	// Authenticates Workspace Name and Password and Get the Workspace File Path
 	_, err = config.AuthenticateWorkspaceInfo(req.WorkspaceName, password)
@@ -123,7 +123,7 @@ func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.G
 	}
 
 	// Reading Last Push Num from Config
-	workspace_conf, err := config.ReadFromWorkspaceConfigFile(filepath.Join(workspace_path, ".PKr", "workspaceConfig.json"))
+	workspace_conf, err := config.ReadFromWorkspaceConfigFile(filepath.Join(workspace_path, ".PKr", "workspace-config.json"))
 	if err != nil {
 		logger.LOGGER.Println("Error while Reading from PKr Config File:", err)
 		logger.LOGGER.Println("Source: GetMetaData()")

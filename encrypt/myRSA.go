@@ -137,7 +137,7 @@ func GetPublicKey(path string) string {
 }
 
 func loadPrivateKey() string {
-	private_key_path := filepath.Join(os.Getenv("LOCALAPPDATA"), "PKr", "Keys", "My", "private.pem")
+	private_key_path := filepath.Join(os.Getenv("LOCALAPPDATA"), "PKr", "Config", "Keys", "My", "private.pem")
 	key, err := os.ReadFile(private_key_path)
 	if err != nil {
 		fmt.Println("Error in Loading Private Key:", err)
