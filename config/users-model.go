@@ -1,15 +1,9 @@
 package config
 
-type UsersConfig struct {
-	User        string         `json:"user"`
-	ServerLists []ServerConfig `json:"server_lists"`
-}
-
-type ServerConfig struct {
-	Username    string `json:"username"`
-	Password    string `json:"password"`
-	ServerAlias string `json:"server_alias"`
-	ServerIP    string `json:"server_ip"`
+type UserConfig struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	ServerIP string `json:"server_ip"`
 
 	SendWorkspaces []SendWorkspaceFolder `json:"send_workspace"`
 	GetWorkspaces  []GetWorkspaceFolder  `json:"get_workspace"`

@@ -2,7 +2,7 @@ package dialer
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"net/rpc"
 
 	"github.com/ButterHost69/PKr-Base/models"
@@ -19,8 +19,8 @@ func (h *ClientCallHandler) CallGetPublicKey(clientHandlerName string, rpc_clien
 
 	rpc_name := CLIENT_BASE_HANDLER_NAME + clientHandlerName + ".GetPublicKey"
 	if err := CallKCP_RPC_WithContext(ctx, req, &res, rpc_name, rpc_client); err != nil {
-		log.Println("Error while Calling GetPublicKey:", err)
-		log.Println("Source: CallGetPublicKey()")
+		fmt.Println("Error while Calling GetPublicKey:", err)
+		fmt.Println("Source: CallGetPublicKey()")
 		return nil, err
 	}
 	return res.PublicKey, nil
@@ -42,8 +42,8 @@ func (h *ClientCallHandler) CallInitNewWorkSpaceConnection(workspace_name, my_us
 
 	rpc_name := CLIENT_BASE_HANDLER_NAME + clientHandlerName + ".InitNewWorkSpaceConnection"
 	if err := CallKCP_RPC_WithContext(ctx, req, &res, rpc_name, rpc_client); err != nil {
-		log.Println("Error while Calling Init New Workspace Connection:", err)
-		log.Println("Source: CallInitNewWorkSpaceConnection()")
+		fmt.Println("Error while Calling Init New Workspace Connection:", err)
+		fmt.Println("Source: CallInitNewWorkSpaceConnection()")
 		return err
 	}
 	return nil
@@ -64,8 +64,8 @@ func (h *ClientCallHandler) CallGetMetaData(my_username, server_ip, workspace_na
 
 	rpc_name := CLIENT_BASE_HANDLER_NAME + clientHandlerName + ".GetMetaData"
 	if err := CallKCP_RPC_WithContext(ctx, req, &res, rpc_name, rpc_client); err != nil {
-		log.Println("Error while Calling Get Data:", err)
-		log.Println("Source: CallGetMetaData()")
+		fmt.Println("Error while Calling Get Data:", err)
+		fmt.Println("Source: CallGetMetaData()")
 		return nil, err
 	}
 	return &res, nil

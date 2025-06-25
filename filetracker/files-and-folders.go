@@ -5,7 +5,6 @@ import (
 	"io"
 	"io/fs"
 	"io/ioutil"
-	"log"
 	"os"
 	"path"
 	"path/filepath"
@@ -22,7 +21,7 @@ func CleanFilesFromWorkspace(workspace_path string) error {
 		return err
 	}
 
-	log.Printf("Deleting All Files at: %s\n\n", workspace_path)
+	fmt.Printf("Deleting All Files at: %s\n\n", workspace_path)
 	for _, file := range files {
 		if file.Name() != ".PKr" && file.Name() != "PKr-Base.exe" && file.Name() != "PKr-Cli.exe" && file.Name() != "tmp" {
 			if err = os.RemoveAll(path.Join([]string{workspace_path, file.Name()}...)); err != nil {
@@ -126,13 +125,13 @@ func ClearEmptyDir(root string) error {
 	for _, dir := range dirs {
 		empty, err := isDirEmpty(dir)
 		if err != nil {
-			log.Println("Error checking if directory is empty:", err)
+			fmt.Println("Error checking if directory is empty:", err)
 			continue
 		}
 		if empty {
 			err = os.Remove(dir)
 			if err != nil {
-				log.Println("Error removing directory:", err)
+				fmt.Println("Error removing directory:", err)
 			}
 		}
 	}
@@ -171,8 +170,8 @@ func UpdateFilesFromWorkspace(workspace_path string, content_path string, change
 
 			err = ClearEmptyDir(workspace_path)
 			if err != nil && !os.IsNotExist(err) {
-				log.Printf("failed to clear empty dirs in '%s' dir: %v\n", workspace_path, err)
-				log.Println("Ignorning this Error")
+				fmt.Printf("failed to clear empty dirs in '%s' dir: %v\n", workspace_path, err)
+				fmt.Println("Ignorning this Error")
 			}
 
 		case "Updated":

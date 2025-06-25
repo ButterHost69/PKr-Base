@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"sort"
 )
@@ -13,13 +12,17 @@ import (
 func GenerateHashWithFilePath(file_path string) (string, error) {
 	f, err := os.Open(file_path)
 	if err != nil {
-		return "", fmt.Errorf("could not generate hash of the file.\nError: %e", err)
+		fmt.Println("Error while Generating Hash with File Path:", err)
+		fmt.Println("Source: GenerateHashWithFilePath()")
+		return "", err
 	}
 	defer f.Close()
 
 	h := sha256.New()
 	if _, err := io.Copy(h, f); err != nil {
-		log.Fatal(err)
+		fmt.Println("Error while Copying from file object:", err)
+		fmt.Println("Source: GenerateHashWithFilePath()")
+		return "", err
 	}
 
 	hash := h.Sum(nil)
@@ -29,12 +32,16 @@ func GenerateHashWithFilePath(file_path string) (string, error) {
 func GenerateHashWithFileIO(file *os.File) (string, error) {
 	_, err := file.Seek(0, 0)
 	if err != nil {
+		fmt.Println("Error while Seeking file:", err)
+		fmt.Println("Source: GenerateHashWithFileIO()")
 		return "", err
 	}
 
 	h := sha256.New()
 	if _, err := io.Copy(h, file); err != nil {
-		log.Fatal(err)
+		fmt.Println("Error while Copying from file object:", err)
+		fmt.Println("Source: GenerateHashWithFileIO()")
+		return "", err
 	}
 
 	hash := h.Sum(nil)

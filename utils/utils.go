@@ -59,8 +59,8 @@ func isPrivateIPv4(ip net.IP) bool {
 func ReturnListOfPrivateIPs() ([]string, error) {
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
-		logger.USER_LOGGER.Println("Error while Retrieving Address of all Network Interfaces:", err)
-		logger.USER_LOGGER.Println("Source: ReturnListOfPrivateIPs()")
+		logger.LOGGER.Println("Error while Retrieving Address of all Network Interfaces:", err)
+		logger.LOGGER.Println("Source: ReturnListOfPrivateIPs()")
 		return nil, err
 	}
 

@@ -5,8 +5,8 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"fmt"
 	"io"
-	"log"
 	"os"
 )
 
@@ -19,7 +19,6 @@ func AESGenerakeKey(length int) ([]byte, error) {
 	if _, err := io.ReadFull(rand.Reader, key); err != nil {
 		return nil, err
 	}
-
 	return key, nil
 }
 
@@ -28,7 +27,6 @@ func AESGenerateIV() ([]byte, error) {
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
 		return nil, err
 	}
-
 	return iv, nil
 }
 
@@ -36,8 +34,8 @@ func AESGenerateIV() ([]byte, error) {
 func EncryptDecryptChunk(data, key, iv []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		log.Println("Error while Creating New Cipher Block:", err)
-		log.Println("Source: EncrpytChunk()")
+		fmt.Println("Error while Creating New Cipher Block:", err)
+		fmt.Println("Source: EncryptDecryptChunk()")
 		return nil, err
 	}
 
@@ -51,16 +49,16 @@ func EncryptDecryptChunk(data, key, iv []byte) ([]byte, error) {
 func EncryptZipFileAndStore(zipped_filepath, zip_enc_path string, key, iv []byte) error {
 	zipped_filepath_obj, err := os.Open(zipped_filepath)
 	if err != nil {
-		log.Println("Failed to Open Zipped File:", err)
-		log.Println("Source: encryptZipFileAndStore()")
+		fmt.Println("Failed to Open Zipped File:", err)
+		fmt.Println("Source: EncryptZipFileAndStore()")
 		return err
 	}
 	defer zipped_filepath_obj.Close()
 
 	zip_enc_file_obj, err := os.Create(zip_enc_path)
 	if err != nil {
-		log.Println("Failed to Create & Open Enc Zipped File:", err)
-		log.Println("Source: encryptZipFileAndStore()")
+		fmt.Println("Failed to Create & Open Enc Zipped File:", err)
+		fmt.Println("Source: EncryptZipFileAndStore()")
 		return err
 	}
 	defer zip_enc_file_obj.Close()
@@ -77,21 +75,21 @@ func EncryptZipFileAndStore(zipped_filepath, zip_enc_path string, key, iv []byte
 			if err == io.EOF {
 				break
 			}
-			log.Println("Error while Reading Zip File:", err)
-			log.Println("Source: encryptZipFileAndStore()")
+			fmt.Println("Error while Reading Zip File:", err)
+			fmt.Println("Source: EncryptZipFileAndStore()")
 			return err
 		}
 		encrypted, err := EncryptDecryptChunk(buffer[:n], key, iv)
 		if err != nil {
-			log.Println("Failed to Encrypt Chunk:", err)
-			log.Println("Source: encryptZipFileAndStore()")
+			fmt.Println("Failed to Encrypt Chunk:", err)
+			fmt.Println("Source: EncryptZipFileAndStore()")
 			return err
 		}
 
 		_, err = writer.Write(encrypted)
 		if err != nil {
-			log.Println("Failed to Write Chunk to File:", err)
-			log.Println("Source: encryptZipFileAndStore()")
+			fmt.Println("Failed to Write Chunk to File:", err)
+			fmt.Println("Source: EncryptZipFileAndStore()")
 			return err
 		}
 
@@ -99,8 +97,8 @@ func EncryptZipFileAndStore(zipped_filepath, zip_enc_path string, key, iv []byte
 		if offset%FLUSH_AFTER_EVERY_X_MB == 0 {
 			err = writer.Flush()
 			if err != nil {
-				log.Println("Error flushing 'writer' after X KB/MB buffer:", err)
-				log.Println("Soure: encryptZipFileAndStore()")
+				fmt.Println("Error flushing 'writer' after X KB/MB buffer:", err)
+				fmt.Println("Soure: EncryptZipFileAndStore()")
 				return err
 			}
 		}
@@ -110,8 +108,8 @@ func EncryptZipFileAndStore(zipped_filepath, zip_enc_path string, key, iv []byte
 	// Flush buffer to disk at end
 	err = writer.Flush()
 	if err != nil {
-		log.Println("Error flushing 'writer' buffer:", err)
-		log.Println("Soure: encryptZipFileAndStore()")
+		fmt.Println("Error flushing 'writer' buffer:", err)
+		fmt.Println("Soure: EncryptZipFileAndStore()")
 		return err
 	}
 	zipped_filepath_obj.Close() // Close Obj now, so we can delete zip file
@@ -120,8 +118,8 @@ func EncryptZipFileAndStore(zipped_filepath, zip_enc_path string, key, iv []byte
 	// Removing Zip File
 	err = os.Remove(zipped_filepath)
 	if err != nil {
-		log.Println("Error deleting zip file:", err)
-		log.Println("Source: encryptZipFileAndStore()")
+		fmt.Println("Error deleting zip file:", err)
+		fmt.Println("Source: EncryptZipFileAndStore()")
 		return err
 	}
 	return nil

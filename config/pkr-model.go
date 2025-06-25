@@ -1,10 +1,9 @@
 package config
 
 type PKRConfig struct {
-	WorkspaceName  string       `json:"workspace_name"`
-	AllConnections []Connection `json:"all_connections"`
-	LastPushNum    int          `json:"last_push_num"`
-	AllUpdates     []Updates    `json:"all_updates"`
+	WorkspaceName string    `json:"workspace_name"`
+	LastPushNum   int       `json:"last_push_num"`
+	AllUpdates    []Updates `json:"all_updates"`
 }
 
 type FileChange struct {
@@ -18,10 +17,4 @@ type Updates struct {
 	PushNum  int          `json:"push_num"`
 	PushDesc string       `json:"push_desc"`
 	Changes  []FileChange `json:"file_change"`
-}
-
-type Connection struct {
-	ServerAlias   string `json:"server_alias"`
-	Username      string `json:"username"`
-	PublicKeyPath string `json:"public_key_path"`
 }

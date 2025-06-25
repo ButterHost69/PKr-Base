@@ -31,20 +31,19 @@ const DATA_CHUNK = handler.DATA_CHUNK
 
 var MY_USERNAME string
 var MY_SERVER_IP string
-var MY_SERVER_ALIAS string
 
 func connectToAnotherUser(workspace_owner_username string, conn *websocket.Conn) (string, string, *net.UDPConn, *kcp.UDPSession, error) {
 	local_port := rand.Intn(16384) + 16384
-	logger.USER_LOGGER.Println("My Local Port:", local_port)
+	logger.LOGGER.Println("My Local Port:", local_port)
 
 	// Get My Public IP
 	my_public_IP, err := dialer.GetMyPublicIP(local_port)
 	if err != nil {
-		logger.USER_LOGGER.Println("Error while Getting my Public IP:", err)
-		logger.USER_LOGGER.Println("Source: connectToAnotherUser()")
+		logger.LOGGER.Println("Error while Getting my Public IP:", err)
+		logger.LOGGER.Println("Source: connectToAnotherUser()")
 		return "", "", nil, nil, err
 	}
-	logger.USER_LOGGER.Println("My Public IP Addr:", my_public_IP)
+	logger.LOGGER.Println("My Public IP Addr:", my_public_IP)
 
 	my_public_IP_split := strings.Split(my_public_IP, ":")
 	my_public_IP_only := my_public_IP_split[0]
@@ -52,8 +51,8 @@ func connectToAnotherUser(workspace_owner_username string, conn *websocket.Conn)
 
 	private_ips, err := utils.ReturnListOfPrivateIPs()
 	if err != nil {
-		logger.USER_LOGGER.Println("Error while Fetching the List of Private IPs:", err)
-		logger.USER_LOGGER.Println("Source: connectToAnotherUser()")
+		logger.LOGGER.Println("Error while Fetching the List of Private IPs:", err)
+		logger.LOGGER.Println("Source: connectToAnotherUser()")
 		return "", "", nil, nil, err
 	}
 
@@ -65,14 +64,14 @@ func connectToAnotherUser(workspace_owner_username string, conn *websocket.Conn)
 	req_punch_from_receiver_request.ListenerPrivatePort = strconv.Itoa(local_port)
 	req_punch_from_receiver_request.ListenerPrivateIPList = private_ips
 
-	logger.USER_LOGGER.Println("Calling RequestPunchFromReceiverRequest")
+	logger.LOGGER.Println("Calling RequestPunchFromReceiverRequest")
 	err = conn.WriteJSON(models.WSMessage{
 		MessageType: "RequestPunchFromReceiverRequest",
 		Message:     req_punch_from_receiver_request,
 	})
 	if err != nil {
-		logger.USER_LOGGER.Println("Error while Sending RequestPunchFromReceiverRequest to WS Server:", err)
-		logger.USER_LOGGER.Println("Source: connectToAnotherUser()")
+		logger.LOGGER.Println("Error while Sending RequestPunchFromReceiverRequest to WS Server:", err)
+		logger.LOGGER.Println("Source: connectToAnotherUser()")
 		return "", "", nil, nil, err
 
 	}
@@ -101,17 +100,17 @@ func connectToAnotherUser(workspace_owner_username string, conn *websocket.Conn)
 	}
 
 	if invalid_flag {
-		logger.USER_LOGGER.Println("Error: Workspace Owner isn't Responding\nSource: connectToAnotherUser()")
+		logger.LOGGER.Println("Error: Workspace Owner isn't Responding\nSource: connectToAnotherUser()")
 		return "", "", nil, nil, errors.New("workspace owner isn't responding")
 	}
 
 	if req_punch_from_receiver_response.Error != "" {
-		logger.USER_LOGGER.Println("Error Received from Server's WS:", req_punch_from_receiver_response.Error)
-		logger.USER_LOGGER.Println("Description: Could Not Request Punch From Receiver")
-		logger.USER_LOGGER.Println("Source: connectToAnotherUser()")
+		logger.LOGGER.Println("Error Received from Server's WS:", req_punch_from_receiver_response.Error)
+		logger.LOGGER.Println("Description: Could Not Request Punch From Receiver")
+		logger.LOGGER.Println("Source: connectToAnotherUser()")
 		return "", "", nil, nil, errors.New(req_punch_from_receiver_response.Error)
 	}
-	logger.USER_LOGGER.Println("Called RequestPunchFromReceiverRequest ...")
+	logger.LOGGER.Println("Called RequestPunchFromReceiverRequest ...")
 
 	// Creating UDP Conn to Perform UDP NAT Hole Punching
 	udp_conn, err := net.ListenUDP("udp", &net.UDPAddr{
@@ -119,43 +118,43 @@ func connectToAnotherUser(workspace_owner_username string, conn *websocket.Conn)
 		IP:   net.IPv4zero, // or nil
 	})
 	if err != nil {
-		logger.USER_LOGGER.Printf("Error while Listening to %d: %v\n", local_port, err)
-		logger.USER_LOGGER.Println("Source: connectToAnotherUser()")
+		logger.LOGGER.Printf("Error while Listening to %d: %v\n", local_port, err)
+		logger.LOGGER.Println("Source: connectToAnotherUser()")
 		return "", "", nil, nil, err
 	}
 
-	logger.USER_LOGGER.Println("Starting UDP NAT Hole Punching ...")
+	logger.LOGGER.Println("Starting UDP NAT Hole Punching ...")
 	var workspace_owner_ip, client_handler_name string
 	if req_punch_from_receiver_response.WorkspaceOwnerPublicIP == my_public_IP_only {
 		for _, private_ip := range req_punch_from_receiver_response.WorkspaceOwnerPrivateIPList {
 			workspace_owner_ip = private_ip + ":" + req_punch_from_receiver_response.WorkspaceOwnerPrivatePort
 			client_handler_name, err = dialer.WorkspaceListenerUdpNatHolePunching(udp_conn, workspace_owner_ip)
 			if err != nil {
-				logger.USER_LOGGER.Println("Error while Punching to Private Remote Addr:", err)
-				logger.USER_LOGGER.Println("Source: connectToAnotherUser()")
+				logger.LOGGER.Println("Error while Punching to Private Remote Addr:", err)
+				logger.LOGGER.Println("Source: connectToAnotherUser()")
 				udp_conn.Close()
 				return "", "", nil, nil, err
 			}
-			logger.USER_LOGGER.Println("TEST Sending Request via Private IP")
+			logger.LOGGER.Println("TEST Sending Request via Private IP")
 			break
 		}
 	} else {
 		workspace_owner_ip = req_punch_from_receiver_response.WorkspaceOwnerPublicIP + ":" + req_punch_from_receiver_response.WorkspaceOwnerPublicPort
 		client_handler_name, err = dialer.WorkspaceListenerUdpNatHolePunching(udp_conn, workspace_owner_ip)
 		if err != nil {
-			logger.USER_LOGGER.Println("Error while Punching to Public Remote Addr:", err)
-			logger.USER_LOGGER.Println("Source: connectToAnotherUser()")
+			logger.LOGGER.Println("Error while Punching to Public Remote Addr:", err)
+			logger.LOGGER.Println("Source: connectToAnotherUser()")
 			udp_conn.Close()
 			return "", "", nil, nil, err
 		}
 	}
-	logger.USER_LOGGER.Println("UDP NAT Hole Punching Completed Successfully")
+	logger.LOGGER.Println("UDP NAT Hole Punching Completed Successfully")
 
 	// Creating KCP-Conn, KCP = Reliable UDP
 	kcp_conn, err := kcp.DialWithConnAndOptions(workspace_owner_ip, nil, 0, 0, udp_conn)
 	if err != nil {
-		logger.USER_LOGGER.Println("Error while Dialing KCP Connection to Remote Addr:", err)
-		logger.USER_LOGGER.Println("Source: connectToAnotherUser()")
+		logger.LOGGER.Println("Error while Dialing KCP Connection to Remote Addr:", err)
+		logger.LOGGER.Println("Source: connectToAnotherUser()")
 		return "", "", nil, nil, err
 	}
 
@@ -170,35 +169,35 @@ func connectToAnotherUser(workspace_owner_username string, conn *websocket.Conn)
 
 func fetchAndStoreDataIntoWorkspace(workspace_owner_ip, workspace_name string, udp_conn *net.UDPConn, res models.GetMetaDataResponse) error {
 	// Decrypting AES Key
-	key, err := encrypt.DecryptData(string(res.KeyBytes))
+	key, err := encrypt.RSADecryptData(string(res.KeyBytes))
 	if err != nil {
-		logger.USER_LOGGER.Println("Error while Decrypting Key:", err)
-		logger.USER_LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
+		logger.LOGGER.Println("Error while Decrypting Key:", err)
+		logger.LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
 		return err
 	}
 
 	// Decrypting AES IV
-	iv, err := encrypt.DecryptData(string(res.IVBytes))
+	iv, err := encrypt.RSADecryptData(string(res.IVBytes))
 	if err != nil {
-		logger.USER_LOGGER.Println("Error while Decrypting 'IV':", err)
-		logger.USER_LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
+		logger.LOGGER.Println("Error while Decrypting 'IV':", err)
+		logger.LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
 		return err
 	}
 
 	workspace_path, err := config.GetGetWorkspaceFilePath(workspace_name)
 	if err != nil {
-		logger.USER_LOGGER.Println("Error while Fetching Workspace Path from Config:", err)
-		logger.USER_LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
+		logger.LOGGER.Println("Error while Fetching Workspace Path from Config:", err)
+		logger.LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
 		return err
 	}
-	logger.USER_LOGGER.Println("Workspace Path: ", workspace_path)
+	logger.LOGGER.Println("Workspace Path: ", workspace_path)
 
 	zip_file_path := filepath.Join(workspace_path, ".PKr", "Contents", res.RequestPushRange+".zip")
 	// Create Zip File
 	zip_file_obj, err := os.Create(zip_file_path)
 	if err != nil {
-		logger.USER_LOGGER.Println("Failed to Open & Create Zipped File:", err)
-		logger.USER_LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
+		logger.LOGGER.Println("Failed to Open & Create Zipped File:", err)
+		logger.LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
 		return err
 	}
 
@@ -206,15 +205,15 @@ func fetchAndStoreDataIntoWorkspace(workspace_owner_ip, workspace_name string, u
 	writer := bufio.NewWriter(zip_file_obj)
 
 	// Now Transfer Data using KCP ONLY, No RPC in chunks
-	logger.USER_LOGGER.Println("Connecting Again to Workspace Owner")
+	logger.LOGGER.Println("Connecting Again to Workspace Owner")
 	kcp_conn, err := kcp.DialWithConnAndOptions(workspace_owner_ip, nil, 0, 0, udp_conn)
 	if err != nil {
-		logger.USER_LOGGER.Println("Error while Dialing Workspace Owner to Get Data:", err)
-		logger.USER_LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
+		logger.LOGGER.Println("Error while Dialing Workspace Owner to Get Data:", err)
+		logger.LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
 		return err
 	}
 	defer kcp_conn.Close()
-	logger.USER_LOGGER.Println("Connected Successfully to Workspace Owner")
+	logger.LOGGER.Println("Connected Successfully to Workspace Owner")
 
 	// KCP Params for Congestion Control
 	kcp_conn.SetWindowSize(128, 1024)
@@ -226,46 +225,46 @@ func fetchAndStoreDataIntoWorkspace(workspace_owner_ip, workspace_name string, u
 	kpc_buff := [3]byte{'K', 'C', 'P'}
 	_, err = kcp_conn.Write(kpc_buff[:])
 	if err != nil {
-		logger.USER_LOGGER.Println("Error while Writing the type of Session(KCP-RPC or KCP-Plain):", err)
-		logger.USER_LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
+		logger.LOGGER.Println("Error while Writing the type of Session(KCP-RPC or KCP-Plain):", err)
+		logger.LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
 		return err
 	}
 
-	logger.USER_LOGGER.Println("Sending Workspace Name & Push Num to Workspace Owner")
+	logger.LOGGER.Println("Sending Workspace Name & Push Num to Workspace Owner")
 	// Sending Workspace Name & Push Num
 	_, err = kcp_conn.Write([]byte(workspace_name))
 	if err != nil {
-		logger.USER_LOGGER.Println("Error while Sending Workspace Name to Workspace Owner:", err)
-		logger.USER_LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
+		logger.LOGGER.Println("Error while Sending Workspace Name to Workspace Owner:", err)
+		logger.LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
 		return err
 	}
 
 	_, err = kcp_conn.Write([]byte(res.RequestPushRange))
 	if err != nil {
-		logger.USER_LOGGER.Println("Error while Sending Workspace Name to Workspace Owner:", err)
-		logger.USER_LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
+		logger.LOGGER.Println("Error while Sending Workspace Name to Workspace Owner:", err)
+		logger.LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
 		return err
 	}
-	logger.USER_LOGGER.Println("Workspace Name & Push Num Sent to Workspace Owner")
+	logger.LOGGER.Println("Workspace Name & Push Num Sent to Workspace Owner")
 
 	_, err = kcp_conn.Write([]byte("Pull"))
 	if err != nil {
-		logger.USER_LOGGER.Println("Error while Sending 'Pull' to Workspace Owner:", err)
-		logger.USER_LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
+		logger.LOGGER.Println("Error while Sending 'Pull' to Workspace Owner:", err)
+		logger.LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
 		return err
 	}
 
 	buffer := make([]byte, DATA_CHUNK)
 
-	logger.USER_LOGGER.Println("Len Data Bytes:", res.LenData)
+	logger.LOGGER.Println("Len Data Bytes:", res.LenData)
 	offset := 0
 
-	logger.USER_LOGGER.Println("Now Reading Data from Workspace Owner ...")
+	logger.LOGGER.Println("Now Reading Data from Workspace Owner ...")
 	for offset < res.LenData {
 		n, err := kcp_conn.Read(buffer)
 		if err != nil {
-			logger.USER_LOGGER.Println("\nError while Reading from Workspace Owner:", err)
-			logger.USER_LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
+			logger.LOGGER.Println("\nError while Reading from Workspace Owner:", err)
+			logger.LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
 			return err
 		}
 
@@ -273,8 +272,8 @@ func fetchAndStoreDataIntoWorkspace(workspace_owner_ip, workspace_name string, u
 		if n < 30 {
 			msg := string(buffer[:n])
 			if msg == "Incorrect Workspace Name/Push Num" || msg == "Internal Server Error" {
-				logger.USER_LOGGER.Println("\nError while Reading from Workspace on his/her side:", msg)
-				logger.USER_LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
+				logger.LOGGER.Println("\nError while Reading from Workspace on his/her side:", msg)
+				logger.LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
 				return errors.New(msg)
 			}
 		}
@@ -282,16 +281,16 @@ func fetchAndStoreDataIntoWorkspace(workspace_owner_ip, workspace_name string, u
 		// Decrypt Data
 		decrypted_data, err := encrypt.EncryptDecryptChunk(buffer[:n], []byte(key), []byte(iv))
 		if err != nil {
-			logger.USER_LOGGER.Println("Error while Decrypting Chunk:", err)
-			logger.USER_LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
+			logger.LOGGER.Println("Error while Decrypting Chunk:", err)
+			logger.LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
 			return err
 		}
 
 		// Store data in chunks using 'writer'
 		_, err = writer.Write(decrypted_data)
 		if err != nil {
-			logger.USER_LOGGER.Println("Error while Writing Decrypted Data in Chunks:", err)
-			logger.USER_LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
+			logger.LOGGER.Println("Error while Writing Decrypted Data in Chunks:", err)
+			logger.LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
 			return err
 		}
 
@@ -299,107 +298,105 @@ func fetchAndStoreDataIntoWorkspace(workspace_owner_ip, workspace_name string, u
 		if offset%handler.FLUSH_AFTER_EVERY_X_MB == 0 {
 			err = writer.Flush()
 			if err != nil {
-				logger.USER_LOGGER.Println("Error flushing 'writer' buffer:", err)
-				logger.USER_LOGGER.Println("Soure: fetchAndStoreDataIntoWorkspace()")
+				logger.LOGGER.Println("Error flushing 'writer' buffer:", err)
+				logger.LOGGER.Println("Soure: fetchAndStoreDataIntoWorkspace()")
 				return err
 			}
 		}
 
 		offset += n
 	}
-	logger.USER_LOGGER.Println()
-	logger.USER_LOGGER.Println("Data Transfer Completed ...")
+	logger.LOGGER.Println()
+	logger.LOGGER.Println("Data Transfer Completed ...")
 
 	// Flush buffer to disk at end
 	err = writer.Flush()
 	if err != nil {
-		logger.USER_LOGGER.Println("Error flushing 'writer' buffer:", err)
-		logger.USER_LOGGER.Println("Soure: fetchAndStoreDataIntoWorkspace()")
+		logger.LOGGER.Println("Error flushing 'writer' buffer:", err)
+		logger.LOGGER.Println("Soure: fetchAndStoreDataIntoWorkspace()")
 		return err
 	}
 	zip_file_obj.Close()
 
 	_, err = kcp_conn.Write([]byte("Data Received"))
 	if err != nil {
-		logger.USER_LOGGER.Println("Error while Sending Data Received Message:", err)
-		logger.USER_LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
+		logger.LOGGER.Println("Error while Sending Data Received Message:", err)
+		logger.LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
 		// Not Returning Error because, we got data, we don't care if workspace owner now is offline or not responding
 	}
 
 	unzip_dest := filepath.Join(workspace_path, ".PKr", "Contents", res.RequestPushRange)
 	err = os.MkdirAll(unzip_dest, 0600)
 	if err != nil {
-		logger.USER_LOGGER.Println("Error while Creating .PKr/Push Num Directory:", err)
-		logger.USER_LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
+		logger.LOGGER.Println("Error while Creating .PKr/Push Num Directory:", err)
+		logger.LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
 		return err
 	}
 
 	// Unzip Content
 	if err = filetracker.UnzipData(zip_file_path, unzip_dest); err != nil {
-		logger.USER_LOGGER.Println("Error while Unzipping Data into Workspace:", err)
-		logger.USER_LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
+		logger.LOGGER.Println("Error while Unzipping Data into Workspace:", err)
+		logger.LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
 		return err
 	}
 
 	err = filetracker.UpdateFilesFromWorkspace(workspace_path, unzip_dest, res.Updates)
 	if err != nil {
-		logger.USER_LOGGER.Println("Error while Updating Files From Workspace:", err)
-		logger.USER_LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
+		logger.LOGGER.Println("Error while Updating Files From Workspace:", err)
+		logger.LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
 		return err
 	}
 
 	// Remove Zip File After Unzipping it
 	err = os.Remove(zip_file_path)
 	if err != nil {
-		logger.USER_LOGGER.Println("Error while Removing the Zip File After Use:", err)
-		logger.USER_LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
+		logger.LOGGER.Println("Error while Removing the Zip File After Use:", err)
+		logger.LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
 		return err
 	}
 
 	// Remove files from the place where changes were temporarily un-zipped
 	err = os.RemoveAll(unzip_dest)
 	if err != nil {
-		logger.USER_LOGGER.Println("Error while Removing the Files from '.PKr/Push Num/':", err)
-		logger.USER_LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
+		logger.LOGGER.Println("Error while Removing the Files from '.PKr/Push Num/':", err)
+		logger.LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
 		return err
 	}
 	return nil
 }
 
 func PullWorkspace(workspace_owner_username, workspace_name string, conn *websocket.Conn) error {
-	logger.USER_LOGGER.Println("Pulling Workspace:", workspace_name)
-	logger.USER_LOGGER.Println("Workspace Owner:", workspace_owner_username)
+	logger.LOGGER.Println("Pulling Workspace:", workspace_name)
+	logger.LOGGER.Println("Workspace Owner:", workspace_owner_username)
 
 	client_handler_name, workspace_owner_ip, udp_conn, kcp_conn, err := connectToAnotherUser(workspace_owner_username, conn)
 	if err != nil {
-		logger.USER_LOGGER.Println("Error while Connecting to Another User:", err)
-		logger.USER_LOGGER.Println("Source: pullWorkspace()")
+		logger.LOGGER.Println("Error while Connecting to Another User:", err)
+		logger.LOGGER.Println("Source: pullWorkspace()")
 		return err
 	}
 
 	rpc_buff := [3]byte{'R', 'P', 'C'}
 	_, err = kcp_conn.Write(rpc_buff[:])
 	if err != nil {
-		logger.USER_LOGGER.Println("Error while Writing the type of Session(KCP-RPC or KCP-Plain):", err)
-		logger.USER_LOGGER.Println("Source: pullWorkspace()")
+		logger.LOGGER.Println("Error while Writing the type of Session(KCP-RPC or KCP-Plain):", err)
+		logger.LOGGER.Println("Source: pullWorkspace()")
 		return err
 	}
 
-	user_config, err := config.ReadFromUserConfigFile()
+	user_conf, err := config.ReadFromUserConfigFile()
 	if err != nil {
-		logger.USER_LOGGER.Println("Error while Reading User Config File:", err)
-		logger.USER_LOGGER.Println("Source: pullWorkspace()")
+		logger.LOGGER.Println("Error while Reading User Config File:", err)
+		logger.LOGGER.Println("Source: pullWorkspace()")
 		return err
 	}
 
 	var workspace_password string
 	var last_push_num int
-	for _, server := range user_config.ServerLists {
-		for _, workspace := range server.GetWorkspaces {
-			if workspace.WorkspaceName == workspace_name && workspace.WorkspaceOwnerName == workspace_owner_username {
-				workspace_password = workspace.WorkspacePassword
-				last_push_num = workspace.LastPushNum
-			}
+	for _, workspace := range user_conf.GetWorkspaces {
+		if workspace.WorkspaceName == workspace_name && workspace.WorkspaceOwnerName == workspace_owner_username {
+			workspace_password = workspace.WorkspacePassword
+			last_push_num = workspace.LastPushNum
 		}
 	}
 
@@ -409,44 +406,44 @@ func PullWorkspace(workspace_owner_username, workspace_name string, conn *websoc
 
 	workspace_path, err := config.GetGetWorkspaceFilePath(workspace_name)
 	if err != nil {
-		logger.USER_LOGGER.Println("Error while Fetching Workspace Path from Config:", err)
-		logger.USER_LOGGER.Println("Source: Pull()")
+		logger.LOGGER.Println("Error while Fetching Workspace Path from Config:", err)
+		logger.LOGGER.Println("Source: Pull()")
 		return err
 	}
 
 	// Get Public Key of Workspace Owner
-	logger.USER_LOGGER.Println("Fetching Public Key of Workspace Owner .PKr/Keys")
+	logger.LOGGER.Println("Fetching Public Key of Workspace Owner .PKr/Keys")
 	public_key, err := os.ReadFile(filepath.Join(workspace_path, ".PKr", "Keys", workspace_owner_username+".pem"))
 	if err != nil {
-		logger.USER_LOGGER.Println("Error while Getting Public Key of Workspace Owner from .PKr/Keys:", err)
-		logger.USER_LOGGER.Println("Source: pullWorkspace()")
+		logger.LOGGER.Println("Error while Getting Public Key of Workspace Owner from .PKr/Keys:", err)
+		logger.LOGGER.Println("Source: pullWorkspace()")
 		return err
 	}
 
 	// Encrypting Workspace Password with Public Key
-	encrypted_password, err := encrypt.EncryptData(workspace_password, string(public_key))
+	encrypted_password, err := encrypt.RSAEncryptData(workspace_password, string(public_key))
 	if err != nil {
-		logger.USER_LOGGER.Println("Error while Encrypting Workspace Password via Public Key:", err)
-		logger.USER_LOGGER.Println("Source: pullWorkspace()")
+		logger.LOGGER.Println("Error while Encrypting Workspace Password via Public Key:", err)
+		logger.LOGGER.Println("Source: pullWorkspace()")
 		return err
 	}
 
-	logger.USER_LOGGER.Println("Calling GetMetaData ...")
+	logger.LOGGER.Println("Calling GetMetaData ...")
 	// Calling GetMetaData
 	res, err := rpcClientHandler.CallGetMetaData(MY_USERNAME, MY_SERVER_IP, workspace_name, encrypted_password, client_handler_name, last_push_num, rpc_client)
 	if err != nil {
 		if err == handler.ErrUserAlreadyHasLatestWorkspace {
 			return nil
 		}
-		logger.USER_LOGGER.Println("Error while Calling GetMetaData:", err)
-		logger.USER_LOGGER.Println("Source: pullWorkspace()")
+		logger.LOGGER.Println("Error while Calling GetMetaData:", err)
+		logger.LOGGER.Println("Source: pullWorkspace()")
 		return err
 	}
-	logger.USER_LOGGER.Println("Get Data Responded, now storing files into workspace")
-	logger.USER_LOGGER.Println(res.LastPushNum)
-	logger.USER_LOGGER.Println(res.LastPushDesc)
-	logger.USER_LOGGER.Println(res.LenData)
-	logger.USER_LOGGER.Println(res.RequestPushRange)
+	logger.LOGGER.Println("Get Data Responded, now storing files into workspace")
+	logger.LOGGER.Println(res.LastPushNum)
+	logger.LOGGER.Println(res.LastPushDesc)
+	logger.LOGGER.Println(res.LenData)
+	logger.LOGGER.Println(res.RequestPushRange)
 	// logger.USER_LOGGER.Println(res.Updates)
 
 	kcp_conn.Close()
@@ -454,24 +451,24 @@ func PullWorkspace(workspace_owner_username, workspace_name string, conn *websoc
 
 	err = fetchAndStoreDataIntoWorkspace(workspace_owner_ip, workspace_name, udp_conn, *res)
 	if err != nil {
-		logger.USER_LOGGER.Println("Error while Fetching Data & Storing it in Workspace:", err)
-		logger.USER_LOGGER.Println("Source: pullWorkspace()")
+		logger.LOGGER.Println("Error while Fetching Data & Storing it in Workspace:", err)
+		logger.LOGGER.Println("Source: pullWorkspace()")
 		return err
 	}
 
 	// Update tmp/userConfig.json
 	err = config.UpdateLastPushNumInGetWorkspaceFolderToUserConfig(workspace_name, res.LastPushNum)
 	if err != nil {
-		logger.USER_LOGGER.Println("Error while Registering New GetWorkspace:", err)
-		logger.USER_LOGGER.Println("Source: pullWorkspace()")
+		logger.LOGGER.Println("Error while Registering New GetWorkspace:", err)
+		logger.LOGGER.Println("Source: pullWorkspace()")
 		return err
 	}
 
 	// Play default system beep for notification
 	err = beeep.Beep(beeep.DefaultFreq, 1000)
 	if err != nil {
-		logger.USER_LOGGER.Println("Error while Playing Beeep Sound:", err)
-		logger.USER_LOGGER.Println("Source: pullWorkspace()")
+		logger.LOGGER.Println("Error while Playing Beeep Sound:", err)
+		logger.LOGGER.Println("Source: pullWorkspace()")
 		// Not Return Error, else it'll pull workspace again after sometime
 	}
 
@@ -479,11 +476,11 @@ func PullWorkspace(workspace_owner_username, workspace_name string, conn *websoc
 	noti_msg := fmt.Sprintf("New Updates of Workspace: %s from User: %s're Fetched!", workspace_name, workspace_owner_username)
 	err = beeep.Notify("Picker", noti_msg, "")
 	if err != nil {
-		logger.USER_LOGGER.Println("Error while Sending Push Notification:", err)
-		logger.USER_LOGGER.Println("Source: pullWorkspace()")
+		logger.LOGGER.Println("Error while Sending Push Notification:", err)
+		logger.LOGGER.Println("Source: pullWorkspace()")
 		// Not Return Error, else it'll pull workspace again after sometime
 	}
 
-	logger.USER_LOGGER.Println("Pull Done")
+	logger.LOGGER.Println("Pull Done")
 	return nil
 }

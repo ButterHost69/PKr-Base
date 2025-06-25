@@ -3,102 +3,79 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 )
 
-const (
-	WORKSPACE_PKR_DIR = ".PKr"
-)
+var WORKSPACE_CONFIG_FILE_PATH = filepath.Join(".PKr", "workspace-config.json")
 
-var (
-	LOGS_PKR_FILE_PATH         = filepath.Join(WORKSPACE_PKR_DIR, "logs.txt")
-	WORKSPACE_CONFIG_FILE_PATH = filepath.Join(WORKSPACE_PKR_DIR, "workspaceConfig.json")
-)
-
-func CreatePKRConfigIfNotExits(workspace_name string, workspace_file_path string) error {
-	pkr_config_file_path := filepath.Join(workspace_file_path, WORKSPACE_CONFIG_FILE_PATH)
-	if _, err := os.Stat(pkr_config_file_path); os.IsExist(err) {
-		fmt.Println("~ workspaceConfig.jso already Exists")
+func CreatePKRConfigIfNotExits(workspace_name string, workspace_path string) error {
+	_, err := os.Stat(WORKSPACE_CONFIG_FILE_PATH)
+	if err == nil {
+		fmt.Println("It Seems Workspace is Already Intialized ...")
+		return nil
+	} else if os.IsNotExist(err) {
+		fmt.Println("Creating workspace-config.json ...")
+	} else {
+		fmt.Println("Error while checking Existence of workspace-config file:", err)
+		fmt.Println("Source: CreatePKRConfigIfNotExits()")
 		return err
 	}
 
-	pkrconf := PKRConfig{
-		WorkspaceName: workspace_name,
-	}
-
-	jsonBytes, err := json.Marshal(pkrconf)
+	// Creating WORKSPACE_PATH/.PKr/Files/Current
+	current_folder_path := filepath.Join(workspace_path, ".PKr", "Files", "Current")
+	err = os.MkdirAll(current_folder_path, 0600)
 	if err != nil {
-		fmt.Println("~ Unable to Parse PKrConfig to JSON")
+		fmt.Printf("Error while Creating '%s' Dir: %v\n", current_folder_path, err)
+		fmt.Println("Source: CreatePKRConfigIfNotExits()")
 		return err
 	}
 
-	// Creating Workspace Config File
-	err = os.WriteFile(pkr_config_file_path, jsonBytes, 0777)
+	// Creating WORKSPACE_PATH/.PKr/Files/Changes
+	changes_folder_path := filepath.Join(workspace_path, ".PKr", "Files", "Changes")
+	err = os.MkdirAll(changes_folder_path, 0600)
 	if err != nil {
-		fmt.Println("~ Unable to Write PKrConfig to File")
+		fmt.Printf("Error while Creating '%s' Dir: %v\n", changes_folder_path, err)
+		fmt.Println("Source: CreatePKRConfigIfNotExits()")
 		return err
 	}
 
+	pkr_config_file_path := filepath.Join(workspace_path, WORKSPACE_CONFIG_FILE_PATH)
+
+	workspace_conf := PKRConfig{WorkspaceName: workspace_name}
+	conf_bytes, err := json.Marshal(workspace_conf)
+	if err != nil {
+		fmt.Println("Error while Parsing workspace-config:", err)
+		fmt.Println("Source: CreatePKRConfigIfNotExits()")
+		return err
+	}
+
+	// Creating Workspace Config File ...
+	err = os.WriteFile(pkr_config_file_path, conf_bytes, 0600)
+	if err != nil {
+		fmt.Println("Error while Writing in workspace-config:", err)
+		fmt.Println("Source: CreatePKRConfigIfNotExits()")
+		return err
+	}
 	return nil
 }
 
-func AddConnectionToPKRConfigFile(workspace_config_path string, connection Connection) error {
-	pkrConfig, err := ReadFromPKRConfigFile(workspace_config_path)
+func StorePublicKeyOfOtherUser(username string, public_key_of_other_user []byte) error {
+	key_path := filepath.Join(OTHERS_KEYS_PATH, username+".pem")
+	err := os.WriteFile(key_path, public_key_of_other_user, 0600)
 	if err != nil {
+		fmt.Println("Error while Storing Public Key of Other User:", err)
+		fmt.Println("Source: StorePublicKeyOfOtherUser()")
 		return err
 	}
-
-	pkrConfig.AllConnections = append(pkrConfig.AllConnections, connection)
-	if err := writeToPKRConfigFile(workspace_config_path, pkrConfig); err != nil {
-		return err
-	}
-
 	return nil
 }
 
-func GetConnectionsPublicKeyUsingUsername(workspace_path, username string) (string, error) {
-	pkrconfig, err := ReadFromPKRConfigFile(filepath.Join(workspace_path, WORKSPACE_CONFIG_FILE_PATH))
-	if err != nil {
-		return "", err
-	}
-
-	for _, connection := range pkrconfig.AllConnections {
-		if connection.Username == username {
-			return connection.PublicKeyPath, nil
-		}
-	}
-
-	return "", fmt.Errorf("no such ip exists : %v", username)
-}
-
-func StorePublicKeys(username, workspace_keys_path string, key string) (string, error) {
-	keyPath := filepath.Join(workspace_keys_path, username+".pem")
-	file, err := os.OpenFile(keyPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0600)
-	if err != nil {
-		return "", err
-	}
-	defer file.Close()
-
-	_, err = file.Write([]byte(key))
-	if err != nil {
-		return "", err
-	}
-
-	fullpath, err := filepath.Abs(keyPath)
-	if err != nil {
-		return keyPath, nil
-	}
-
-	return fullpath, nil
-}
-
-func ReadFromPKRConfigFile(workspace_config_path string) (PKRConfig, error) {
+func ReadFromWorkspaceConfigFile(workspace_config_path string) (PKRConfig, error) {
 	file, err := os.Open(workspace_config_path)
 	if err != nil {
-		log.Println("error in opening PKR config file.... pls check if .PKr/workspaceConfig.json available ")
-		// AddUsersLogEntry("error in opening PKR config file.... pls check if .PKr/workspaceConfig.json available ")
+		fmt.Println("Error while opening workspace-config file:", err)
+		fmt.Println("Source: ReadFromWorkspaceConfigFile()")
 		return PKRConfig{}, err
 	}
 	defer file.Close()
@@ -107,124 +84,89 @@ func ReadFromPKRConfigFile(workspace_config_path string) (PKRConfig, error) {
 	decoder := json.NewDecoder(file)
 	err = decoder.Decode(&pkrConfig)
 	if err != nil {
-		log.Println("error in decoding json data")
-		// AddUsersLogEntry("error in decoding json data")
+		fmt.Println("Error while Decoding JSON Data from workspace-config file:", err)
+		fmt.Println("Source: ReadFromWorkspaceConfigFile()")
 		return PKRConfig{}, err
 	}
 
-	// fmt.Println(pkrConfig)
 	return pkrConfig, nil
 }
 
-func writeToPKRConfigFile(workspace_config_path string, newPKRConfing PKRConfig) error {
+func writeToWorkspaceConfigFile(workspace_config_path string, newPKRConfing PKRConfig) error {
 	jsonData, err := json.MarshalIndent(newPKRConfing, "", "	")
-	// fmt.Println(jsonData)
 	if err != nil {
-		fmt.Println("error occured in Marshalling the data to JSON")
-		fmt.Println(err)
+		fmt.Println("Error while Marshalling the workspace-config to JSON:", err)
+		fmt.Println("Source: writeToWorkspaceConfigFile()")
 		return err
 	}
 
-	// fmt.Println(string(jsonData))
-	err = os.WriteFile(workspace_config_path, jsonData, 0777)
+	err = os.WriteFile(workspace_config_path, jsonData, 0600)
 	if err != nil {
-		fmt.Println("error occured in storing data in userconfig file")
-		fmt.Println(err)
+		fmt.Println("Error while writing data in workspace-config file", err)
+		fmt.Println("Source: writeToWorkspaceConfigFile()")
 		return err
 	}
-
-	return nil
-}
-
-// Logs Entry of all the events occurred related to the workspace
-// Also Creates the Log File by default
-func AddLogEntry(workspace_name string, isSendWorkspace bool, log_entry any) error {
-	var workspace_path string
-	var err error
-	if isSendWorkspace {
-		workspace_path, err = GetSendWorkspaceFilePath(workspace_name)
-		if err != nil {
-			return err
-		}
-	} else {
-		workspace_path, err = GetGetWorkspaceFilePath(workspace_name)
-		if err != nil {
-			return err
-		}
-	}
-
-	// Adds the ".Pkr/logs.txt"
-	workspace_path += "\\" + LOGS_PKR_FILE_PATH
-
-	// Opens or Creates the Log File
-	file, err := os.OpenFile(workspace_path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0600)
-	if err != nil {
-		return err
-	}
-
-	defer file.Close()
-	log.SetOutput(file)
-	log.Println(log_entry)
-	// log.Println(log_entry, log.LstdFlags)
-
 	return nil
 }
 
 func UpdateLastPushNum(workspace_name string, last_push_num int) error {
 	workspace_path, err := GetSendWorkspaceFilePath(workspace_name)
 	if err != nil {
+		fmt.Println("Error while Fetching File Path of 'Send Workspace':", err)
+		fmt.Println("Source: UpdateLastPushNum()")
 		return err
 	}
 
 	workspace_path = filepath.Join(workspace_path, WORKSPACE_CONFIG_FILE_PATH)
-	workspace_json, err := ReadFromPKRConfigFile(workspace_path)
+	workspace_json, err := ReadFromWorkspaceConfigFile(workspace_path)
 	if err != nil {
-		return fmt.Errorf("could not read from config file.\nError: %v", err)
+		fmt.Println("Error while Reading from workspace-config:", err)
+		fmt.Println("Source: UpdateLastPushNum()")
 	}
 
 	workspace_json.LastPushNum = last_push_num
-	if err := writeToPKRConfigFile(workspace_path, workspace_json); err != nil {
-		return fmt.Errorf("error in writing the update push num to file: %s.\nError: %v", workspace_path, err)
+	if err := writeToWorkspaceConfigFile(workspace_path, workspace_json); err != nil {
+		fmt.Println("Error while Writing in workspace-config:", err)
+		fmt.Println("Source: UpdateLastPushNum()")
+		return err
 	}
 	return nil
 }
 
-func ReadPublicKey() (string, error) {
-	keyData, err := os.ReadFile(filepath.Join(MY_KEYS_PATH, "publickey.pem"))
+func ReadMyPublicKey() (string, error) {
+	keyData, err := os.ReadFile(filepath.Join(MY_KEYS_PATH, "public.pem"))
 	if err != nil {
+		fmt.Println("Error while Reading My Public Key:", err)
+		fmt.Println("Source: ReadMyPublicKey()")
 		return "", err
 	}
-
 	return string(keyData), nil
-}
-
-func GetWorkspaceConnectionsUsingPath(workspace_path string) ([]Connection, error) {
-	workspace_json, err := ReadFromPKRConfigFile(workspace_path)
-	if err != nil {
-		return []Connection{}, fmt.Errorf("could not read from config file.\nError: %v", err)
-	}
-
-	return workspace_json.AllConnections, nil
 }
 
 func AppendWorkspaceUpdates(updates Updates, workspace_path string) error {
 	workspace_config_path := filepath.Join(workspace_path, WORKSPACE_CONFIG_FILE_PATH)
-	workspace_json, err := ReadFromPKRConfigFile(workspace_config_path)
+	workspace_json, err := ReadFromWorkspaceConfigFile(workspace_config_path)
 	if err != nil {
-		return fmt.Errorf("could not read from config file.\nError: %v", err)
+		fmt.Println("Error while Reading from workspace-config:", err)
+		fmt.Println("Source: AppendWorkspaceUpdates()")
+		return err
 	}
 
 	workspace_json.AllUpdates = append(workspace_json.AllUpdates, updates)
-	if err := writeToPKRConfigFile(workspace_config_path, workspace_json); err != nil {
-		return fmt.Errorf("error in writing new update to workspace_conf\nError: %v", err)
+	if err := writeToWorkspaceConfigFile(workspace_config_path, workspace_json); err != nil {
+		fmt.Println("Error while Writing in workspace-config:", err)
+		fmt.Println("Source: AppendWorkspaceUpdates()")
+		return err
 	}
 	return nil
 }
 
 func MergeUpdates(workspace_path string, start_push_num, end_push_num int) ([]FileChange, error) {
-	workspace_conf, err := ReadFromPKRConfigFile(filepath.Join(workspace_path, WORKSPACE_CONFIG_FILE_PATH))
+	workspace_conf, err := ReadFromWorkspaceConfigFile(filepath.Join(workspace_path, WORKSPACE_CONFIG_FILE_PATH))
 	if err != nil {
-		return nil, fmt.Errorf("could not read from config file.\nError: %v", err)
+		fmt.Println("Error while Reading from workspace-config file:", err)
+		fmt.Println("Source: MergeUpdates()")
+		return nil, err
 	}
 
 	updates_list := make(map[string]FileChange)

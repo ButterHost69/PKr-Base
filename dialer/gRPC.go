@@ -3,24 +3,26 @@ package dialer
 import (
 	"context"
 	"fmt"
-	"log"
 
+	"github.com/ButterHost69/PKr-Base/logger"
 	pb "github.com/ButterHost69/PKr-Base/pb"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-func NewGRPCClients(address string) (pb.CliServiceClient, error) {
+func GetNewGRPCClient(address string) (pb.CliServiceClient, error) {
 	conn, err := grpc.NewClient(address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
+		fmt.Println("Error while Creating New gRPC Client:", err)
+		fmt.Println("Source: GetNewGRPCClient()")
 		return nil, err
 	}
 	return pb.NewCliServiceClient(conn), nil
 }
 
 func CheckForNewChanges(grpc_client pb.CliServiceClient, workspace_name, workspace_owner_name, listener_username, listener_password string, last_push_num int) (bool, error) {
-	log.Println("Preparing gRPC Request ...")
+	logger.LOGGER.Println("Preparing gRPC Request ...")
 	// Prepare req
 	req := &pb.GetLastPushNumOfWorkspaceRequest{
 		WorkspaceOwner:   workspace_owner_name,
@@ -33,7 +35,7 @@ func CheckForNewChanges(grpc_client pb.CliServiceClient, workspace_name, workspa
 	ctx, cancelFunc := context.WithTimeout(context.Background(), CONTEXT_TIMEOUT)
 	defer cancelFunc()
 
-	log.Println("Sending gRPC Request ...")
+	logger.LOGGER.Println("Sending gRPC Request ...")
 	// Sending Request ...
 	res, err := grpc_client.GetLastPushNumOfWorkspace(ctx, req)
 	if err != nil {
@@ -42,7 +44,7 @@ func CheckForNewChanges(grpc_client pb.CliServiceClient, workspace_name, workspa
 		fmt.Println("Source: CheckForNewChanges()")
 		return false, err
 	}
-	log.Println("Latest Push Num Received from Server:", res.LastPushNum)
-	log.Println("My Latest Push Num:", last_push_num)
+	logger.LOGGER.Println("Latest Push Num Received from Server:", res.LastPushNum)
+	logger.LOGGER.Println("My Latest Push Num:", last_push_num)
 	return res.LastPushNum != int32(last_push_num), nil
 }

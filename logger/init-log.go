@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 )
 
-var USER_LOGGER *log.Logger
+var LOGGER *log.Logger
 
-func InitUserLogger() error {
+func InitLogger() error {
 	local_app_data_path := os.Getenv("LOCALAPPDATA")
 	if local_app_data_path == "" {
 		return errors.New("localappdata path not set in env")
@@ -31,6 +31,6 @@ func InitUserLogger() error {
 		return err
 	}
 
-	USER_LOGGER = log.New(log_file, "", log.Ldate|log.Ltime|log.Lshortfile)
+	LOGGER = log.New(log_file, "", log.Ldate|log.Ltime|log.Lshortfile)
 	return nil
 }

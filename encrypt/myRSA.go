@@ -8,24 +8,23 @@ import (
 	"encoding/base64"
 	"encoding/pem"
 	"errors"
-	"log"
+	"fmt"
 	"path/filepath"
 
 	"os"
 )
 
 var (
-	KEY_SIZE          = 4096
-	PRIVATE_KEYS_PATH = filepath.Join("tmp", "mykeys", "privatekey.pem")
+	KEY_SIZE = 4096
 )
 
 func GenerateRSAKeys() (*rsa.PrivateKey, *rsa.PublicKey) {
 	privateKey, err := rsa.GenerateKey(rand.Reader, KEY_SIZE)
 	if err != nil {
-		log.Println(" ~ Could not create Keys")
+		fmt.Println("Error while Generating RSA Keys:", err)
+		fmt.Println("Source: GenerateRSAKeys()")
 		return nil, nil
 	}
-
 	return privateKey, &privateKey.PublicKey
 }
 
@@ -37,9 +36,7 @@ func ParsePrivateKeyToBytes(pkey *rsa.PrivateKey) []byte {
 			Bytes: pkeyBytes,
 		},
 	)
-
 	return privatekey_pem_block
-
 }
 
 func ParsePublicKeyToBytes(pbkey *rsa.PublicKey) []byte {
@@ -50,17 +47,14 @@ func ParsePublicKeyToBytes(pbkey *rsa.PublicKey) []byte {
 			Bytes: pbkeyBytes,
 		},
 	)
-
 	return publickey_pem_block
 }
 
 func StorePrivateKeyInFile(filepath string, pkey *rsa.PrivateKey) error {
 	private_pem_key := ParsePrivateKeyToBytes(pkey)
-
 	if private_pem_key == nil {
-		return errors.New("~ Private Key Could Not Be Converted To []Byte")
+		return errors.New("could not convert private key to []byte")
 	}
-
 	return os.WriteFile(filepath, private_pem_key, 0600)
 }
 
@@ -68,23 +62,24 @@ func StorePublicKeyInFile(filepath string, pbkey *rsa.PublicKey) error {
 	public_pem_key := ParsePublicKeyToBytes(pbkey)
 
 	if public_pem_key == nil {
-		return errors.New("~ Private Key Could Not Be Converted To []Byte")
+		return errors.New("could not convert public key to []byte")
 	}
-
 	return os.WriteFile(filepath, public_pem_key, 0600)
 }
 
-func DecryptData(cipherText string) (string, error) {
+func RSADecryptData(cipherText string) (string, error) {
 	block, _ := pem.Decode([]byte(loadPrivateKey()))
 	if block == nil {
-		log.Println("error in parsing the pem Block...")
-		log.Println("Pls check if the provided Private Key is correct")
+		fmt.Println("Error while Parsing, Pem Block is nil")
+		fmt.Println("Pls check if the provided Private Key is correct")
+		fmt.Println("Source: RSADecryptData()")
 		return "", errors.New("error in retrieving the Pem Block")
 	}
 
 	privKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {
-		log.Println("error in parsing the private key...")
+		fmt.Println("Error while parsing the Private Key:", err)
+		fmt.Println("Source: RSADecryptData()")
 		return "", err
 	}
 
@@ -94,24 +89,26 @@ func DecryptData(cipherText string) (string, error) {
 	label := []byte("")
 	plaintext, err := rsa.DecryptOAEP(hash, rand.Reader, privKey, []byte(baseDecoded), label)
 	if err != nil {
-		log.Println("error in decrypting cipher text...", err)
+		fmt.Println("Error while Decrypting Cipher text:", err)
+		fmt.Println("Source: RSADecryptData()")
 		return "", err
 	}
-
 	return string(plaintext), err
 }
 
-func EncryptData(data string, publicPemBock string) (string, error) {
+func RSAEncryptData(data string, publicPemBock string) (string, error) {
 	block, _ := pem.Decode([]byte(publicPemBock))
 	if block == nil {
-		log.Println("error in parsing the pem Block...")
-		log.Println("Pls check if the provided Public Key is correct")
+		fmt.Println("Error while Parsing, Pem Block is nil")
+		fmt.Println("Pls check if the provided Private Key is correct")
+		fmt.Println("Source: RSAEncryptData()")
 		return "", errors.New("error in retrieving the Pem Block")
 	}
 
 	publicKey, err := x509.ParsePKCS1PublicKey(block.Bytes)
 	if err != nil {
-		log.Println("error in parsing the Public key...")
+		fmt.Println("Error while parsing the Public Key:", err)
+		fmt.Println("Source: RSAEncryptData()")
 		return "", err
 	}
 
@@ -120,42 +117,31 @@ func EncryptData(data string, publicPemBock string) (string, error) {
 
 	result, err := rsa.EncryptOAEP(hash, rand.Reader, publicKey, []byte(data), label)
 	if err != nil {
-		log.Println("error in encypting the messgae...")
-		log.Println(err.Error())
+		fmt.Println("Error while Encrypting text:", err)
+		fmt.Println("Source: RSAEncryptData()")
 		return "", err
 	}
 
-	// log.Printf("[Log] : Encryped Message: %s\n", string(result))
-
 	base64Encrypted := base64.StdEncoding.EncodeToString(result)
 	return base64Encrypted, nil
-	// return string(result), nil
 }
 
 func GetPublicKey(path string) string {
-	// file, err := os.OpenFile(KEYS_PATH, os.O_RDONLY, 0444)
-	// if err != nil {
-	// 	log.Println("error in loading public key")
-	// 	log.Println(err.Error())
-
-	// 	return ""
-	// }
 	key, err := os.ReadFile(path)
 	if err != nil {
-		log.Println("error in reading public key")
-		log.Println(err.Error())
-
+		fmt.Println("Error while Reading Public Key:", err)
+		fmt.Println("Source: GetPublicKey()")
 		return ""
 	}
 	return string(key)
 }
 
 func loadPrivateKey() string {
-	key, err := os.ReadFile(PRIVATE_KEYS_PATH)
+	private_key_path := filepath.Join(os.Getenv("LOCALAPPDATA"), "PKr", "Keys", "My", "private.pem")
+	key, err := os.ReadFile(private_key_path)
 	if err != nil {
-		log.Println("error in reading public key")
-		log.Println(err.Error())
-
+		fmt.Println("Error in Loading Private Key:", err)
+		fmt.Println("Source: LoadPrivateKey()")
 		return ""
 	}
 	return string(key)

@@ -3,14 +3,13 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 
 	"github.com/ButterHost69/PKr-Base/encrypt"
 )
 
-var TREE_REL_PATH = filepath.Join(".PKr", "file_tree.json")
+var TREE_REL_PATH = filepath.Join(".PKr", "file-tree.json")
 
 type FileTree struct {
 	Nodes []Node
@@ -21,34 +20,34 @@ type Node struct {
 	Hash     string `json:"hash"`
 }
 
-func CreateFileTreeIfNotExits(workspace_file_path string) error {
-	tree_file_path := filepath.Join(workspace_file_path, TREE_REL_PATH)
+func CreateFileTreeIfNotExits(workspace_path string) error {
+	tree_file_path := filepath.Join(workspace_path, TREE_REL_PATH)
 	if _, err := os.Stat(tree_file_path); os.IsExist(err) {
-		fmt.Println("~ tree_file already Exists")
+		fmt.Println("File Tree Already Exists")
+		return nil
+	}
+
+	fileTree, err := GetNewTree(workspace_path)
+	if err != nil {
+		fmt.Println("Error while Getting New Tree: ", err)
+		fmt.Println("Source: CreateFileTreeIfNotExits()")
 		return err
 	}
 
-	fileTree, err := GetNewTree(workspace_file_path)
+	err = WriteToFileTree(workspace_path, fileTree)
 	if err != nil {
-		log.Println("Error while Getting New Tree: ", err)
-		log.Println("Source: CreateFileTreeIfNotExits()")
-		return err
-	}
-
-	err = WriteToFileTree(workspace_file_path, fileTree)
-	if err != nil {
-		log.Println("Error while Writing File Tree: ", err)
-		log.Println("Source: CreateFileTreeIfNotExits()")
+		fmt.Println("Error while Writing in File Tree: ", err)
+		fmt.Println("Source: CreateFileTreeIfNotExits()")
 		return err
 	}
 
 	return nil
 }
 
-func GetNewTree(workspace_file_path string) (FileTree, error) {
+func GetNewTree(workspace_path string) (FileTree, error) {
 	var tree FileTree
 
-	err := filepath.Walk(workspace_file_path, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(workspace_path, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err // skip files we can't read
 		}
@@ -59,17 +58,17 @@ func GetNewTree(workspace_file_path string) (FileTree, error) {
 			if info.Name() == "PKr-Base.exe" || info.Name() == "PKr-Cli.exe" {
 				return nil
 			}
-			relPath, err := filepath.Rel(workspace_file_path, path)
+			relPath, err := filepath.Rel(workspace_path, path)
 			if err != nil {
-				log.Println("Could Not Generate RelPath")
-				log.Printf("Path: %s | Error: %v\n", workspace_file_path, err)
-				log.Println("Source: GetNewTree()")
+				fmt.Println("Error while Getting Relative Path:", err)
+				fmt.Println("Source: GetNewTree()")
 				return err
 			}
 
 			hash, err := encrypt.GenerateHashWithFilePath(path)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "Failed to hash %s: %v\n", path, err)
+				fmt.Println("Error while Hashing with File Path:", err)
+				fmt.Println("Source: GetNewTree()")
 				return nil
 			}
 
@@ -82,7 +81,8 @@ func GetNewTree(workspace_file_path string) (FileTree, error) {
 	})
 
 	if err != nil {
-		log.Println("Error walking the path:", err)
+		fmt.Println("Error walking the path:", err)
+		fmt.Println("Source: GetNewTree()")
 		return tree, nil
 	}
 	return tree, nil
@@ -91,8 +91,8 @@ func GetNewTree(workspace_file_path string) (FileTree, error) {
 func ReadFromTreeFile(workspace_tree_path string) (FileTree, error) {
 	file, err := os.Open(filepath.Join(workspace_tree_path, TREE_REL_PATH))
 	if err != nil {
-		// AddUsersLogEntry("error in opening PKR config file.... pls check if .PKr/workspaceConfig.json available ")
-		log.Println("error in opening PKR config file.... pls check if .PKr/workspaceConfig.json available ")
+		fmt.Println("Error while opening tree file:", err)
+		fmt.Println("Source: ReadFromTreeFile()")
 		return FileTree{}, err
 	}
 	defer file.Close()
@@ -101,30 +101,27 @@ func ReadFromTreeFile(workspace_tree_path string) (FileTree, error) {
 	decoder := json.NewDecoder(file)
 	err = decoder.Decode(&fileTree)
 	if err != nil {
-		log.Println("error in decoding json data")
+		fmt.Println("Error while Decoding JSON Data from tree file:", err)
+		fmt.Println("Source: ReadFromTreeFile()")
 		return FileTree{}, err
 	}
-
 	return fileTree, nil
 }
 
 func WriteToFileTree(workspace_tree_path string, FileTree FileTree) error {
 	jsonData, err := json.MarshalIndent(FileTree, "", "	")
-	// fmt.Println(jsonData)
 	if err != nil {
-		log.Println("error occured in Marshalling the data to JSON")
-		log.Println(err)
+		fmt.Println("Error while Marshalling the file-tree to JSON:", err)
+		fmt.Println("Source: WriteToFileTree()")
 		return err
 	}
 
-	// fmt.Println(string(jsonData))
-	err = os.WriteFile(filepath.Join(workspace_tree_path, TREE_REL_PATH), jsonData, 0777)
+	err = os.WriteFile(filepath.Join(workspace_tree_path, TREE_REL_PATH), jsonData, 0600)
 	if err != nil {
-		log.Println("error occured in storing data in userconfig file")
-		log.Println(err)
+		fmt.Println("Error while writing data in file-tree:", err)
+		fmt.Println("Source: WriteToFileTree()")
 		return err
 	}
-
 	return nil
 }
 

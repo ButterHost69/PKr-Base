@@ -18,8 +18,8 @@ const FLUSH_AFTER_EVERY_X_MB = encrypt.FLUSH_AFTER_EVERY_X_MB
 func sendErrorMessage(kcp_session *kcp.UDPSession, error_msg string) {
 	_, err := kcp_session.Write([]byte(error_msg))
 	if err != nil {
-		logger.USER_LOGGER.Println("Error while Sending Error Message:", err)
-		logger.USER_LOGGER.Println("Source: sendMessage()")
+		logger.LOGGER.Println("Error while Sending Error Message:", err)
+		logger.LOGGER.Println("Source: sendMessage()")
 	}
 }
 
@@ -27,23 +27,23 @@ func handleClone(kcp_session *kcp.UDPSession, zip_path string, len_data_bytes in
 	curr_dir := filepath.Join(workspace_path, ".PKr", "Files", "Current") + string(filepath.Separator)
 	key, err := os.ReadFile(curr_dir + "AES_KEY")
 	if err != nil {
-		logger.USER_LOGGER.Println("Error while Reading AES Key:", err)
-		logger.USER_LOGGER.Println("Source: handleClone()")
+		logger.LOGGER.Println("Error while Reading AES Key:", err)
+		logger.LOGGER.Println("Source: handleClone()")
 		return
 	}
 
 	iv, err := os.ReadFile(curr_dir + "AES_IV")
 	if err != nil {
-		logger.USER_LOGGER.Println("Error while Reading AES IV:", err)
-		logger.USER_LOGGER.Println("Source: handleClone()")
+		logger.LOGGER.Println("Error while Reading AES IV:", err)
+		logger.LOGGER.Println("Source: handleClone()")
 		return
 	}
 
-	logger.USER_LOGGER.Println("Opening Destination File")
+	logger.LOGGER.Println("Opening Destination File")
 	zip_file_obj, err := os.Open(zip_path)
 	if err != nil {
-		logger.USER_LOGGER.Println("Error while Opening Destination File:", err)
-		logger.USER_LOGGER.Println("Source: GetDataHandler()")
+		logger.LOGGER.Println("Error while Opening Destination File:", err)
+		logger.LOGGER.Println("Source: GetDataHandler()")
 		sendErrorMessage(kcp_session, "Internal Server Error")
 		return
 	}
@@ -52,31 +52,31 @@ func handleClone(kcp_session *kcp.UDPSession, zip_path string, len_data_bytes in
 	var buff [512]byte
 	buffer := make([]byte, DATA_CHUNK)
 	reader := bufio.NewReader(zip_file_obj)
-	logger.USER_LOGGER.Println("Length of File:", len_data_bytes)
+	logger.LOGGER.Println("Length of File:", len_data_bytes)
 
-	logger.USER_LOGGER.Println("Preparing to Transfer Data")
+	logger.LOGGER.Println("Preparing to Transfer Data")
 	for {
 		n, err := reader.Read(buffer)
 		if err != nil {
 			if err == io.EOF {
-				logger.USER_LOGGER.Println("Done Sent, now waiting for ack from listener ...")
+				logger.LOGGER.Println("Done Sent, now waiting for ack from listener ...")
 				n, err := kcp_session.Read(buff[:])
 				if err != nil {
-					logger.USER_LOGGER.Println("Error while Reading 'Data Received' Message from Listener:", err)
-					logger.USER_LOGGER.Println("Source: GetDataHandler()")
+					logger.LOGGER.Println("Error while Reading 'Data Received' Message from Listener:", err)
+					logger.LOGGER.Println("Source: GetDataHandler()")
 					return
 				}
 				// Data Received
 				msg := string(buff[:n])
 				if msg == "Data Received" {
-					logger.USER_LOGGER.Println("Data Transfer Completed")
+					logger.LOGGER.Println("Data Transfer Completed")
 					return
 				}
-				logger.USER_LOGGER.Println("Received Unexpected Message:", msg)
+				logger.LOGGER.Println("Received Unexpected Message:", msg)
 				return
 			}
-			logger.USER_LOGGER.Println("Error while Sending Workspace Chunk:", err)
-			logger.USER_LOGGER.Println("Source: GetDataHandler()")
+			logger.LOGGER.Println("Error while Sending Workspace Chunk:", err)
+			logger.LOGGER.Println("Source: GetDataHandler()")
 			sendErrorMessage(kcp_session, "Internal Server Error")
 			return
 		}
@@ -84,15 +84,15 @@ func handleClone(kcp_session *kcp.UDPSession, zip_path string, len_data_bytes in
 		if n > 0 {
 			buffer, err = encrypt.EncryptDecryptChunk(buffer[:n], key, iv)
 			if err != nil {
-				logger.USER_LOGGER.Println("Error while Encrypting Data Chunk ...:", err)
-				logger.USER_LOGGER.Println("Source: handleClone()")
+				logger.LOGGER.Println("Error while Encrypting Data Chunk ...:", err)
+				logger.LOGGER.Println("Source: handleClone()")
 				return
 			}
 
 			_, err := kcp_session.Write([]byte(buffer[:n]))
 			if err != nil {
-				logger.USER_LOGGER.Println("Error while Sending Data:", err)
-				logger.USER_LOGGER.Println("Source: GetDataHandler()")
+				logger.LOGGER.Println("Error while Sending Data:", err)
+				logger.LOGGER.Println("Source: GetDataHandler()")
 				sendErrorMessage(kcp_session, "Internal Server Error")
 				return
 			}
@@ -102,60 +102,60 @@ func handleClone(kcp_session *kcp.UDPSession, zip_path string, len_data_bytes in
 }
 
 func GetDataHandler(kcp_session *kcp.UDPSession) {
-	logger.USER_LOGGER.Println("Get Data Handler Called")
-	logger.USER_LOGGER.Println("Reading Workspace Name ...")
+	logger.LOGGER.Println("Get Data Handler Called")
+	logger.LOGGER.Println("Reading Workspace Name ...")
 
 	var buff [512]byte
 	n, err := kcp_session.Read(buff[:])
 	if err != nil {
-		logger.USER_LOGGER.Println("Error while Reading Workspace Name:", err)
-		logger.USER_LOGGER.Println("Source: GetDataHandler()")
+		logger.LOGGER.Println("Error while Reading Workspace Name:", err)
+		logger.LOGGER.Println("Source: GetDataHandler()")
 		return
 	}
 	workspace_name := string(buff[:n])
-	logger.USER_LOGGER.Println("Workspace Name:", workspace_name)
-	logger.USER_LOGGER.Println("Reading Workspace Push Num ...")
+	logger.LOGGER.Println("Workspace Name:", workspace_name)
+	logger.LOGGER.Println("Reading Workspace Push Num ...")
 
 	n, err = kcp_session.Read(buff[:])
 	if err != nil {
-		logger.USER_LOGGER.Println("Error while Reading Workspace Push Num:", err)
-		logger.USER_LOGGER.Println("Source: GetDataHandler()")
+		logger.LOGGER.Println("Error while Reading Workspace Push Num:", err)
+		logger.LOGGER.Println("Source: GetDataHandler()")
 		return
 	}
 	workspace_push_num := string(buff[:n])
-	logger.USER_LOGGER.Println("Workspace Push Num:", workspace_push_num)
+	logger.LOGGER.Println("Workspace Push Num:", workspace_push_num)
 
 	// Read Data Request Type (Pull/Clone)
 	n, err = kcp_session.Read(buff[:])
 	if err != nil {
-		logger.USER_LOGGER.Println("Error while Reading Type of Data Request Type:", err)
-		logger.USER_LOGGER.Println("Source: GetDataHandler()")
+		logger.LOGGER.Println("Error while Reading Type of Data Request Type:", err)
+		logger.LOGGER.Println("Source: GetDataHandler()")
 		return
 	}
 	data_req_type := string(buff[:n])
-	logger.USER_LOGGER.Println("Data Request Type(Clone/Pull):", data_req_type)
+	logger.LOGGER.Println("Data Request Type(Clone/Pull):", data_req_type)
 
 	workspace_path, err := config.GetSendWorkspaceFilePath(workspace_name)
 	if err != nil {
-		logger.USER_LOGGER.Println("Failed to Get Workspace Path from Config:", err)
-		logger.USER_LOGGER.Println("Source: GetDataHandler()")
+		logger.LOGGER.Println("Failed to Get Workspace Path from Config:", err)
+		logger.LOGGER.Println("Source: GetDataHandler()")
 		sendErrorMessage(kcp_session, "Internal Server Error")
 		return
 	}
-	logger.USER_LOGGER.Println("Workspace Path:", workspace_path)
+	logger.LOGGER.Println("Workspace Path:", workspace_path)
 
 	if data_req_type == "Clone" {
 		zip_path := filepath.Join(workspace_path, ".PKr", "Files", "Current", workspace_push_num+".zip")
 		fileInfo, err := os.Stat(zip_path)
 		if err == nil {
-			logger.USER_LOGGER.Println("Destination File exists")
+			logger.LOGGER.Println("Destination File exists")
 		} else if os.IsNotExist(err) {
-			logger.USER_LOGGER.Println("Destination File does not exist")
+			logger.LOGGER.Println("Destination File does not exist")
 			sendErrorMessage(kcp_session, "Incorrect Workspace Name/Push Num")
 			return
 		} else {
-			logger.USER_LOGGER.Println("Error while checking Existence of Destination file:", err)
-			logger.USER_LOGGER.Println("Source: GetDataHandler()")
+			logger.LOGGER.Println("Error while checking Existence of Destination file:", err)
+			logger.LOGGER.Println("Source: GetDataHandler()")
 			sendErrorMessage(kcp_session, "Internal Server Error")
 			return
 		}
@@ -163,34 +163,34 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 		handleClone(kcp_session, zip_path, int(fileInfo.Size()), workspace_path)
 		return
 	} else if data_req_type != "Pull" {
-		logger.USER_LOGGER.Println("Invalid Data Request Type Sent from User")
-		logger.USER_LOGGER.Println("Source: GetDataHandler()")
+		logger.LOGGER.Println("Invalid Data Request Type Sent from User")
+		logger.LOGGER.Println("Source: GetDataHandler()")
 		sendErrorMessage(kcp_session, "Invalid Data Request Type Sent")
 		return
 	}
 
 	zip_enc_path := filepath.Join(workspace_path, ".PKr", "Files", "Changes", workspace_push_num, workspace_push_num+".enc")
-	logger.USER_LOGGER.Println("Zip Enc FilePath to share:", zip_enc_path)
+	logger.LOGGER.Println("Zip Enc FilePath to share:", zip_enc_path)
 
 	fileInfo, err := os.Stat(zip_enc_path)
 	if err == nil {
-		logger.USER_LOGGER.Println("Destination File exists")
+		logger.LOGGER.Println("Destination File exists")
 	} else if os.IsNotExist(err) {
-		logger.USER_LOGGER.Println("Destination File does not exist")
+		logger.LOGGER.Println("Destination File does not exist")
 		sendErrorMessage(kcp_session, "Incorrect Workspace Name/Push Num Range")
 		return
 	} else {
-		logger.USER_LOGGER.Println("Error while checking Existence of Destination file:", err)
-		logger.USER_LOGGER.Println("Source: GetDataHandler()")
+		logger.LOGGER.Println("Error while checking Existence of Destination file:", err)
+		logger.LOGGER.Println("Source: GetDataHandler()")
 		sendErrorMessage(kcp_session, "Internal Server Error")
 		return
 	}
 
-	logger.USER_LOGGER.Println("Opening Destination File")
+	logger.LOGGER.Println("Opening Destination File")
 	zip_file_obj, err := os.Open(zip_enc_path)
 	if err != nil {
-		logger.USER_LOGGER.Println("Error while Opening Destination File:", err)
-		logger.USER_LOGGER.Println("Source: GetDataHandler()")
+		logger.LOGGER.Println("Error while Opening Destination File:", err)
+		logger.LOGGER.Println("Source: GetDataHandler()")
 		sendErrorMessage(kcp_session, "Internal Server Error")
 		return
 	}
@@ -200,31 +200,31 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 	reader := bufio.NewReader(zip_file_obj)
 
 	len_data_bytes := int(fileInfo.Size())
-	logger.USER_LOGGER.Println("Length of File:", len_data_bytes)
+	logger.LOGGER.Println("Length of File:", len_data_bytes)
 
-	logger.USER_LOGGER.Println("Preparing to Transfer Data")
+	logger.LOGGER.Println("Preparing to Transfer Data")
 	for {
 		n, err := reader.Read(buffer)
 		if err != nil {
 			if err == io.EOF {
-				logger.USER_LOGGER.Println("Done Sent, now waiting for ack from listener ...")
+				logger.LOGGER.Println("Done Sent, now waiting for ack from listener ...")
 				n, err := kcp_session.Read(buff[:])
 				if err != nil {
-					logger.USER_LOGGER.Println("Error while Reading 'Data Received' Message from Listener:", err)
-					logger.USER_LOGGER.Println("Source: GetDataHandler()")
+					logger.LOGGER.Println("Error while Reading 'Data Received' Message from Listener:", err)
+					logger.LOGGER.Println("Source: GetDataHandler()")
 					return
 				}
 				// Data Received
 				msg := string(buff[:n])
 				if msg == "Data Received" {
-					logger.USER_LOGGER.Println("Data Transfer Completed")
+					logger.LOGGER.Println("Data Transfer Completed")
 					return
 				}
-				logger.USER_LOGGER.Println("Received Unexpected Message:", msg)
+				logger.LOGGER.Println("Received Unexpected Message:", msg)
 				return
 			}
-			logger.USER_LOGGER.Println("Error while Sending Workspace Chunk:", err)
-			logger.USER_LOGGER.Println("Source: GetDataHandler()")
+			logger.LOGGER.Println("Error while Sending Workspace Chunk:", err)
+			logger.LOGGER.Println("Source: GetDataHandler()")
 			sendErrorMessage(kcp_session, "Internal Server Error")
 			return
 		}
@@ -232,8 +232,8 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 		if n > 0 {
 			_, err := kcp_session.Write([]byte(buffer[:n]))
 			if err != nil {
-				logger.USER_LOGGER.Println("Error while Sending Data:", err)
-				logger.USER_LOGGER.Println("Source: GetDataHandler()")
+				logger.LOGGER.Println("Error while Sending Data:", err)
+				logger.LOGGER.Println("Source: GetDataHandler()")
 				sendErrorMessage(kcp_session, "Internal Server Error")
 				return
 			}

@@ -2,9 +2,9 @@ package filetracker
 
 import (
 	"archive/zip"
+	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -14,8 +14,8 @@ import (
 func addFilesToZip(writer *zip.Writer, dirpath string, relativepath string) error {
 	files, err := ioutil.ReadDir(dirpath)
 	if err != nil {
-		log.Println("Error while Reading Dir:", err)
-		log.Println("Source: addFilesToZip()")
+		fmt.Println("Error while Reading Dir:", err)
+		fmt.Println("Source: addFilesToZip()")
 		return err
 	}
 
@@ -26,15 +26,15 @@ func addFilesToZip(writer *zip.Writer, dirpath string, relativepath string) erro
 			content, err := os.ReadFile(filepath.Join(dirpath, file.Name()))
 
 			if err != nil {
-				log.Println("Error while Reading File:", err)
-				log.Println("Source: addFilesToZip()")
+				fmt.Println("Error while Reading File:", err)
+				fmt.Println("Source: addFilesToZip()")
 				return err
 			}
 
 			file, err := writer.Create(filepath.Join(relativepath, file.Name()))
 			if err != nil {
-				log.Println("Error while Creating Entry in Zip File:", err)
-				log.Println("Source: addFilesToZip()")
+				fmt.Println("Error while Creating Entry in Zip File:", err)
+				fmt.Println("Source: addFilesToZip()")
 				return err
 			}
 			file.Write(content)
@@ -55,15 +55,15 @@ func ZipData(workspace_path string, destination_path string, zip_file_name strin
 	// Ensure the destination directory exists
 	err := os.MkdirAll(destination_path, os.ModePerm)
 	if err != nil {
-		log.Println("Error creating destination directory:", err)
-		log.Println("Source: ZipData()")
+		fmt.Println("Error creating destination directory:", err)
+		fmt.Println("Source: ZipData()")
 		return err
 	}
 
 	zip_file, err := os.Create(fullZipPath)
 	if err != nil {
-		log.Println("Error while Creating Zip File:", err)
-		log.Println("Source: ZipData()")
+		fmt.Println("Error while Creating Zip File:", err)
+		fmt.Println("Source: ZipData()")
 		return err
 	}
 
@@ -71,8 +71,8 @@ func ZipData(workspace_path string, destination_path string, zip_file_name strin
 	addFilesToZip(writer, workspace_path, "")
 
 	if err = writer.Close(); err != nil {
-		log.Println("Error while Closing zip writer:", err)
-		log.Println("Source: ZipData()")
+		fmt.Println("Error while Closing zip writer:", err)
+		fmt.Println("Source: ZipData()")
 		return err
 	}
 	zip_file.Close()
@@ -80,7 +80,7 @@ func ZipData(workspace_path string, destination_path string, zip_file_name strin
 }
 
 func UnzipData(src, dest string) error {
-	log.Printf("Unzipping Files: %s\n\t to %s\n", src, dest)
+	fmt.Printf("Unzipping Files: %s\n\t to %s\n", src, dest)
 	zipper, err := zip.OpenReader(src)
 	if err != nil {
 		return err
@@ -94,7 +94,7 @@ func UnzipData(src, dest string) error {
 		abs_path := filepath.Join(dest, file.Name)
 		dir, _ := filepath.Split(abs_path)
 		if dir != "" {
-			if err := os.MkdirAll(dir, 0777); err != nil {
+			if err := os.MkdirAll(dir, 0600); err != nil {
 				return err
 			}
 		}
@@ -115,9 +115,9 @@ func UnzipData(src, dest string) error {
 			return err
 		}
 		totalfiles += 1
-		log.Printf("%d] File: %s\n", count, file.Name)
+		fmt.Printf("%d] File: %s\n", count, file.Name)
 	}
-	log.Printf("\nTotal Files Recieved: %d\n", totalfiles)
+	fmt.Printf("\nTotal Files Recieved: %d\n", totalfiles)
 	return nil
 }
 
@@ -133,16 +133,16 @@ func returnZipFileObj(zip_file_reader *zip.ReadCloser, search_file_name string) 
 func ZipUpdates(changes []config.FileChange, src_path string, dst_path string) (err error) {
 	dst_dir, _ := filepath.Split(dst_path)
 	if err = os.Mkdir(dst_dir, 0600); err != nil {
-		log.Println("Error Could not Create the Dir:", err)
-		log.Println("Source: ZipUpdates()")
+		fmt.Println("Error Could not Create the Dir:", err)
+		fmt.Println("Source: ZipUpdates()")
 		return err
 	}
 
 	// Open Src Zip File
 	src_zip_file, err := zip.OpenReader(src_path)
 	if err != nil {
-		log.Println("Error while Opening Source Zip File:", err)
-		log.Println("Source: ZipUpdates()")
+		fmt.Println("Error while Opening Source Zip File:", err)
+		fmt.Println("Source: ZipUpdates()")
 		return err
 	}
 	defer src_zip_file.Close()
@@ -150,8 +150,8 @@ func ZipUpdates(changes []config.FileChange, src_path string, dst_path string) (
 	// Create Dest Zip File
 	dst_zip_file, err := os.Create(dst_path)
 	if err != nil {
-		log.Printf("Error Could Not Create File %v: %v\n", dst_path, err)
-		log.Println("Source: ZipUpdates()")
+		fmt.Printf("Error Could Not Create File %v: %v\n", dst_path, err)
+		fmt.Println("Source: ZipUpdates()")
 		return err
 	}
 	defer dst_zip_file.Close()
@@ -167,7 +167,7 @@ func ZipUpdates(changes []config.FileChange, src_path string, dst_path string) (
 
 		zip_file_obj := returnZipFileObj(src_zip_file, change.FilePath)
 		if zip_file_obj == nil {
-			log.Println(filepath.Join(src_path, change.FilePath), "is nil")
+			fmt.Println(filepath.Join(src_path, change.FilePath), "is nil")
 			return
 		}
 

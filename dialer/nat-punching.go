@@ -1,7 +1,7 @@
 package dialer
 
 import (
-	"log"
+	"fmt"
 	"net"
 	"strings"
 	"time"
@@ -13,23 +13,23 @@ const (
 )
 
 func WorkspaceOwnerUdpNatPunching(conn *net.UDPConn, peerAddr, clientHandlerName string) error {
-	log.Println("Attempting to Dial Peer ...")
+	fmt.Println("Attempting to Dial Peer ...")
 	peerUDPAddr, err := net.ResolveUDPAddr("udp", peerAddr)
 	if err != nil {
-		log.Println("Error while resolving UDP Addr:", err)
-		log.Println("Source: WorkspaceOwnerUdpNatPunching()")
+		fmt.Println("Error while resolving UDP Addr:", err)
+		fmt.Println("Source: WorkspaceOwnerUdpNatPunching()")
 		return err
 	}
 
-	log.Println("Punching ", peerAddr)
+	fmt.Println("Punching ", peerAddr)
 	for range PUNCH_ATTEMPTS {
 		conn.WriteToUDP([]byte("Punch"+";"+clientHandlerName), peerUDPAddr)
 	}
 
 	err = conn.SetReadDeadline(time.Now().Add(30 * time.Second))
 	if err != nil {
-		log.Println("Error while Setting Deadline during UDP NAT Hole Punching:", err)
-		log.Println("Source: WorkspaceOwnerUdpNatPunching()")
+		fmt.Println("Error while Setting Deadline during UDP NAT Hole Punching:", err)
+		fmt.Println("Source: WorkspaceOwnerUdpNatPunching()")
 		return err
 	}
 
@@ -37,8 +37,8 @@ func WorkspaceOwnerUdpNatPunching(conn *net.UDPConn, peerAddr, clientHandlerName
 	defer func() {
 		err = conn.SetReadDeadline(time.Time{})
 		if err != nil {
-			log.Println("Error while Setting Deadline after UDP NAT Hole Punching:", err)
-			log.Println("Source: WorkspaceOwnerUdpNatPunching()")
+			fmt.Println("Error while Setting Deadline after UDP NAT Hole Punching:", err)
+			fmt.Println("Source: WorkspaceOwnerUdpNatPunching()")
 			return
 		}
 	}()
@@ -47,56 +47,56 @@ func WorkspaceOwnerUdpNatPunching(conn *net.UDPConn, peerAddr, clientHandlerName
 	for {
 		n, addr, err := conn.ReadFromUDP(buff[0:])
 		if err != nil {
-			log.Println("Error while reading from Udp:", err)
-			log.Println("Source: WorkspaceOwnerUdpNatPunching()")
+			fmt.Println("Error while reading from Udp:", err)
+			fmt.Println("Source: WorkspaceOwnerUdpNatPunching()")
 			return err
 		}
 		msg := string(buff[:n])
-		log.Printf("Received message: %s from %v\n", msg, addr)
-		log.Println(peerAddr == addr.String())
+		fmt.Printf("Received message: %s from %v\n", msg, addr)
+		fmt.Println(peerAddr == addr.String())
 
 		if addr.String() == peerAddr {
-			log.Println("Expected User Messaged:", addr.String())
+			fmt.Println("Expected User Messaged:", addr.String())
 			if msg == "Punch" {
 				_, err = conn.WriteToUDP([]byte("Punch ACK"+";"+clientHandlerName), peerUDPAddr)
 				if err != nil {
-					log.Println("Error while Writing 'Punch ACK;clientHandlerName':", err)
-					log.Println("Source: WorkspaceOwnerUdpNatPunching()")
+					fmt.Println("Error while Writing 'Punch ACK;clientHandlerName':", err)
+					fmt.Println("Source: WorkspaceOwnerUdpNatPunching()")
 					continue
 				}
-				log.Println("Connection Established with", addr.String())
+				fmt.Println("Connection Established with", addr.String())
 				return nil
 			} else if msg == "Punch ACK" {
-				log.Println("Connection Established with", addr.String())
+				fmt.Println("Connection Established with", addr.String())
 				return nil
 			} else {
-				log.Println("Something Else is in Message:", msg)
+				fmt.Println("Something Else is in Message:", msg)
 			}
 		} else {
-			log.Println("Unexpected User Messaged:", addr.String())
-			log.Println(msg)
+			fmt.Println("Unexpected User Messaged:", addr.String())
+			fmt.Println(msg)
 		}
 	}
 }
 
 func WorkspaceListenerUdpNatHolePunching(conn *net.UDPConn, peerAddr string) (string, error) {
-	log.Println("Attempting to Dial Peer ...")
+	fmt.Println("Attempting to Dial Peer ...")
 	peerUDPAddr, err := net.ResolveUDPAddr("udp", peerAddr)
 	if err != nil {
-		log.Println("Error while resolving UDP Addr:", err)
-		log.Println("Source: WorkspaceListenerUdpNatHolePunching()")
+		fmt.Println("Error while resolving UDP Addr:", err)
+		fmt.Println("Source: WorkspaceListenerUdpNatHolePunching()")
 		return "", err
 	}
 
-	log.Println("Punching ", peerAddr)
+	fmt.Println("Punching ", peerAddr)
 	for range PUNCH_ATTEMPTS {
 		conn.WriteToUDP([]byte("Punch"), peerUDPAddr)
 	}
 
 	err = conn.SetReadDeadline(time.Now().Add(30 * time.Second))
 	if err != nil {
-		log.Println("Error while Setting Deadline during UDP NAT Hole Punching:", err)
-		log.Println("Source: WorkspaceListenerUdpNatHolePunching()")
+		fmt.Println("Error while Setting Deadline during UDP NAT Hole Punching:", err)
+		fmt.Println("Source: WorkspaceListenerUdpNatHolePunching()")
 		return "", err
 	}
 
@@ -104,8 +104,8 @@ func WorkspaceListenerUdpNatHolePunching(conn *net.UDPConn, peerAddr string) (st
 	defer func() {
 		err = conn.SetReadDeadline(time.Time{})
 		if err != nil {
-			log.Println("Error while Setting Deadline after UDP NAT Hole Punching:", err)
-			log.Println("Source: WorkspaceListenerUdpNatHolePunching()")
+			fmt.Println("Error while Setting Deadline after UDP NAT Hole Punching:", err)
+			fmt.Println("Source: WorkspaceListenerUdpNatHolePunching()")
 			return
 		}
 	}()
@@ -114,35 +114,35 @@ func WorkspaceListenerUdpNatHolePunching(conn *net.UDPConn, peerAddr string) (st
 	for {
 		n, addr, err := conn.ReadFromUDP(buff[0:])
 		if err != nil {
-			log.Println("Error while reading from Udp:", err)
-			log.Println("Source: WorkspaceListenerUdpNatHolePunching()")
+			fmt.Println("Error while reading from Udp:", err)
+			fmt.Println("Source: WorkspaceListenerUdpNatHolePunching()")
 			return "", err
 		}
 		msg := string(buff[:n])
-		log.Printf("Received message: %s from %v\n", msg, addr)
-		log.Println(peerAddr == addr.String())
+		fmt.Printf("Received message: %s from %v\n", msg, addr)
+		fmt.Println(peerAddr == addr.String())
 
 		if addr.String() == peerAddr {
-			log.Println("Expected User Messaged:", addr.String())
+			fmt.Println("Expected User Messaged:", addr.String())
 			if strings.HasPrefix(msg, "Punch") {
 				clientHandlerName := strings.Split(msg, ";")[1]
 				_, err = conn.WriteToUDP([]byte("Punch ACK"), peerUDPAddr)
 				if err != nil {
-					log.Println("Error while Writing Punch ACK:", err)
-					log.Println("Source: WorkspaceListenerUdpNatHolePunching()")
+					fmt.Println("Error while Writing Punch ACK:", err)
+					fmt.Println("Source: WorkspaceListenerUdpNatHolePunching()")
 					continue
 				}
-				log.Println("Connection Established with", addr.String())
+				fmt.Println("Connection Established with", addr.String())
 				return clientHandlerName, nil
 			} else if strings.HasPrefix(msg, "Punch ACK") {
-				log.Println("Connection Established with", addr.String())
+				fmt.Println("Connection Established with", addr.String())
 				clientHandlerName := strings.Split(msg, ";")[1]
 				return clientHandlerName, nil
 			} else {
-				log.Println("Something Else is in Message:", msg)
+				fmt.Println("Something Else is in Message:", msg)
 			}
 		} else {
-			log.Println("Unexpected User Messaged:", addr.String())
+			fmt.Println("Unexpected User Messaged:", addr.String())
 		}
 	}
 }

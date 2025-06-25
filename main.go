@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net"
 	"net/url"
 	"os"
@@ -17,44 +18,36 @@ import (
 )
 
 var WEBSOCKET_SERVER_ADDR_WITH_QUERY url.URL
-var SERVER config.ServerConfig
+var USER_CONF config.UserConfig
 
 func init() {
-	err := logger.InitUserLogger()
+	err := logger.InitLogger()
 	if err != nil {
+		log.Println("Error while Initializing Logger:", err)
+		log.Println("Source: init()")
 		os.Exit(1)
 	}
 
-	servers, err := config.GetAllServers()
+	USER_CONF, err = config.ReadFromUserConfigFile()
 	if err != nil {
-		logger.USER_LOGGER.Println("Failed to Get all Servers from Config:", err)
-		logger.USER_LOGGER.Println("Source: init()")
+		logger.LOGGER.Println("Failed to Read from user-config:", err)
+		logger.LOGGER.Println("Source: init()")
 		os.Exit(1)
 	}
 
-	if len(servers) == 0 {
-		logger.USER_LOGGER.Println("No Server're found in Config\nExiting Base ...")
-		os.Exit(1)
-	}
+	escaped_username := url.QueryEscape(USER_CONF.Username)
+	escaped_password := url.QueryEscape(USER_CONF.Password)
+	ws.MY_USERNAME = USER_CONF.Username
+	ws.MY_SERVER_IP = USER_CONF.ServerIP
 
-	// Will Pick the last server from user config & maitain ws connection with that
-	for _, server := range servers {
-		escaped_username := url.QueryEscape(server.Username)
-		escaped_password := url.QueryEscape(server.Password)
-		ws.MY_USERNAME = server.Username
-		ws.MY_SERVER_IP = server.ServerIP
-		ws.MY_SERVER_ALIAS = server.ServerAlias
-		SERVER = server
+	raw_query := "username=" + escaped_username + "&password=" + escaped_password
+	websock_server_ip := strings.Split(USER_CONF.ServerIP, ":")[0]
 
-		raw_query := "username=" + escaped_username + "&password=" + escaped_password
-		websock_server_ip := strings.Split(server.ServerIP, ":")[0]
-
-		WEBSOCKET_SERVER_ADDR_WITH_QUERY = url.URL{
-			Scheme:   "ws",
-			Host:     websock_server_ip + ":8080",
-			Path:     "/ws",
-			RawQuery: raw_query,
-		}
+	WEBSOCKET_SERVER_ADDR_WITH_QUERY = url.URL{
+		Scheme:   "ws",
+		Host:     websock_server_ip + ":8080",
+		Path:     "/ws",
+		RawQuery: raw_query,
 	}
 }
 
@@ -70,9 +63,9 @@ func main() {
 			// Check if it's a syscall error underneath
 			if sysErr, ok := opErr.Err.(*os.SyscallError); ok {
 				if strings.Contains(sysErr.Error(), "actively refused") {
-					logger.USER_LOGGER.Println("Server seems offline")
-					logger.USER_LOGGER.Println("Failed to Connect to PKr-Server")
-					logger.USER_LOGGER.Println("Will be retrying in 15 Mins")
+					logger.LOGGER.Println("Server seems offline")
+					logger.LOGGER.Println("Failed to Connect to PKr-Server")
+					logger.LOGGER.Println("Will be retrying in 15 Mins")
 
 					ws_conn, _, server_err = websocket.DefaultDialer.Dial(WEBSOCKET_SERVER_ADDR_WITH_QUERY.String(), nil)
 					select {
@@ -80,86 +73,86 @@ func main() {
 						ws_conn, _, server_err = websocket.DefaultDialer.Dial(WEBSOCKET_SERVER_ADDR_WITH_QUERY.String(), nil)
 
 					case <-interrupt:
-						logger.USER_LOGGER.Println("Interrupt received. Exiting Program...")
+						logger.LOGGER.Println("Interrupt received. Exiting Program...")
 						return
 					}
 					continue
 				}
 			} else {
-				logger.USER_LOGGER.Println("Error while Dialing Websocket Connection to Server: ", server_err)
-				logger.USER_LOGGER.Println("Source: main()")
+				logger.LOGGER.Println("Error while Dialing Websocket Connection to Server: ", server_err)
+				logger.LOGGER.Println("Source: main()")
 				return
 			}
 		} else {
-			logger.USER_LOGGER.Println("Error while Dialing Websocket Connection to Server: ", server_err)
-			logger.USER_LOGGER.Println("Source: main()")
+			logger.LOGGER.Println("Error while Dialing Websocket Connection to Server: ", server_err)
+			logger.LOGGER.Println("Source: main()")
 			return
 		}
 	}
 
 	defer ws_conn.Close()
-	logger.USER_LOGGER.Println("Connected to Server")
+	logger.LOGGER.Println("Connected to Server")
 
 	done := make(chan struct{})
 
 	go ws.ReadJSONMessage(done, ws_conn)
 	go ws.PingPongWriter(done, ws_conn)
 
-	logger.USER_LOGGER.Println("Preparing gRPC Client ...")
+	logger.LOGGER.Println("Preparing gRPC Client ...")
 	// New GRPC Client
-	gRPC_cli_service_client, err := dialer.NewGRPCClients(SERVER.ServerIP)
+	gRPC_cli_service_client, err := dialer.GetNewGRPCClient(USER_CONF.ServerIP)
 	if err != nil {
-		logger.USER_LOGGER.Println("Error:", err)
-		logger.USER_LOGGER.Println("Description: Cannot Create New GRPC Client")
-		logger.USER_LOGGER.Println("Source: Install()")
+		logger.LOGGER.Println("Error:", err)
+		logger.LOGGER.Println("Description: Cannot Create New GRPC Client")
+		logger.LOGGER.Println("Source: Install()")
 		return
 	}
 
-	logger.USER_LOGGER.Println("Checking for New Changes")
+	logger.LOGGER.Println("Checking for New Changes")
 	// Checking for New Changes
-	for _, get_workspace := range SERVER.GetWorkspaces {
-		logger.USER_LOGGER.Println("GET Workspace: ")
-		logger.USER_LOGGER.Println(get_workspace)
-		are_there_new_changes, err := dialer.CheckForNewChanges(gRPC_cli_service_client, get_workspace.WorkspaceName, get_workspace.WorkspaceOwnerName, SERVER.Username, SERVER.Password, get_workspace.LastPushNum)
+	for _, get_workspace := range USER_CONF.GetWorkspaces {
+		logger.LOGGER.Println("GET Workspace: ")
+		logger.LOGGER.Println(get_workspace)
+		are_there_new_changes, err := dialer.CheckForNewChanges(gRPC_cli_service_client, get_workspace.WorkspaceName, get_workspace.WorkspaceOwnerName, USER_CONF.Username, USER_CONF.Password, get_workspace.LastPushNum)
 		if err != nil {
-			logger.USER_LOGGER.Println("Error while Checking For New Changes:", err)
-			logger.USER_LOGGER.Println("Source: main()")
+			logger.LOGGER.Println("Error while Checking For New Changes:", err)
+			logger.LOGGER.Println("Source: main()")
 			continue
 		}
-		logger.USER_LOGGER.Println("Are there new changes:", are_there_new_changes)
+		logger.LOGGER.Println("Are there new changes:", are_there_new_changes)
 
 		if are_there_new_changes {
 			err = ws.PullWorkspace(get_workspace.WorkspaceOwnerName, get_workspace.WorkspaceName, ws_conn)
 			if err != nil {
 				if err.Error() == "workspace owner is offline" {
-					logger.USER_LOGGER.Println("Workspace Owner is Offline, Server'll notify when he's online")
+					logger.LOGGER.Println("Workspace Owner is Offline, Server'll notify when he's online")
 					break
 				}
-				logger.USER_LOGGER.Println("Error while Pulling Data:", err)
-				logger.USER_LOGGER.Println("Source: main()")
+				logger.LOGGER.Println("Error while Pulling Data:", err)
+				logger.LOGGER.Println("Source: main()")
 
-				logger.USER_LOGGER.Println("Will Try Again after 5 minutes")
+				logger.LOGGER.Println("Will Try Again after 5 minutes")
 				// Try Again only once after 5 minutes
 				time.Sleep(5 * time.Minute)
 				err = ws.PullWorkspace(get_workspace.WorkspaceOwnerName, get_workspace.WorkspaceName, ws_conn)
 				if err != nil {
-					logger.USER_LOGGER.Println("Error while Pulling Data Again:", err)
-					logger.USER_LOGGER.Println("Source: main()")
+					logger.LOGGER.Println("Error while Pulling Data Again:", err)
+					logger.LOGGER.Println("Source: main()")
 				}
 			}
 		}
 	}
-	logger.USER_LOGGER.Println("Done with Checking for New Changes ...")
+	logger.LOGGER.Println("Done with Checking for New Changes ...")
 
 	select {
 	case <-done:
 	case <-interrupt:
-		logger.USER_LOGGER.Println("Interrupt Received, Closing Connection ...")
+		logger.LOGGER.Println("Interrupt Received, Closing Connection ...")
 
 		err := ws_conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "Bye"))
 		if err != nil {
-			logger.USER_LOGGER.Println("Error while Writing Close Message to Server via WS:", err)
-			logger.USER_LOGGER.Println("Source: main()")
+			logger.LOGGER.Println("Error while Writing Close Message to Server via WS:", err)
+			logger.LOGGER.Println("Source: main()")
 			return
 		}
 	}
