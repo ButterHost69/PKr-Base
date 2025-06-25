@@ -1,3 +1,5 @@
+0. If ".PKr" already Exists then warn user that he's trying to clone or init on already PKr initialized directory
+
 1. Also add a list of "Avoid files" like ".env" or any other secret files
 
 2. Listeners can fetch workspace from other listeners
