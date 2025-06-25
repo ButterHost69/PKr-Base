@@ -2,11 +2,11 @@ package ws
 
 import (
 	"encoding/json"
-	"log"
 	"time"
 
 	"github.com/ButterHost69/PKr-Base/config"
 	"github.com/ButterHost69/PKr-Base/handler"
+	"github.com/ButterHost69/PKr-Base/logger"
 	"github.com/ButterHost69/PKr-Base/models"
 
 	"github.com/gorilla/websocket"
@@ -22,22 +22,22 @@ var RequestPunchFromReceiverResponseMap = models.RequestPunchFromReceiverRespons
 func handleNotifyToPunchRequest(conn *websocket.Conn, msg models.WSMessage) {
 	msg_bytes, err := json.Marshal(msg.Message)
 	if err != nil {
-		log.Println("Error while marshaling:", err)
-		log.Println("Source: handleNotifyToPunchRequest()")
+		logger.USER_LOGGER.Println("Error while marshaling:", err)
+		logger.USER_LOGGER.Println("Source: handleNotifyToPunchRequest()")
 		return
 	}
 	var noti_to_punch_req models.NotifyToPunchRequest
 	if err := json.Unmarshal(msg_bytes, &noti_to_punch_req); err != nil {
-		log.Println("Error while unmarshaling:", err)
-		log.Println("Source: handleNotifyToPunchRequest()")
+		logger.USER_LOGGER.Println("Error while unmarshaling:", err)
+		logger.USER_LOGGER.Println("Source: handleNotifyToPunchRequest()")
 		return
 	}
-	log.Printf("Res: %#v", noti_to_punch_req)
+	logger.USER_LOGGER.Printf("Res: %#v", noti_to_punch_req)
 
 	my_public_ip, my_public_port, my_private_ips, my_private_port, err := handler.HandleNotifyToPunchRequest(noti_to_punch_req.ListenerPublicIP, noti_to_punch_req.ListenerPublicPort, noti_to_punch_req.ListenerPrivateIPList, noti_to_punch_req.ListenerPrivatePort)
 	if err != nil {
-		log.Println("Error while Handling NotifyToPunch:", err)
-		log.Println("Source: handleNotifyToPunchRequest()")
+		logger.USER_LOGGER.Println("Error while Handling NotifyToPunch:", err)
+		logger.USER_LOGGER.Println("Source: handleNotifyToPunchRequest()")
 		return
 	}
 
@@ -56,45 +56,45 @@ func handleNotifyToPunchRequest(conn *websocket.Conn, msg models.WSMessage) {
 
 	err = conn.WriteJSON(res)
 	if err != nil {
-		log.Println("Error while writing Response of Notify To Punch:", err)
-		log.Println("Source: handleNotifyToPunchRequest()")
+		logger.USER_LOGGER.Println("Error while writing Response of Notify To Punch:", err)
+		logger.USER_LOGGER.Println("Source: handleNotifyToPunchRequest()")
 		return
 	}
-	log.Println("Response Sent to Server:", noti_to_punch_res)
-	log.Println(noti_to_punch_res)
+	logger.USER_LOGGER.Println("Response Sent to Server:", noti_to_punch_res)
+	logger.USER_LOGGER.Println(noti_to_punch_res)
 }
 
 func handleNotifyNewPushToListeners(msg models.WSMessage, conn *websocket.Conn) {
 	msg_bytes, err := json.Marshal(msg.Message)
 	if err != nil {
-		log.Println("Error while marshaling:", err)
-		log.Println("Source: handleNotifyNewPushToListeners()")
+		logger.USER_LOGGER.Println("Error while marshaling:", err)
+		logger.USER_LOGGER.Println("Source: handleNotifyNewPushToListeners()")
 		return
 	}
 	var noti_new_push models.NotifyNewPushToListeners
 	if err := json.Unmarshal(msg_bytes, &noti_new_push); err != nil {
-		log.Println("Error while unmarshaling:", err)
-		log.Println("Source: handleNotifyNewPushToListeners()")
+		logger.USER_LOGGER.Println("Error while unmarshaling:", err)
+		logger.USER_LOGGER.Println("Source: handleNotifyNewPushToListeners()")
 		return
 	}
-	log.Printf("Res: %#v", noti_new_push)
+	logger.USER_LOGGER.Printf("Res: %#v", noti_new_push)
 
 	err = PullWorkspace(noti_new_push.WorkspaceOwnerUsername, noti_new_push.WorkspaceName, conn)
 	if err != nil {
 		if err.Error() == "workspace owner is offline" {
-			log.Println("Workspace Owner is Offline, Server'll notify when he's online")
+			logger.USER_LOGGER.Println("Workspace Owner is Offline, Server'll notify when he's online")
 			return
 		}
-		log.Println("Error while Pulling Data:", err)
-		log.Println("Source: handleNotifyNewPushToListeners()")
+		logger.USER_LOGGER.Println("Error while Pulling Data:", err)
+		logger.USER_LOGGER.Println("Source: handleNotifyNewPushToListeners()")
 
 		// Try Again only once after 5 minutes
-		log.Println("Will Try Again after 5 minutes")
+		logger.USER_LOGGER.Println("Will Try Again after 5 minutes")
 		time.Sleep(5 * time.Minute)
 		err = PullWorkspace(noti_new_push.WorkspaceOwnerUsername, noti_new_push.WorkspaceName, conn)
 		if err != nil {
-			log.Println("Error while Pulling Data Again:", err)
-			log.Println("Source: handleNotifyNewPushToListeners()")
+			logger.USER_LOGGER.Println("Error while Pulling Data Again:", err)
+			logger.USER_LOGGER.Println("Source: handleNotifyNewPushToListeners()")
 		}
 	}
 }
@@ -102,41 +102,41 @@ func handleNotifyNewPushToListeners(msg models.WSMessage, conn *websocket.Conn) 
 func handleRequestPunchFromReceiverResponse(msg models.WSMessage) {
 	msg_bytes, err := json.Marshal(msg.Message)
 	if err != nil {
-		log.Println("Error while marshaling:", err)
-		log.Println("Source: handleNotifyToPunchResponse()")
+		logger.USER_LOGGER.Println("Error while marshaling:", err)
+		logger.USER_LOGGER.Println("Source: handleNotifyToPunchResponse()")
 		return
 	}
 	var msg_obj models.RequestPunchFromReceiverResponse
 	if err := json.Unmarshal(msg_bytes, &msg_obj); err != nil {
-		log.Println("Error while unmarshaling:", err)
-		log.Println("Source: handleNotifyToPunchResponse()")
+		logger.USER_LOGGER.Println("Error while unmarshaling:", err)
+		logger.USER_LOGGER.Println("Source: handleNotifyToPunchResponse()")
 		return
 	}
 	RequestPunchFromReceiverResponseMap.Lock()
 	RequestPunchFromReceiverResponseMap.Map[msg_obj.WorkspaceOwnerUsername] = msg_obj
 	RequestPunchFromReceiverResponseMap.Unlock()
-	log.Printf("Noti To Punch Res: %#v", msg_obj)
+	logger.USER_LOGGER.Printf("Noti To Punch Res: %#v", msg_obj)
 }
 
 func handleWorkspaceOwnerIsOnline(msg models.WSMessage, conn *websocket.Conn) {
 	msg_bytes, err := json.Marshal(msg.Message)
 	if err != nil {
-		log.Println("Error while marshaling:", err)
-		log.Println("Source: handleWorkspaceOwnerIsOnline()")
+		logger.USER_LOGGER.Println("Error while marshaling:", err)
+		logger.USER_LOGGER.Println("Source: handleWorkspaceOwnerIsOnline()")
 		return
 	}
 
 	var msg_obj models.WorkspaceOwnerIsOnline
 	if err := json.Unmarshal(msg_bytes, &msg_obj); err != nil {
-		log.Println("Error while unmarshaling:", err)
-		log.Println("Source: handleWorkspaceOwnerIsOnline()")
+		logger.USER_LOGGER.Println("Error while unmarshaling:", err)
+		logger.USER_LOGGER.Println("Source: handleWorkspaceOwnerIsOnline()")
 		return
 	}
 
 	user_config, err := config.ReadFromUserConfigFile()
 	if err != nil {
-		log.Println("Error while Reading User Config File:", err)
-		log.Println("Source: handleWorkspaceOwnerIsOnline()")
+		logger.USER_LOGGER.Println("Error while Reading User Config File:", err)
+		logger.USER_LOGGER.Println("Source: handleWorkspaceOwnerIsOnline()")
 		return
 	}
 
@@ -145,8 +145,8 @@ func handleWorkspaceOwnerIsOnline(msg models.WSMessage, conn *websocket.Conn) {
 			if workspace.WorkspaceOwnerName == msg_obj.WorkspaceOwnerName {
 				err := PullWorkspace(msg_obj.WorkspaceOwnerName, workspace.WorkspaceName, conn)
 				if err != nil {
-					log.Println("Error while Pulling Data:", err)
-					log.Println("Source: handleWorkspaceOwnerIsOnline()")
+					logger.USER_LOGGER.Println("Error while Pulling Data:", err)
+					logger.USER_LOGGER.Println("Source: handleWorkspaceOwnerIsOnline()")
 				}
 			}
 		}
@@ -166,25 +166,25 @@ func ReadJSONMessage(done chan struct{}, conn *websocket.Conn) {
 		var msg models.WSMessage
 		err := conn.ReadJSON(&msg)
 		if err != nil {
-			log.Println("Read WebSocket Error from Server:", err)
-			log.Println("Source: ReadJSONMessage()")
+			logger.USER_LOGGER.Println("Read WebSocket Error from Server:", err)
+			logger.USER_LOGGER.Println("Source: ReadJSONMessage()")
 			return
 		}
 
-		log.Printf("Message: %#v", msg)
+		logger.USER_LOGGER.Printf("Message: %#v", msg)
 
 		switch msg.MessageType {
 		case "NotifyToPunchRequest":
-			log.Println("NotifyToPunchRequest Called")
+			logger.USER_LOGGER.Println("NotifyToPunchRequest Called")
 			go handleNotifyToPunchRequest(conn, msg)
 		case "NotifyNewPushToListeners":
-			log.Println("NotifyNewPushToListeners Called")
+			logger.USER_LOGGER.Println("NotifyNewPushToListeners Called")
 			go handleNotifyNewPushToListeners(msg, conn)
 		case "RequestPunchFromReceiverResponse":
-			log.Println("RequestPunchFromReceiverResponse Called")
+			logger.USER_LOGGER.Println("RequestPunchFromReceiverResponse Called")
 			go handleRequestPunchFromReceiverResponse(msg)
 		case "WorkspaceOwnerIsOnline":
-			log.Println("Workspace Owner is Online Called")
+			logger.USER_LOGGER.Println("Workspace Owner is Online Called")
 			go handleWorkspaceOwnerIsOnline(msg, conn)
 		}
 	}
@@ -197,7 +197,7 @@ func PingPongWriter(done chan struct{}, conn *websocket.Conn) {
 	for {
 		<-ticker.C
 		if err := conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-			log.Println("No response of Ping from Server")
+			logger.USER_LOGGER.Println("No response of Ping from Server")
 			return
 		}
 	}

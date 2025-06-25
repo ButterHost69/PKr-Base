@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net"
 	"net/url"
 	"os"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/ButterHost69/PKr-Base/config"
 	"github.com/ButterHost69/PKr-Base/dialer"
+	"github.com/ButterHost69/PKr-Base/logger"
 	"github.com/ButterHost69/PKr-Base/ws"
 
 	"github.com/gorilla/websocket"
@@ -20,15 +20,20 @@ var WEBSOCKET_SERVER_ADDR_WITH_QUERY url.URL
 var SERVER config.ServerConfig
 
 func init() {
+	err := logger.InitUserLogger()
+	if err != nil {
+		os.Exit(1)
+	}
+
 	servers, err := config.GetAllServers()
 	if err != nil {
-		log.Println("Failed to Get all Servers from Config:", err)
-		log.Println("Source: init()")
+		logger.USER_LOGGER.Println("Failed to Get all Servers from Config:", err)
+		logger.USER_LOGGER.Println("Source: init()")
 		os.Exit(1)
 	}
 
 	if len(servers) == 0 {
-		log.Println("No Server're found in Config\nExiting Base ...")
+		logger.USER_LOGGER.Println("No Server're found in Config\nExiting Base ...")
 		os.Exit(1)
 	}
 
@@ -65,9 +70,9 @@ func main() {
 			// Check if it's a syscall error underneath
 			if sysErr, ok := opErr.Err.(*os.SyscallError); ok {
 				if strings.Contains(sysErr.Error(), "actively refused") {
-					log.Println("Server seems offline")
-					log.Println("Failed to Connect to PKr-Server")
-					log.Println("Will be retrying in 15 Mins")
+					logger.USER_LOGGER.Println("Server seems offline")
+					logger.USER_LOGGER.Println("Failed to Connect to PKr-Server")
+					logger.USER_LOGGER.Println("Will be retrying in 15 Mins")
 
 					ws_conn, _, server_err = websocket.DefaultDialer.Dial(WEBSOCKET_SERVER_ADDR_WITH_QUERY.String(), nil)
 					select {
@@ -75,86 +80,86 @@ func main() {
 						ws_conn, _, server_err = websocket.DefaultDialer.Dial(WEBSOCKET_SERVER_ADDR_WITH_QUERY.String(), nil)
 
 					case <-interrupt:
-						log.Println("Interrupt received. Exiting Program...")
+						logger.USER_LOGGER.Println("Interrupt received. Exiting Program...")
 						return
 					}
 					continue
 				}
 			} else {
-				log.Println("Error while Dialing Websocket Connection to Server: ", server_err)
-				log.Println("Source: main()")
+				logger.USER_LOGGER.Println("Error while Dialing Websocket Connection to Server: ", server_err)
+				logger.USER_LOGGER.Println("Source: main()")
 				return
 			}
 		} else {
-			log.Println("Error while Dialing Websocket Connection to Server: ", server_err)
-			log.Println("Source: main()")
+			logger.USER_LOGGER.Println("Error while Dialing Websocket Connection to Server: ", server_err)
+			logger.USER_LOGGER.Println("Source: main()")
 			return
 		}
 	}
 
 	defer ws_conn.Close()
-	log.Println("Connected to Server")
+	logger.USER_LOGGER.Println("Connected to Server")
 
 	done := make(chan struct{})
 
 	go ws.ReadJSONMessage(done, ws_conn)
 	go ws.PingPongWriter(done, ws_conn)
 
-	log.Println("Preparing gRPC Client ...")
+	logger.USER_LOGGER.Println("Preparing gRPC Client ...")
 	// New GRPC Client
 	gRPC_cli_service_client, err := dialer.NewGRPCClients(SERVER.ServerIP)
 	if err != nil {
-		log.Println("Error:", err)
-		log.Println("Description: Cannot Create New GRPC Client")
-		log.Println("Source: Install()")
+		logger.USER_LOGGER.Println("Error:", err)
+		logger.USER_LOGGER.Println("Description: Cannot Create New GRPC Client")
+		logger.USER_LOGGER.Println("Source: Install()")
 		return
 	}
 
-	log.Println("Checking for New Changes")
+	logger.USER_LOGGER.Println("Checking for New Changes")
 	// Checking for New Changes
 	for _, get_workspace := range SERVER.GetWorkspaces {
-		log.Println("GET Workspace: ")
-		log.Println(get_workspace)
+		logger.USER_LOGGER.Println("GET Workspace: ")
+		logger.USER_LOGGER.Println(get_workspace)
 		are_there_new_changes, err := dialer.CheckForNewChanges(gRPC_cli_service_client, get_workspace.WorkspaceName, get_workspace.WorkspaceOwnerName, SERVER.Username, SERVER.Password, get_workspace.LastPushNum)
 		if err != nil {
-			log.Println("Error while Checking For New Changes:", err)
-			log.Println("Source: main()")
+			logger.USER_LOGGER.Println("Error while Checking For New Changes:", err)
+			logger.USER_LOGGER.Println("Source: main()")
 			continue
 		}
-		log.Println("Are there new changes:", are_there_new_changes)
+		logger.USER_LOGGER.Println("Are there new changes:", are_there_new_changes)
 
 		if are_there_new_changes {
 			err = ws.PullWorkspace(get_workspace.WorkspaceOwnerName, get_workspace.WorkspaceName, ws_conn)
 			if err != nil {
 				if err.Error() == "workspace owner is offline" {
-					log.Println("Workspace Owner is Offline, Server'll notify when he's online")
+					logger.USER_LOGGER.Println("Workspace Owner is Offline, Server'll notify when he's online")
 					break
 				}
-				log.Println("Error while Pulling Data:", err)
-				log.Println("Source: main()")
+				logger.USER_LOGGER.Println("Error while Pulling Data:", err)
+				logger.USER_LOGGER.Println("Source: main()")
 
-				log.Println("Will Try Again after 5 minutes")
+				logger.USER_LOGGER.Println("Will Try Again after 5 minutes")
 				// Try Again only once after 5 minutes
 				time.Sleep(5 * time.Minute)
 				err = ws.PullWorkspace(get_workspace.WorkspaceOwnerName, get_workspace.WorkspaceName, ws_conn)
 				if err != nil {
-					log.Println("Error while Pulling Data Again:", err)
-					log.Println("Source: main()")
+					logger.USER_LOGGER.Println("Error while Pulling Data Again:", err)
+					logger.USER_LOGGER.Println("Source: main()")
 				}
 			}
 		}
 	}
-	log.Println("Done with Checking for New Changes ...")
+	logger.USER_LOGGER.Println("Done with Checking for New Changes ...")
 
 	select {
 	case <-done:
 	case <-interrupt:
-		log.Println("Interrupt Received, Closing Connection ...")
+		logger.USER_LOGGER.Println("Interrupt Received, Closing Connection ...")
 
 		err := ws_conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "Bye"))
 		if err != nil {
-			log.Println("Error while Writing Close Message to Server via WS:", err)
-			log.Println("Source: main()")
+			logger.USER_LOGGER.Println("Error while Writing Close Message to Server via WS:", err)
+			logger.USER_LOGGER.Println("Source: main()")
 			return
 		}
 	}

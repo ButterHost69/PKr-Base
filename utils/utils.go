@@ -2,7 +2,6 @@ package utils
 
 import (
 	"fmt"
-	"log"
 	"math/rand"
 	"net"
 	"os"
@@ -10,6 +9,8 @@ import (
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/ButterHost69/PKr-Base/logger"
 )
 
 func ClearScreen() {
@@ -58,8 +59,8 @@ func isPrivateIPv4(ip net.IP) bool {
 func ReturnListOfPrivateIPs() ([]string, error) {
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
-		log.Println("Error while Retrieving Address of all Network Interfaces:", err)
-		log.Println("Source: ReturnListOfPrivateIPs()")
+		logger.USER_LOGGER.Println("Error while Retrieving Address of all Network Interfaces:", err)
+		logger.USER_LOGGER.Println("Source: ReturnListOfPrivateIPs()")
 		return nil, err
 	}
 
