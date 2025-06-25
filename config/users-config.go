@@ -30,18 +30,18 @@ func CreateUserConfigIfNotExists(username, password, server_ip string) error {
 		return err
 	}
 
-	// Creating %LOCALAPPDATA%/.PKr/Config
-	err = os.MkdirAll(filepath.Join(USER_CONFIG_ROOT_DIR, "Config"), 0600)
+	// Creating %LOCALAPPDATA%/.PKr/Config/Keys/My
+	err = os.MkdirAll(filepath.Join(USER_CONFIG_ROOT_DIR, "Config", "Keys", "My"), 0600)
 	if err != nil {
-		fmt.Println("Error while Creating %LOCALAPPDATA%/.PKr/Config Dir:", err)
+		fmt.Println("Error while Creating %LOCALAPPDATA%/.PKr/Config/Keys/My Dir:", err)
 		fmt.Println("Source: CreateUserConfigIfNotExists()")
 		return err
 	}
 
-	// Creating %LOCALAPPDATA%/.PKr/Keys/My
-	err = os.MkdirAll(filepath.Join(USER_CONFIG_ROOT_DIR, "Keys", "My"), 0600)
+	// Creating %LOCALAPPDATA%/.PKr/Config/Keys/Others
+	err = os.MkdirAll(filepath.Join(USER_CONFIG_ROOT_DIR, "Config", "Keys", "Others"), 0600)
 	if err != nil {
-		fmt.Println("Error while Creating %LOCALAPPDATA%/.PKr/Config Dir:", err)
+		fmt.Println("Error while Creating %LOCALAPPDATA%/.PKr/Config/Keys/Others Dir:", err)
 		fmt.Println("Source: CreateUserConfigIfNotExists()")
 		return err
 	}
