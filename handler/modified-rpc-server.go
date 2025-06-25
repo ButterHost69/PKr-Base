@@ -6,11 +6,12 @@ import (
 	"errors"
 	"go/token"
 	"io"
-	"log"
 	"net"
 	"reflect"
 	"strings"
 	"sync"
+
+	"github.com/ButterHost69/PKr-Base/logger"
 )
 
 // Precompute the reflect type for error.
@@ -110,14 +111,15 @@ func (server *Server) register(rcvr any, name string, useName bool) error {
 	if !useName {
 		sname = reflect.Indirect(s.rcvr).Type().Name()
 	}
+
 	if sname == "" {
 		s := "rpc.Register: no service name for type " + s.typ.String()
-		log.Print(s)
+		logger.LOGGER.Print(s)
 		return errors.New(s)
 	}
 	if !useName && !token.IsExported(sname) {
 		s := "rpc.Register: type " + sname + " is not exported"
-		log.Print(s)
+		logger.LOGGER.Print(s)
 		return errors.New(s)
 	}
 	s.name = sname
@@ -135,7 +137,7 @@ func (server *Server) register(rcvr any, name string, useName bool) error {
 		} else {
 			str = "rpc.Register: type " + sname + " has no exported methods of suitable type"
 		}
-		log.Print(str)
+		logger.LOGGER.Print(str)
 		return errors.New(str)
 	}
 
@@ -160,7 +162,7 @@ func suitableMethods(typ reflect.Type, logErr bool) map[string]*methodType {
 		// Method needs three ins: receiver, *args, *reply.
 		if mtype.NumIn() != 3 {
 			if logErr {
-				log.Printf("rpc.Register: method %q has %d input parameters; needs exactly three\n", mname, mtype.NumIn())
+				logger.LOGGER.Printf("rpc.Register: method %q has %d input parameters; needs exactly three\n", mname, mtype.NumIn())
 			}
 			continue
 		}
@@ -168,7 +170,7 @@ func suitableMethods(typ reflect.Type, logErr bool) map[string]*methodType {
 		argType := mtype.In(1)
 		if !isExportedOrBuiltinType(argType) {
 			if logErr {
-				log.Printf("rpc.Register: argument type of method %q is not exported: %q\n", mname, argType)
+				logger.LOGGER.Printf("rpc.Register: argument type of method %q is not exported: %q\n", mname, argType)
 			}
 			continue
 		}
@@ -176,28 +178,28 @@ func suitableMethods(typ reflect.Type, logErr bool) map[string]*methodType {
 		replyType := mtype.In(2)
 		if replyType.Kind() != reflect.Pointer {
 			if logErr {
-				log.Printf("rpc.Register: reply type of method %q is not a pointer: %q\n", mname, replyType)
+				logger.LOGGER.Printf("rpc.Register: reply type of method %q is not a pointer: %q\n", mname, replyType)
 			}
 			continue
 		}
 		// Reply type must be exported.
 		if !isExportedOrBuiltinType(replyType) {
 			if logErr {
-				log.Printf("rpc.Register: reply type of method %q is not exported: %q\n", mname, replyType)
+				logger.LOGGER.Printf("rpc.Register: reply type of method %q is not exported: %q\n", mname, replyType)
 			}
 			continue
 		}
 		// Method needs one out.
 		if mtype.NumOut() != 1 {
 			if logErr {
-				log.Printf("rpc.Register: method %q has %d output parameters; needs exactly one\n", mname, mtype.NumOut())
+				logger.LOGGER.Printf("rpc.Register: method %q has %d output parameters; needs exactly one\n", mname, mtype.NumOut())
 			}
 			continue
 		}
 		// The return type of the method must be error.
 		if returnType := mtype.Out(0); returnType != typeOfError {
 			if logErr {
-				log.Printf("rpc.Register: return type of method %q is %q, must be error\n", mname, returnType)
+				logger.LOGGER.Printf("rpc.Register: return type of method %q is %q, must be error\n", mname, returnType)
 			}
 			continue
 		}
@@ -223,7 +225,7 @@ func (server *Server) sendResponse(sending *sync.Mutex, req *Request, reply any,
 	sending.Lock()
 	err := codec.WriteResponse(resp, reply)
 	if err != nil {
-		log.Println("rpc: writing response:", err)
+		logger.LOGGER.Println("rpc: writing response:", err)
 	}
 	sending.Unlock()
 	server.freeResponse(resp)
@@ -277,7 +279,7 @@ func (c *gobServerCodec) WriteResponse(r *Response, body any) (err error) {
 		if c.encBuf.Flush() == nil {
 			// Gob couldn't encode the header. Should not happen, so if it does,
 			// shut down the connection to signal that the connection is broken.
-			log.Println("rpc: gob error encoding response:", err)
+			logger.LOGGER.Println("rpc: gob error encoding response:", err)
 			c.Close()
 		}
 		return
@@ -286,7 +288,7 @@ func (c *gobServerCodec) WriteResponse(r *Response, body any) (err error) {
 		if c.encBuf.Flush() == nil {
 			// Was a gob problem encoding the body but the header has been written.
 			// Shut down the connection to signal that the connection is broken.
-			log.Println("rpc: gob error encoding body:", err)
+			logger.LOGGER.Println("rpc: gob error encoding body:", err)
 			c.Close()
 		}
 		return
@@ -329,7 +331,7 @@ func (server *Server) ServeCodec(codec ServerCodec) {
 		service, mtype, req, argv, replyv, keepReading, err := server.readRequest(codec)
 		if err != nil {
 			if err != io.EOF {
-				log.Println("rpc:", err)
+				logger.LOGGER.Println("rpc:", err)
 			}
 			if !keepReading {
 				break
@@ -503,7 +505,7 @@ func (server *Server) Accept(lis net.Listener) {
 	for {
 		conn, err := lis.Accept()
 		if err != nil {
-			log.Print("rpc.Serve: accept:", err.Error())
+			logger.LOGGER.Print("rpc.Serve: accept:", err.Error())
 			return
 		}
 		go server.ServeConn(conn)
