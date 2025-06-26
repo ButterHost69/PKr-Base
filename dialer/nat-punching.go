@@ -5,6 +5,8 @@ import (
 	"net"
 	"strings"
 	"time"
+
+	"github.com/ButterHost69/PKr-Base/logger"
 )
 
 const (
@@ -13,23 +15,22 @@ const (
 )
 
 func WorkspaceOwnerUdpNatPunching(conn *net.UDPConn, peerAddr, clientHandlerName string) error {
-	fmt.Println("Attempting to Dial Peer ...")
 	peerUDPAddr, err := net.ResolveUDPAddr("udp", peerAddr)
 	if err != nil {
-		fmt.Println("Error while resolving UDP Addr:", err)
-		fmt.Println("Source: WorkspaceOwnerUdpNatPunching()")
+		logger.LOGGER.Println("Error while resolving UDP Addr:", err)
+		logger.LOGGER.Println("Source: WorkspaceOwnerUdpNatPunching()")
 		return err
 	}
 
-	fmt.Println("Punching ", peerAddr)
+	logger.LOGGER.Println("Punching", peerAddr)
 	for range PUNCH_ATTEMPTS {
 		conn.WriteToUDP([]byte("Punch"+";"+clientHandlerName), peerUDPAddr)
 	}
 
 	err = conn.SetReadDeadline(time.Now().Add(30 * time.Second))
 	if err != nil {
-		fmt.Println("Error while Setting Deadline during UDP NAT Hole Punching:", err)
-		fmt.Println("Source: WorkspaceOwnerUdpNatPunching()")
+		logger.LOGGER.Println("Error while Setting Deadline during UDP NAT Hole Punching:", err)
+		logger.LOGGER.Println("Source: WorkspaceOwnerUdpNatPunching()")
 		return err
 	}
 
@@ -37,8 +38,8 @@ func WorkspaceOwnerUdpNatPunching(conn *net.UDPConn, peerAddr, clientHandlerName
 	defer func() {
 		err = conn.SetReadDeadline(time.Time{})
 		if err != nil {
-			fmt.Println("Error while Setting Deadline after UDP NAT Hole Punching:", err)
-			fmt.Println("Source: WorkspaceOwnerUdpNatPunching()")
+			logger.LOGGER.Println("Error while Setting Deadline after UDP NAT Hole Punching:", err)
+			logger.LOGGER.Println("Source: WorkspaceOwnerUdpNatPunching()")
 			return
 		}
 	}()
@@ -47,39 +48,38 @@ func WorkspaceOwnerUdpNatPunching(conn *net.UDPConn, peerAddr, clientHandlerName
 	for {
 		n, addr, err := conn.ReadFromUDP(buff[0:])
 		if err != nil {
-			fmt.Println("Error while reading from Udp:", err)
-			fmt.Println("Source: WorkspaceOwnerUdpNatPunching()")
+			logger.LOGGER.Println("Error while reading from Udp:", err)
+			logger.LOGGER.Println("Source: WorkspaceOwnerUdpNatPunching()")
 			return err
 		}
 		msg := string(buff[:n])
-		fmt.Printf("Received message: %s from %v\n", msg, addr)
+		logger.LOGGER.Printf("Received message: %s from %v\n", msg, addr)
 
 		if addr.String() == peerAddr {
-			fmt.Println("Expected User Messaged:", addr.String())
+			logger.LOGGER.Println("Expected User Messaged:", addr.String())
 			if msg == "Punch" {
 				_, err = conn.WriteToUDP([]byte("Punch ACK"+";"+clientHandlerName), peerUDPAddr)
 				if err != nil {
-					fmt.Println("Error while Writing 'Punch ACK;clientHandlerName':", err)
-					fmt.Println("Source: WorkspaceOwnerUdpNatPunching()")
+					logger.LOGGER.Println("Error while Writing 'Punch ACK;clientHandlerName':", err)
+					logger.LOGGER.Println("Source: WorkspaceOwnerUdpNatPunching()")
 					continue
 				}
-				fmt.Println("Connection Established with", addr.String())
+				logger.LOGGER.Println("Connection Established with", addr.String())
 				return nil
 			} else if msg == "Punch ACK" {
-				fmt.Println("Connection Established with", addr.String())
+				logger.LOGGER.Println("Connection Established with", addr.String())
 				return nil
 			} else {
-				fmt.Println("Something Else is in Message:", msg)
+				logger.LOGGER.Println("Something Else is in Message:", msg)
 			}
 		} else {
-			fmt.Println("Unexpected User Messaged:", addr.String())
-			fmt.Println(msg)
+			logger.LOGGER.Println("Unexpected User Messaged:", addr.String())
+			logger.LOGGER.Println("Unexpected Msg:", msg)
 		}
 	}
 }
 
 func WorkspaceListenerUdpNatHolePunching(conn *net.UDPConn, peerAddr string) (string, error) {
-	fmt.Println("Attempting to Dial Peer ...")
 	peerUDPAddr, err := net.ResolveUDPAddr("udp", peerAddr)
 	if err != nil {
 		fmt.Println("Error while resolving UDP Addr:", err)
@@ -87,7 +87,7 @@ func WorkspaceListenerUdpNatHolePunching(conn *net.UDPConn, peerAddr string) (st
 		return "", err
 	}
 
-	fmt.Println("Punching ", peerAddr)
+	fmt.Println("Punching", peerAddr)
 	for range PUNCH_ATTEMPTS {
 		conn.WriteToUDP([]byte("Punch"), peerUDPAddr)
 	}

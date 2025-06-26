@@ -64,7 +64,7 @@ func connectToAnotherUser(workspace_owner_username string, conn *websocket.Conn)
 	req_punch_from_receiver_request.ListenerPrivatePort = strconv.Itoa(local_port)
 	req_punch_from_receiver_request.ListenerPrivateIPList = private_ips
 
-	logger.LOGGER.Println("Calling RequestPunchFromReceiverRequest")
+	logger.LOGGER.Println("Calling RequestPunchFromReceiverRequest ...")
 	err = conn.WriteJSON(models.WSMessage{
 		MessageType: "RequestPunchFromReceiverRequest",
 		Message:     req_punch_from_receiver_request,
@@ -110,7 +110,6 @@ func connectToAnotherUser(workspace_owner_username string, conn *websocket.Conn)
 		logger.LOGGER.Println("Source: connectToAnotherUser()")
 		return "", "", nil, nil, errors.New(req_punch_from_receiver_response.Error)
 	}
-	logger.LOGGER.Println("Called RequestPunchFromReceiverRequest ...")
 
 	// Creating UDP Conn to Perform UDP NAT Hole Punching
 	udp_conn, err := net.ListenUDP("udp", &net.UDPAddr{
@@ -126,6 +125,7 @@ func connectToAnotherUser(workspace_owner_username string, conn *websocket.Conn)
 	logger.LOGGER.Println("Starting UDP NAT Hole Punching ...")
 	var workspace_owner_ip, client_handler_name string
 	if req_punch_from_receiver_response.WorkspaceOwnerPublicIP == my_public_IP_only {
+		logger.LOGGER.Println("Sending Request via Private IP ...")
 		for _, private_ip := range req_punch_from_receiver_response.WorkspaceOwnerPrivateIPList {
 			workspace_owner_ip = private_ip + ":" + req_punch_from_receiver_response.WorkspaceOwnerPrivatePort
 			client_handler_name, err = dialer.WorkspaceListenerUdpNatHolePunching(udp_conn, workspace_owner_ip)
@@ -135,10 +135,11 @@ func connectToAnotherUser(workspace_owner_username string, conn *websocket.Conn)
 				udp_conn.Close()
 				return "", "", nil, nil, err
 			}
-			logger.LOGGER.Println("TEST Sending Request via Private IP")
+			logger.LOGGER.Println("Connected to User via Private IP ...")
 			break
 		}
 	} else {
+		logger.LOGGER.Println("Sending Request via Public IP ...")
 		workspace_owner_ip = req_punch_from_receiver_response.WorkspaceOwnerPublicIP + ":" + req_punch_from_receiver_response.WorkspaceOwnerPublicPort
 		client_handler_name, err = dialer.WorkspaceListenerUdpNatHolePunching(udp_conn, workspace_owner_ip)
 		if err != nil {
@@ -147,6 +148,7 @@ func connectToAnotherUser(workspace_owner_username string, conn *websocket.Conn)
 			udp_conn.Close()
 			return "", "", nil, nil, err
 		}
+		logger.LOGGER.Println("Connected to User via Public IP ...")
 	}
 	logger.LOGGER.Println("UDP NAT Hole Punching Completed Successfully")
 
@@ -230,7 +232,7 @@ func fetchAndStoreDataIntoWorkspace(workspace_owner_ip, workspace_name string, u
 		return err
 	}
 
-	logger.LOGGER.Println("Sending Workspace Name & Push Num to Workspace Owner")
+	logger.LOGGER.Println("Sending Workspace Name, Push Num & Data Request Type(Pull/Clone) to Workspace Owner")
 	// Sending Workspace Name & Push Num
 	_, err = kcp_conn.Write([]byte(workspace_name))
 	if err != nil {
@@ -245,7 +247,7 @@ func fetchAndStoreDataIntoWorkspace(workspace_owner_ip, workspace_name string, u
 		logger.LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
 		return err
 	}
-	logger.LOGGER.Println("Workspace Name & Push Num Sent to Workspace Owner")
+	logger.LOGGER.Println("Workspace Name, Push Num & Data Request Type(Pull/Clone) Sent to Workspace Owner")
 
 	_, err = kcp_conn.Write([]byte("Pull"))
 	if err != nil {
@@ -405,7 +407,7 @@ func PullWorkspace(workspace_owner_username, workspace_name string, conn *websoc
 	rpcClientHandler := dialer.ClientCallHandler{}
 
 	// Get Public Key of Workspace Owner
-	logger.LOGGER.Println("Fetching Public Key of Workspace Owner")
+	logger.LOGGER.Println("Fetching Public Key of Workspace Owner from Config")
 	public_key, err := config.GetPublicKeyUsingUsername(workspace_owner_username)
 	if err != nil {
 		logger.LOGGER.Println("Error while Getting Public Key of Workspace Owner:", err)
@@ -433,11 +435,10 @@ func PullWorkspace(workspace_owner_username, workspace_name string, conn *websoc
 		return err
 	}
 	logger.LOGGER.Println("Get Data Responded, now storing files into workspace")
-	logger.LOGGER.Println(res.LastPushNum)
-	logger.LOGGER.Println(res.LastPushDesc)
-	logger.LOGGER.Println(res.LenData)
-	logger.LOGGER.Println(res.RequestPushRange)
-	// logger.USER_LOGGER.Println(res.Updates)
+	logger.LOGGER.Println("Len Data:", res.LenData)
+	logger.LOGGER.Println("Request Push Range:", res.RequestPushRange)
+	logger.LOGGER.Println("Last Push Num:", res.LastPushNum)
+	logger.LOGGER.Println("Last Push Desc:", res.LastPushDesc)
 
 	kcp_conn.Close()
 	rpc_client.Close()

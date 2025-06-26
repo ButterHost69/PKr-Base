@@ -32,7 +32,6 @@ func handleNotifyToPunchRequest(conn *websocket.Conn, msg models.WSMessage) {
 		logger.LOGGER.Println("Source: handleNotifyToPunchRequest()")
 		return
 	}
-	logger.LOGGER.Printf("Res: %#v", noti_to_punch_req)
 
 	my_public_ip, my_public_port, my_private_ips, my_private_port, err := handler.HandleNotifyToPunchRequest(noti_to_punch_req.ListenerPublicIP, noti_to_punch_req.ListenerPublicPort, noti_to_punch_req.ListenerPrivateIPList, noti_to_punch_req.ListenerPrivatePort)
 	if err != nil {
@@ -60,8 +59,6 @@ func handleNotifyToPunchRequest(conn *websocket.Conn, msg models.WSMessage) {
 		logger.LOGGER.Println("Source: handleNotifyToPunchRequest()")
 		return
 	}
-	logger.LOGGER.Println("Response Sent to Server:", noti_to_punch_res)
-	logger.LOGGER.Println(noti_to_punch_res)
 }
 
 func handleNotifyNewPushToListeners(msg models.WSMessage, conn *websocket.Conn) {
@@ -77,7 +74,6 @@ func handleNotifyNewPushToListeners(msg models.WSMessage, conn *websocket.Conn) 
 		logger.LOGGER.Println("Source: handleNotifyNewPushToListeners()")
 		return
 	}
-	logger.LOGGER.Printf("Res: %#v", noti_new_push)
 
 	err = PullWorkspace(noti_new_push.WorkspaceOwnerUsername, noti_new_push.WorkspaceName, conn)
 	if err != nil {
@@ -115,7 +111,6 @@ func handleRequestPunchFromReceiverResponse(msg models.WSMessage) {
 	RequestPunchFromReceiverResponseMap.Lock()
 	RequestPunchFromReceiverResponseMap.Map[msg_obj.WorkspaceOwnerUsername] = msg_obj
 	RequestPunchFromReceiverResponseMap.Unlock()
-	logger.LOGGER.Printf("Noti To Punch Res: %#v", msg_obj)
 }
 
 func handleWorkspaceOwnerIsOnline(msg models.WSMessage, conn *websocket.Conn) {
@@ -169,7 +164,7 @@ func ReadJSONMessage(done chan struct{}, conn *websocket.Conn) {
 			return
 		}
 
-		logger.LOGGER.Printf("Message: %#v", msg)
+		logger.LOGGER.Printf("Message Received from Server's WS: %#v\n", msg)
 
 		switch msg.MessageType {
 		case "NotifyToPunchRequest":

@@ -36,6 +36,7 @@ func (h *ClientHandler) GetPublicKey(req models.PublicKeyRequest, res *models.Pu
 	}
 
 	res.PublicKey = []byte(keyData)
+	logger.LOGGER.Println("Get Public Successful ...")
 	return nil
 }
 
@@ -44,7 +45,6 @@ func (h *ClientHandler) InitNewWorkSpaceConnection(req models.InitWorkspaceConne
 	// 2. Authenticate Request [X]
 	// 3. Add the New Connection to the .PKr Config File [X]
 	// 4. Store the Public Key [X]
-
 	logger.LOGGER.Println("Init New Work Space Connection Called ...")
 
 	password, err := encrypt.RSADecryptData(req.WorkspacePassword)
@@ -53,9 +53,7 @@ func (h *ClientHandler) InitNewWorkSpaceConnection(req models.InitWorkspaceConne
 		logger.LOGGER.Println("Source: InitNewWorkSpaceConnection()")
 		return ErrInternalSeverError
 	}
-	logger.LOGGER.Println("Decrypted Data, Now Authenticating ...")
 
-	// Authenticates Workspace Name and Password and Get the Workspace File Path
 	_, err = config.AuthenticateWorkspaceInfo(req.WorkspaceName, password)
 	if err != nil {
 		if errors.Is(err, ErrIncorrectPassword) {
@@ -68,8 +66,6 @@ func (h *ClientHandler) InitNewWorkSpaceConnection(req models.InitWorkspaceConne
 		return ErrIncorrectPassword
 	}
 
-	logger.LOGGER.Println("Auth Successfull ...")
-
 	listener_public_key, err := base64.StdEncoding.DecodeString(string(req.MyPublicKey))
 	if err != nil {
 		logger.LOGGER.Println("Failed to Decode Public Key from base64:", err)
@@ -78,28 +74,26 @@ func (h *ClientHandler) InitNewWorkSpaceConnection(req models.InitWorkspaceConne
 	}
 
 	// Save Public Key
-	logger.LOGGER.Println("Storing Public Keys ...")
 	err = config.StorePublicKeyOfOtherUser(req.MyUsername, listener_public_key)
 	if err != nil {
 		logger.LOGGER.Println("Failed to Store Public Keys at '.PKr\\keys':", err)
 		logger.LOGGER.Println("Source: InitNewWorkSpaceConnection()")
 		return ErrInternalSeverError
 	}
-	logger.LOGGER.Println("Adding New Conn in Pkr Config File")
 
-	logger.LOGGER.Println("Added New Conn in Pkr Config file")
-	logger.LOGGER.Println("Init New Workspace Conn Successful")
+	logger.LOGGER.Println("Init New Workspace Successful ...")
 	return nil
 }
 
 func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.GetMetaDataResponse) error {
+	logger.LOGGER.Println("Get Meta Data Called ...")
+
 	password, err := encrypt.RSADecryptData(req.WorkspacePassword)
 	if err != nil {
 		logger.LOGGER.Println("Failed to Decrypt the Workspace Pass Received from Listener:", err)
 		logger.LOGGER.Println("Source: GetMetaData()")
 		return ErrInternalSeverError
 	}
-	logger.LOGGER.Println("Decrypted Data ..., Now Authenticating ...")
 
 	// Authenticates Workspace Name and Password and Get the Workspace File Path
 	_, err = config.AuthenticateWorkspaceInfo(req.WorkspaceName, password)
@@ -170,13 +164,11 @@ func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.G
 			logger.LOGGER.Println("Source: GetMetaData()")
 			return ErrInternalSeverError
 		}
-		// logger.USER_LOGGER.Println("Merged Changes:", merged_changes)
 
 		logger.LOGGER.Println("Generating Changes Push Name ...")
 		for _, changes := range merged_changes {
 			res.Updates[changes.FilePath] = changes.Type
 		}
-		// logger.USER_LOGGER.Println("Res.Updates:", res.Updates)
 		res.RequestPushRange = strconv.Itoa(req.LastPushNum) + "-" + strconv.Itoa(workspace_conf.LastPushNum)
 		logger.LOGGER.Println("Request Push Range:", res.RequestPushRange)
 
@@ -220,7 +212,6 @@ func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.G
 				return ErrInternalSeverError
 			}
 
-			logger.LOGGER.Println("Generating IV for Changes File ...")
 			changes_iv, err := encrypt.AESGenerateIV()
 			if err != nil {
 				logger.LOGGER.Println("Failed to Generate IV Keys:", err)
@@ -270,7 +261,7 @@ func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.G
 		return ErrInternalSeverError
 	}
 
-	logger.LOGGER.Println("Fetching Public Key of Listener")
+	logger.LOGGER.Println("Fetching Public Key of Listener from Config")
 	public_key, err := config.GetPublicKeyUsingUsername(req.Username)
 	if err != nil {
 		logger.LOGGER.Println("Failed to Get Public Key of Listener Using Username:", err)
@@ -278,7 +269,6 @@ func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.G
 		return ErrInternalSeverError
 	}
 
-	logger.LOGGER.Println("Encrypting Key")
 	encrypt_key, err := encrypt.RSAEncryptData(string(key), string(public_key))
 	if err != nil {
 		logger.LOGGER.Println("Failed to Encrypt AES Keys using Listener's Public Key:", err)
@@ -299,12 +289,11 @@ func (h *ClientHandler) GetMetaData(req models.GetMetaDataRequest, res *models.G
 	res.LastPushNum = workspace_conf.LastPushNum
 	res.LastPushDesc = workspace_conf.AllUpdates[workspace_conf.LastPushNum].PushDesc
 
-	logger.LOGGER.Println(res.LenData)
-	logger.LOGGER.Println(res.RequestPushRange)
-	logger.LOGGER.Println(res.LastPushNum)
-	logger.LOGGER.Println(res.LastPushDesc)
-	// logger.USER_LOGGER.Println(res.Updates)
+	logger.LOGGER.Println("Len Data:", res.LenData)
+	logger.LOGGER.Println("Request Push Range:", res.RequestPushRange)
+	logger.LOGGER.Println("Last Push Num:", res.LastPushNum)
+	logger.LOGGER.Println("Last Push Desc:", res.LastPushDesc)
 
-	logger.LOGGER.Println("Done with Everything now returning Response")
+	logger.LOGGER.Println("Get Meta Data Successful ...")
 	return nil
 }

@@ -40,7 +40,6 @@ func CreateFileTreeIfNotExits(workspace_path string) error {
 		fmt.Println("Source: CreateFileTreeIfNotExits()")
 		return err
 	}
-
 	return nil
 }
 

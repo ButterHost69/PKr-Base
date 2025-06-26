@@ -39,9 +39,9 @@ func CheckForNewChanges(grpc_client pb.CliServiceClient, workspace_name, workspa
 	// Sending Request ...
 	res, err := grpc_client.GetLastPushNumOfWorkspace(ctx, req)
 	if err != nil {
-		fmt.Println("Error:", err)
-		fmt.Println("Description: Error in Getting Last Push Number from Server")
-		fmt.Println("Source: CheckForNewChanges()")
+		logger.LOGGER.Println("Error:", err)
+		logger.LOGGER.Println("Description: Error in Getting Last Push Number from Server")
+		logger.LOGGER.Println("Source: CheckForNewChanges()")
 		return false, err
 	}
 	logger.LOGGER.Println("Latest Push Num Received from Server:", res.LastPushNum)

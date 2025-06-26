@@ -39,7 +39,6 @@ func handleClone(kcp_session *kcp.UDPSession, zip_path string, len_data_bytes in
 		return
 	}
 
-	logger.LOGGER.Println("Opening Destination File")
 	zip_file_obj, err := os.Open(zip_path)
 	if err != nil {
 		logger.LOGGER.Println("Error while Opening Destination File:", err)
@@ -54,7 +53,7 @@ func handleClone(kcp_session *kcp.UDPSession, zip_path string, len_data_bytes in
 	reader := bufio.NewReader(zip_file_obj)
 	logger.LOGGER.Println("Length of File:", len_data_bytes)
 
-	logger.LOGGER.Println("Preparing to Transfer Data")
+	logger.LOGGER.Println("Preparing to Transfer Data for Clone")
 	for {
 		n, err := reader.Read(buffer)
 		if err != nil {
@@ -102,7 +101,7 @@ func handleClone(kcp_session *kcp.UDPSession, zip_path string, len_data_bytes in
 }
 
 func GetDataHandler(kcp_session *kcp.UDPSession) {
-	logger.LOGGER.Println("Get Data Handler Called")
+	logger.LOGGER.Println("Get Data Handler Called ...")
 	logger.LOGGER.Println("Reading Workspace Name ...")
 
 	var buff [512]byte
@@ -124,6 +123,7 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 	}
 	workspace_push_num := string(buff[:n])
 	logger.LOGGER.Println("Workspace Push Num:", workspace_push_num)
+	logger.LOGGER.Println("Reading Type of Data Request(Pull/Clone) ...")
 
 	// Read Data Request Type (Pull/Clone)
 	n, err = kcp_session.Read(buff[:])
@@ -148,9 +148,9 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 		zip_path := filepath.Join(workspace_path, ".PKr", "Files", "Current", workspace_push_num+".zip")
 		fileInfo, err := os.Stat(zip_path)
 		if err == nil {
-			logger.LOGGER.Println("Destination File exists")
+			logger.LOGGER.Println("Destination File Exists")
 		} else if os.IsNotExist(err) {
-			logger.LOGGER.Println("Destination File does not exist")
+			logger.LOGGER.Println("Destination File does not Exists")
 			sendErrorMessage(kcp_session, "Incorrect Workspace Name/Push Num")
 			return
 		} else {
@@ -174,9 +174,9 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 
 	fileInfo, err := os.Stat(zip_enc_path)
 	if err == nil {
-		logger.LOGGER.Println("Destination File exists")
+		logger.LOGGER.Println("Destination File Exists")
 	} else if os.IsNotExist(err) {
-		logger.LOGGER.Println("Destination File does not exist")
+		logger.LOGGER.Println("Destination File does not Exists")
 		sendErrorMessage(kcp_session, "Incorrect Workspace Name/Push Num Range")
 		return
 	} else {
@@ -186,7 +186,6 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 		return
 	}
 
-	logger.LOGGER.Println("Opening Destination File")
 	zip_file_obj, err := os.Open(zip_enc_path)
 	if err != nil {
 		logger.LOGGER.Println("Error while Opening Destination File:", err)
@@ -202,7 +201,7 @@ func GetDataHandler(kcp_session *kcp.UDPSession) {
 	len_data_bytes := int(fileInfo.Size())
 	logger.LOGGER.Println("Length of File:", len_data_bytes)
 
-	logger.LOGGER.Println("Preparing to Transfer Data")
+	logger.LOGGER.Println("Preparing to Transfer Data for Pull")
 	for {
 		n, err := reader.Read(buffer)
 		if err != nil {
