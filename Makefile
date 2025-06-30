@@ -4,10 +4,7 @@ TEST_DEST="C:\Users\Lappy\OneDrive\Desktop\Cringe xD\Dim Future\Go\Picker-Pal\PK
 TEST_MOIT="C:\Users\Lappy\OneDrive\Desktop\Cringe xD\Dim Future\Go\Picker-Pal\PKr-Test\Moit"
 TEST_PALAS="C:\Users\Lappy\OneDrive\Desktop\Cringe xD\Dim Future\Go\Picker-Pal\PKr-Test\Palas"
 
-build2test:clean build copy done
-
-done:
-	@echo $(TEST) is built
+build2test:clean build copy
 
 build:
 	@cls
