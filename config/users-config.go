@@ -8,17 +8,32 @@ import (
 	"path/filepath"
 
 	"github.com/ButterHost69/PKr-Base/encrypt"
-)
-
-var (
-	USER_CONFIG_ROOT_DIR = filepath.Join(os.Getenv("LOCALAPPDATA"), "PKr")
-	MY_KEYS_PATH         = filepath.Join(USER_CONFIG_ROOT_DIR, "Config", "Keys", "My")
-	OTHERS_KEYS_PATH     = filepath.Join(USER_CONFIG_ROOT_DIR, "Config", "Keys", "Others")
-	USER_CONFIG_FILE     = filepath.Join(USER_CONFIG_ROOT_DIR, "Config", "user-config.json")
+	"github.com/ButterHost69/PKr-Base/utils"
 )
 
 func CreateUserConfigIfNotExists(username, password, server_ip string) error {
-	_, err := os.Stat(USER_CONFIG_FILE)
+	user_config_file_path, err := utils.GetUserConfigFilePath()
+	if err != nil {
+		fmt.Println("Error while User Config File Path:", err)
+		fmt.Println("Source: CreateUserConfigIfNotExists()")
+		return err
+	}
+
+	my_keys_path, err := utils.GetMyKeysPath()
+	if err != nil {
+		fmt.Println("Error while Getting My Keys Path:", err)
+		fmt.Println("Source: CreateUserConfigIfNotExists()")
+		return err
+	}
+
+	others_keys_path, err := utils.GetOthersKeysPath()
+	if err != nil {
+		fmt.Println("Error while Getting Others Keys Path:", err)
+		fmt.Println("Source: CreateUserConfigIfNotExists()")
+		return err
+	}
+
+	_, err = os.Stat(user_config_file_path)
 	if err == nil {
 		fmt.Println("It Seems PKr is Already Installed...")
 		return nil
@@ -30,18 +45,18 @@ func CreateUserConfigIfNotExists(username, password, server_ip string) error {
 		return err
 	}
 
-	// Creating %LOCALAPPDATA%/.PKr/Config/Keys/My
-	err = os.MkdirAll(filepath.Join(USER_CONFIG_ROOT_DIR, "Config", "Keys", "My"), 0600)
+	// Creating my_keys_path
+	err = os.MkdirAll(filepath.Join(my_keys_path), 0600)
 	if err != nil {
-		fmt.Println("Error while Creating %LOCALAPPDATA%/.PKr/Config/Keys/My Dir:", err)
+		fmt.Println("Error while Creating my_keys_path Dir:", err)
 		fmt.Println("Source: CreateUserConfigIfNotExists()")
 		return err
 	}
 
-	// Creating %LOCALAPPDATA%/.PKr/Config/Keys/Others
-	err = os.MkdirAll(filepath.Join(USER_CONFIG_ROOT_DIR, "Config", "Keys", "Others"), 0600)
+	// Creating others_keys_path
+	err = os.MkdirAll(others_keys_path, 0600)
 	if err != nil {
-		fmt.Println("Error while Creating %LOCALAPPDATA%/.PKr/Config/Keys/Others Dir:", err)
+		fmt.Println("Error while Creating others_keys_path Dir:", err)
 		fmt.Println("Source: CreateUserConfigIfNotExists()")
 		return err
 	}
@@ -59,7 +74,7 @@ func CreateUserConfigIfNotExists(username, password, server_ip string) error {
 		return err
 	}
 
-	err = os.WriteFile(USER_CONFIG_FILE, conf_bytes, 0600)
+	err = os.WriteFile(user_config_file_path, conf_bytes, 0600)
 	if err != nil {
 		fmt.Println("Error while Writing in user-config:", err)
 		fmt.Println("Source: CreateUserConfigIfNotExists()")
@@ -71,13 +86,13 @@ func CreateUserConfigIfNotExists(username, password, server_ip string) error {
 		panic("Could Not Generate Keys")
 	}
 
-	if err = encrypt.StorePrivateKeyInFile(filepath.Join(MY_KEYS_PATH, "private.pem"), private_key); err != nil {
+	if err = encrypt.StorePrivateKeyInFile(filepath.Join(my_keys_path, "private.pem"), private_key); err != nil {
 		fmt.Println("Error while Storing My Private Key:", err)
 		fmt.Println("Source: CreateUserConfigIfNotExists()")
 		return err
 	}
 
-	if err = encrypt.StorePublicKeyInFile(filepath.Join(MY_KEYS_PATH, "public.pem"), public_key); err != nil {
+	if err = encrypt.StorePublicKeyInFile(filepath.Join(my_keys_path, "public.pem"), public_key); err != nil {
 		fmt.Println("Error while Storing My Public Key:", err)
 		fmt.Println("Source: CreateUserConfigIfNotExists()")
 		return err
@@ -86,7 +101,14 @@ func CreateUserConfigIfNotExists(username, password, server_ip string) error {
 }
 
 func ReadFromUserConfigFile() (UserConfig, error) {
-	file, err := os.Open(USER_CONFIG_FILE)
+	user_config_file_path, err := utils.GetUserConfigFilePath()
+	if err != nil {
+		fmt.Println("Error while User Config File Path:", err)
+		fmt.Println("Source: ReadFromUserConfigFile()")
+		return UserConfig{}, err
+	}
+
+	file, err := os.Open(user_config_file_path)
 	if err != nil {
 		fmt.Println("Error while opening user-config file:", err)
 		fmt.Println("Source: ReadFromUserConfigFile()")
@@ -114,7 +136,14 @@ func writeToUserConfigFile(new_user_conf UserConfig) error {
 		return err
 	}
 
-	err = os.WriteFile(USER_CONFIG_FILE, jsonData, 0600)
+	user_config_file_path, err := utils.GetUserConfigFilePath()
+	if err != nil {
+		fmt.Println("Error while User Config File Path:", err)
+		fmt.Println("Source: writeToUserConfigFile()")
+		return err
+	}
+
+	err = os.WriteFile(user_config_file_path, jsonData, 0600)
 	if err != nil {
 		fmt.Println("Error while writing data in user-config file", err)
 		fmt.Println("Source: writeToUserConfigFile()")
@@ -250,7 +279,14 @@ func UpdateLastPushNumInGetWorkspaceFolderToUserConfig(workspace_name string, la
 }
 
 func GetPublicKeyUsingUsername(username string) ([]byte, error) {
-	public_key_path := filepath.Join(OTHERS_KEYS_PATH, username+".pem")
+	other_keys_path, err := utils.GetOthersKeysPath()
+	if err != nil {
+		fmt.Println("Error while User Config File Path:", err)
+		fmt.Println("Source: GetPublicKeyUsingUsername()")
+		return nil, err
+	}
+
+	public_key_path := filepath.Join(other_keys_path, username+".pem")
 	public_key, err := os.ReadFile(public_key_path)
 	if err != nil {
 		fmt.Println("Error while Reading Public Key of Other User:", err)

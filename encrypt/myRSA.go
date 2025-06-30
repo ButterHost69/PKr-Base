@@ -12,6 +12,8 @@ import (
 	"path/filepath"
 
 	"os"
+
+	"github.com/ButterHost69/PKr-Base/utils"
 )
 
 var (
@@ -137,7 +139,13 @@ func GetPublicKey(path string) string {
 }
 
 func loadPrivateKey() string {
-	private_key_path := filepath.Join(os.Getenv("LOCALAPPDATA"), "PKr", "Config", "Keys", "My", "private.pem")
+	my_keys_path, err := utils.GetMyKeysPath()
+	if err != nil {
+		fmt.Println("Error while Getting Path of My Keys:", err)
+		fmt.Println("Source; LoadPrivateKey")
+		return ""
+	}
+	private_key_path := filepath.Join(my_keys_path, "private.pem")
 	key, err := os.ReadFile(private_key_path)
 	if err != nil {
 		fmt.Println("Error in Loading Private Key:", err)

@@ -1,25 +1,29 @@
 package logger
 
 import (
-	"errors"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
+
+	"github.com/ButterHost69/PKr-Base/utils"
 )
 
 var LOGGER *log.Logger
 
 func InitLogger() error {
-	local_app_data_path := os.Getenv("LOCALAPPDATA")
-	if local_app_data_path == "" {
-		return errors.New("localappdata path not set in env")
+	user_config_root_dir, err := utils.GetUserConfigRootDir()
+	if err != nil {
+		fmt.Println("Error while Getting User Config of Root Dir:", err)
+		fmt.Println("Source: user_config_root_dir()")
+		return err
 	}
 
-	dir_name := filepath.Join(local_app_data_path, "PKr", "Logs")
-	err := os.MkdirAll(dir_name, 0600)
+	dir_name := filepath.Join(user_config_root_dir, "Logs")
+	err = os.MkdirAll(dir_name, 0600)
 	if err != nil {
-		log.Printf("Error while Creating '%s' dir: %v\n", dir_name, err)
-		log.Println("Source: InitUserLogger()")
+		fmt.Printf("Error while Creating '%s' dir: %v\n", dir_name, err)
+		fmt.Println("Source: InitUserLogger()")
 		return err
 	}
 

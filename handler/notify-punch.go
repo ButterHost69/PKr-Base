@@ -41,7 +41,7 @@ func HandleNotifyToPunchRequest(peer_public_ip, peer_public_port string, peer_pr
 	ip_port_split := strings.Split(my_public_IP, ":")
 	my_public_IP_only := ip_port_split[0]
 	my_public_port_only := ip_port_split[1]
-	my_private_ips, err := utils.ReturnListOfPrivateIPs()
+	my_private_ips, err := dialer.ReturnListOfPrivateIPs()
 	if err != nil {
 		logger.LOGGER.Println("Error while Fetching List of Private IPs:", err)
 		logger.LOGGER.Println("Source: HandleNotifyToPunch()")

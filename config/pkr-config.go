@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/ButterHost69/PKr-Base/utils"
 )
 
 var WORKSPACE_CONFIG_FILE_PATH = filepath.Join(".PKr", "workspace-config.json")
@@ -61,8 +63,15 @@ func CreatePKRConfigIfNotExits(workspace_name string, workspace_path string) err
 }
 
 func StorePublicKeyOfOtherUser(username string, public_key_of_other_user []byte) error {
-	key_path := filepath.Join(OTHERS_KEYS_PATH, username+".pem")
-	err := os.WriteFile(key_path, public_key_of_other_user, 0600)
+	other_keys_path, err := utils.GetOthersKeysPath()
+	if err != nil {
+		fmt.Println("Error while Getting Other Keys Path:", err)
+		fmt.Println("Source: StorePublicKeyOfOtherUser()")
+		return err
+	}
+
+	key_path := filepath.Join(other_keys_path, username+".pem")
+	err = os.WriteFile(key_path, public_key_of_other_user, 0600)
 	if err != nil {
 		fmt.Println("Error while Storing Public Key of Other User:", err)
 		fmt.Println("Source: StorePublicKeyOfOtherUser()")
@@ -134,7 +143,14 @@ func UpdateLastPushNum(workspace_name string, last_push_num int) error {
 }
 
 func ReadMyPublicKey() ([]byte, error) {
-	public_key_bytes, err := os.ReadFile(filepath.Join(MY_KEYS_PATH, "public.pem"))
+	my_keys_path, err := utils.GetMyKeysPath()
+	if err != nil {
+		fmt.Println("Error while Getting My Keys Path:", err)
+		fmt.Println("Source: ReadMyPublicKey()")
+		return nil, err
+	}
+
+	public_key_bytes, err := os.ReadFile(filepath.Join(my_keys_path, "public.pem"))
 	if err != nil {
 		fmt.Println("Error while Reading My Public Key:", err)
 		fmt.Println("Source: ReadMyPublicKey()")

@@ -21,7 +21,6 @@ import (
 	"github.com/ButterHost69/PKr-Base/handler"
 	"github.com/ButterHost69/PKr-Base/logger"
 	"github.com/ButterHost69/PKr-Base/models"
-	"github.com/ButterHost69/PKr-Base/utils"
 	"github.com/ButterHost69/kcp-go"
 	"github.com/gen2brain/beeep"
 	"github.com/gorilla/websocket"
@@ -49,7 +48,7 @@ func connectToAnotherUser(workspace_owner_username string, conn *websocket.Conn)
 	my_public_IP_only := my_public_IP_split[0]
 	my_public_port_only := my_public_IP_split[1]
 
-	private_ips, err := utils.ReturnListOfPrivateIPs()
+	private_ips, err := dialer.ReturnListOfPrivateIPs()
 	if err != nil {
 		logger.LOGGER.Println("Error while Fetching the List of Private IPs:", err)
 		logger.LOGGER.Println("Source: connectToAnotherUser()")
