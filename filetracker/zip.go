@@ -127,7 +127,7 @@ func UnzipData(src, dest string) error {
 		content.Close()
 
 		total_files += 1
-		fmt.Printf("%d] File: %s\n", count, file.Name)
+		fmt.Printf("%d] File: %s\n", count, temp_file_name)
 	}
 	fmt.Printf("\nTotal Files Recieved: %d\n", total_files)
 	return nil
@@ -190,14 +190,7 @@ func ZipUpdates(changes []config.FileChange, src_path string, dst_path string) (
 		}
 		defer zip_file_obj_reader.Close()
 
-		var temp_file_name string
-		if runtime.GOOS == "windows" {
-			temp_file_name = strings.ReplaceAll(zip_file_obj.Name, "/", "\\")
-		} else {
-			temp_file_name = strings.ReplaceAll(zip_file_obj.Name, "\\", "/")
-		}
-
-		new_file, err := writer.Create(temp_file_name)
+		new_file, err := writer.Create(zip_file_obj.Name)
 		if err != nil {
 			return err
 		}

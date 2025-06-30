@@ -8,20 +8,22 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strings"
 
 	"github.com/ButterHost69/PKr-Base/encrypt"
 )
 
-// Delete files and folders in the Workspace Except: /.PKr , PKr-base.exe, PKr-cli.exe, /tmp
+// Delete files and folders in the Workspace Except: /.PKr , PKr-base.exe, PKr-cli.exe
 func CleanFilesFromWorkspace(workspace_path string) error {
 	files, err := ioutil.ReadDir(workspace_path)
 	if err != nil {
+		fmt.Println("Error while Cleaning Files from Workspace:", err)
+		fmt.Println("Source: CleanFilesFromWorkspace()")
 		return err
 	}
 
-	fmt.Printf("Deleting All Files at: %s\n\n", workspace_path)
 	for _, file := range files {
 		if file.Name() != ".PKr" && file.Name() != "PKr-Base.exe" && file.Name() != "PKr-Cli.exe" && file.Name() != "PKr-Base" && file.Name() != "PKr-Cli" {
 			if err = os.RemoveAll(path.Join([]string{workspace_path, file.Name()}...)); err != nil {
@@ -29,7 +31,6 @@ func CleanFilesFromWorkspace(workspace_path string) error {
 			}
 		}
 	}
-
 	return nil
 }
 
@@ -158,10 +159,16 @@ func isDirEmpty(name string) (bool, error) {
 }
 
 func UpdateFilesFromWorkspace(workspace_path string, content_path string, changes map[string]string) error {
-	for relPath, changeType := range changes {
-		workspace_file := filepath.Join(workspace_path, relPath)
+	for rel_path, change_type := range changes {
+		if runtime.GOOS == "windows" {
+			rel_path = strings.ReplaceAll(rel_path, "/", "\\")
+		} else {
+			rel_path = strings.ReplaceAll(rel_path, "\\", "/")
+		}
 
-		switch changeType {
+		workspace_file := filepath.Join(workspace_path, rel_path)
+
+		switch change_type {
 		case "Removed":
 			err := os.Remove(workspace_file)
 			if err != nil && !os.IsNotExist(err) {
@@ -175,20 +182,19 @@ func UpdateFilesFromWorkspace(workspace_path string, content_path string, change
 			}
 
 		case "Updated":
-			sourceFile := filepath.Join(content_path, relPath)
+			source_file := filepath.Join(content_path, rel_path)
 
 			// Make sure the parent directory exists
 			if err := os.MkdirAll(filepath.Dir(workspace_file), 0755); err != nil {
 				return fmt.Errorf("failed to create directory for %s: %v", workspace_file, err)
 			}
 
-			err := copyFile(sourceFile, workspace_file)
+			err := copyFile(source_file, workspace_file)
 			if err != nil {
-				return fmt.Errorf("failed to update %s: %v", relPath, err)
+				return fmt.Errorf("failed to update %s: %v", rel_path, err)
 			}
 		}
 	}
-
 	return nil
 }
 
