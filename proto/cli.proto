@@ -43,7 +43,7 @@ message RequestPunchFromReceiverRequest {
     string listener_password = 2;
     string listener_public_ip = 3;
     string listener_public_port= 4;
-    repeated string listener_private_ip_list = 5;
+    string listener_private_ip = 5;
     string listener_private_port = 6;
     string workspace_owner_username = 7;
 }
@@ -51,7 +51,7 @@ message RequestPunchFromReceiverRequest {
 message RequestPunchFromReceiverResponse {
     string workspace_owner_public_ip = 1;
     string workspace_owner_public_port = 2;
-    repeated string workspace_owner_private_ip_list = 3;
+    string workspace_owner_private_ip = 3;
     string workspace_owner_private_port = 4;
 }
 

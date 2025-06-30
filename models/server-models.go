@@ -3,19 +3,19 @@ package models
 import "sync"
 
 type NotifyToPunchRequest struct {
-	ListenerUsername      string   `json:"listener_username"`
-	ListenerPublicIP      string   `json:"listener_public_ip"`
-	ListenerPublicPort    string   `json:"listener_public_port"`
-	ListenerPrivateIPList []string `json:"listener_private_ip_list"`
-	ListenerPrivatePort   string   `json:"listener_private_port"`
+	ListenerUsername    string `json:"listener_username"`
+	ListenerPublicIp    string `json:"listener_public_ip"`
+	ListenerPublicPort  string `json:"listener_public_port"`
+	ListenerPrivateIp   string `json:"listener_private_ip"`
+	ListenerPrivatePort string `json:"listener_private_port"`
 }
 
 type NotifyToPunchResponse struct {
-	WorkspaceOwnerPublicIP      string   `json:"workspace_owner_public_ip"`
-	WorkspaceOwnerPublicPort    string   `json:"workspace_owner_public_port"`
-	WorkspaceOwnerPrivateIPList []string `json:"workspace_owner_private_ip_list"`
-	WorkspaceOwnerPrivatePort   string   `json:"workspace_owner_private_port"`
-	ListenerUsername            string   `json:"listener_username"`
+	WorkspaceOwnerPublicIp    string `json:"workspace_owner_public_ip"`
+	WorkspaceOwnerPublicPort  string `json:"workspace_owner_public_port"`
+	WorkspaceOwnerPrivateIp   string `json:"workspace_owner_private_ip"`
+	WorkspaceOwnerPrivatePort string `json:"workspace_owner_private_port"`
+	ListenerUsername          string `json:"listener_username"`
 }
 
 type NotifyNewPushToListeners struct {
@@ -25,21 +25,21 @@ type NotifyNewPushToListeners struct {
 }
 
 type RequestPunchFromReceiverRequest struct {
-	ListenerUsername       string   `json:"listener_username"`
-	ListenerPublicIP       string   `json:"listener_public_ip"`
-	ListenerPublicPort     string   `json:"listener_public_port"`
-	ListenerPrivateIPList  []string `json:"listener_private_ip_list"`
-	ListenerPrivatePort    string   `json:"listener_private_port"`
-	WorkspaceOwnerUsername string   `json:"workspace_owner_username"`
+	ListenerUsername       string `json:"listener_username"`
+	ListenerPublicIp       string `json:"listener_public_ip"`
+	ListenerPublicPort     string `json:"listener_public_port"`
+	ListenerPrivateIp      string `json:"listener_private_ip"`
+	ListenerPrivatePort    string `json:"listener_private_port"`
+	WorkspaceOwnerUsername string `json:"workspace_owner_username"`
 }
 
 type RequestPunchFromReceiverResponse struct {
-	Error                       string   `json:"error"`
-	WorkspaceOwnerUsername      string   `json:"workspace_owner_username"`
-	WorkspaceOwnerPublicIP      string   `json:"workspace_owner_public_ip"`
-	WorkspaceOwnerPublicPort    string   `json:"workspace_owner_public_port"`
-	WorkspaceOwnerPrivateIPList []string `json:"workspace_owner_private_ip_list"`
-	WorkspaceOwnerPrivatePort   string   `json:"workspace_owner_private_port"`
+	Error                     string `json:"error"`
+	WorkspaceOwnerUsername    string `json:"workspace_owner_username"`
+	WorkspaceOwnerPublicIp    string `json:"workspace_owner_public_ip"`
+	WorkspaceOwnerPublicPort  string `json:"workspace_owner_public_port"`
+	WorkspaceOwnerPrivateIp   string `json:"workspace_owner_private_ip"`
+	WorkspaceOwnerPrivatePort string `json:"workspace_owner_private_port"`
 }
 
 type WorkspaceOwnerIsOnline struct {

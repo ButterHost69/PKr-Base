@@ -48,9 +48,9 @@ func connectToAnotherUser(workspace_owner_username string, conn *websocket.Conn)
 	my_public_IP_only := my_public_IP_split[0]
 	my_public_port_only := my_public_IP_split[1]
 
-	private_ips, err := dialer.ReturnListOfPrivateIPs()
+	private_ip, err := dialer.GetMyPrivateIP()
 	if err != nil {
-		logger.LOGGER.Println("Error while Fetching the List of Private IPs:", err)
+		logger.LOGGER.Println("Error while Getting My Private IP:", err)
 		logger.LOGGER.Println("Source: connectToAnotherUser()")
 		return "", "", nil, nil, err
 	}
@@ -58,10 +58,10 @@ func connectToAnotherUser(workspace_owner_username string, conn *websocket.Conn)
 	var req_punch_from_receiver_request models.RequestPunchFromReceiverRequest
 	req_punch_from_receiver_request.WorkspaceOwnerUsername = workspace_owner_username
 	req_punch_from_receiver_request.ListenerUsername = MY_USERNAME
-	req_punch_from_receiver_request.ListenerPublicIP = my_public_IP_only
+	req_punch_from_receiver_request.ListenerPublicIp = my_public_IP_only
 	req_punch_from_receiver_request.ListenerPublicPort = my_public_port_only
 	req_punch_from_receiver_request.ListenerPrivatePort = strconv.Itoa(local_port)
-	req_punch_from_receiver_request.ListenerPrivateIPList = private_ips
+	req_punch_from_receiver_request.ListenerPrivateIp = private_ip
 
 	logger.LOGGER.Println("Calling RequestPunchFromReceiverRequest ...")
 	err = conn.WriteJSON(models.WSMessage{
@@ -123,47 +123,20 @@ func connectToAnotherUser(workspace_owner_username string, conn *websocket.Conn)
 
 	logger.LOGGER.Println("Starting UDP NAT Hole Punching ...")
 	var workspace_owner_ip, client_handler_name string
-	if req_punch_from_receiver_response.WorkspaceOwnerPublicIP == my_public_IP_only {
-		connected_via_private_ip := false
+	if req_punch_from_receiver_response.WorkspaceOwnerPublicIp == my_public_IP_only {
 		logger.LOGGER.Println("Sending Request via Private IP ...")
-		for _, private_ip := range req_punch_from_receiver_response.WorkspaceOwnerPrivateIPList {
-			workspace_owner_ip = private_ip + ":" + req_punch_from_receiver_response.WorkspaceOwnerPrivatePort
-			client_handler_name, err = dialer.WorkspaceListenerUdpNatHolePunching(udp_conn, workspace_owner_ip)
-			if err != nil {
-				logger.LOGGER.Println("Error while Punching to Private Remote Addr:", err)
-				logger.LOGGER.Println("Source: connectToAnotherUser()")
-				fmt.Println("Now Trying to Connect via Another IP Addr ...")
-				continue
-			}
-			connected_via_private_ip = true
-			logger.LOGGER.Println("Connected to User via Private IP ...")
-			break
-		}
-
-		// Trying Public IP, if connection with Private IP fails
-		if !connected_via_private_ip {
-			fmt.Println("Sending Request via Public IP ...")
-			workspace_owner_ip = req_punch_from_receiver_response.WorkspaceOwnerPublicIP + ":" + req_punch_from_receiver_response.WorkspaceOwnerPublicPort
-			client_handler_name, err = dialer.WorkspaceListenerUdpNatHolePunching(udp_conn, workspace_owner_ip)
-			if err != nil {
-				fmt.Println("Error while Punching to Public Remote Addr:", err)
-				fmt.Println("Source: connectToAnotherUser()")
-				udp_conn.Close()
-				return "", "", nil, nil, err
-			}
-			fmt.Println("Connected to User via Public IP")
-		}
+		workspace_owner_ip = req_punch_from_receiver_response.WorkspaceOwnerPrivateIp + ":" + req_punch_from_receiver_response.WorkspaceOwnerPrivatePort
 	} else {
 		logger.LOGGER.Println("Sending Request via Public IP ...")
-		workspace_owner_ip = req_punch_from_receiver_response.WorkspaceOwnerPublicIP + ":" + req_punch_from_receiver_response.WorkspaceOwnerPublicPort
-		client_handler_name, err = dialer.WorkspaceListenerUdpNatHolePunching(udp_conn, workspace_owner_ip)
-		if err != nil {
-			logger.LOGGER.Println("Error while Punching to Public Remote Addr:", err)
-			logger.LOGGER.Println("Source: connectToAnotherUser()")
-			udp_conn.Close()
-			return "", "", nil, nil, err
-		}
-		logger.LOGGER.Println("Connected to User via Public IP ...")
+		workspace_owner_ip = req_punch_from_receiver_response.WorkspaceOwnerPublicIp + ":" + req_punch_from_receiver_response.WorkspaceOwnerPublicPort
+	}
+
+	client_handler_name, err = dialer.WorkspaceListenerUdpNatHolePunching(udp_conn, workspace_owner_ip)
+	if err != nil {
+		logger.LOGGER.Println("Error while UDP NAT Hole Punching:", err)
+		logger.LOGGER.Println("Source: connectToAnotherUser()")
+		udp_conn.Close()
+		return "", "", nil, nil, err
 	}
 	logger.LOGGER.Println("UDP NAT Hole Punching Completed Successfully")
 

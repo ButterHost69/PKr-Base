@@ -25,7 +25,7 @@ var clientHandlerNameManager = ClientHandlerNameManager{
 	RandomStringList: []string{},
 }
 
-func HandleNotifyToPunchRequest(peer_public_ip, peer_public_port string, peer_private_ips []string, peer_private_port string) (string, string, []string, string, error) {
+func HandleNotifyToPunchRequest(peer_public_ip, peer_public_port string, peer_private_ip string, peer_private_port string) (string, string, string, string, error) {
 	local_port := rand.Intn(16384) + 16384
 	logger.LOGGER.Println("My Local Port:", local_port)
 
@@ -34,25 +34,25 @@ func HandleNotifyToPunchRequest(peer_public_ip, peer_public_port string, peer_pr
 	if err != nil {
 		logger.LOGGER.Println("Error while Getting my Public IP:", err)
 		logger.LOGGER.Println("Source: HandleNotifyToPunch()")
-		return "", "", nil, "", err
+		return "", "", "", "", err
 	}
 	logger.LOGGER.Println("My Public IP Addr:", my_public_IP)
 
 	ip_port_split := strings.Split(my_public_IP, ":")
 	my_public_IP_only := ip_port_split[0]
 	my_public_port_only := ip_port_split[1]
-	my_private_ips, err := dialer.ReturnListOfPrivateIPs()
+	my_private_ip, err := dialer.GetMyPrivateIP()
 	if err != nil {
-		logger.LOGGER.Println("Error while Fetching List of Private IPs:", err)
+		logger.LOGGER.Println("Error while Getting Private IP:", err)
 		logger.LOGGER.Println("Source: HandleNotifyToPunch()")
-		return "", "", nil, "", err
+		return "", "", "", "", err
 	}
 
 	udp_local_addr, err := net.ResolveUDPAddr("udp", ":"+strconv.Itoa(local_port))
 	if err != nil {
 		logger.LOGGER.Println("Error while Resolving UDP Addr for Random Local Port:", err)
 		logger.LOGGER.Println("Source: HandleNotifyToPunch()")
-		return "", "", nil, "", err
+		return "", "", "", "", err
 	}
 
 	// Creating UDP Conn to Perform UDP NAT Hole Punching
@@ -60,7 +60,7 @@ func HandleNotifyToPunchRequest(peer_public_ip, peer_public_port string, peer_pr
 	if err != nil {
 		logger.LOGGER.Printf("Error while Listening to %d: %v\n", local_port, err)
 		logger.LOGGER.Println("Source: HandleNotifyToPunch()")
-		return "", "", nil, "", err
+		return "", "", "", "", err
 	}
 
 	// Creating Unique ClientHandlerName
@@ -74,45 +74,21 @@ func HandleNotifyToPunchRequest(peer_public_ip, peer_public_port string, peer_pr
 		time.Sleep(5 * time.Second)
 		logger.LOGGER.Println("Initializing UDP NAT Hole Punching")
 
+		var workspace_owner_ip string
 		if peer_public_ip == my_public_IP_only {
-			connected_via_private_ip := false
-			for _, private_ip := range peer_private_ips {
-				workspace_owner_ip := private_ip + ":" + peer_private_port
-				err = dialer.WorkspaceOwnerUdpNatPunching(udp_conn, workspace_owner_ip, client_handler_name)
-				if err != nil {
-					logger.LOGGER.Println("Error while Performing UDP NAT Hole Punching using Private Addr:", err)
-					logger.LOGGER.Println("Source: HandleNotifyToPunch()")
-					logger.LOGGER.Println("Now Trying to Connect via Another IP Addr ...")
-					continue
-				}
-				connected_via_private_ip = true
-				logger.LOGGER.Println("Connected to User via Private IP")
-				break
-			}
-
-			// Trying Public IP, if connection with Private IP fails
-			if !connected_via_private_ip {
-				logger.LOGGER.Println("Sending Request via Public IP ...")
-				workspace_owner_ip := peer_public_ip + ":" + peer_public_port
-				client_handler_name, err = dialer.WorkspaceListenerUdpNatHolePunching(udp_conn, workspace_owner_ip)
-				if err != nil {
-					logger.LOGGER.Println("Error while Punching to Public Remote Addr:", err)
-					logger.LOGGER.Println("Source: connectToAnotherUser()")
-					udp_conn.Close()
-					return
-				}
-				logger.LOGGER.Println("Connected to User via Public IP")
-			}
-
+			logger.LOGGER.Println("Sending Request via Private IP ...")
+			workspace_owner_ip = peer_private_ip + ":" + peer_private_port
 		} else {
-			workspace_owner_ip := peer_public_ip + ":" + peer_public_port
-			err = dialer.WorkspaceOwnerUdpNatPunching(udp_conn, workspace_owner_ip, client_handler_name)
-			if err != nil {
-				logger.LOGGER.Println("Error while Performing UDP NAT Hole Punching using Public Addr:", err)
-				logger.LOGGER.Println("Source: HandleNotifyToPunch()")
-				udp_conn.Close()
-				return
-			}
+			logger.LOGGER.Println("Sending Request via Public IP ...")
+			workspace_owner_ip = peer_public_ip + ":" + peer_public_port
+		}
+
+		err = dialer.WorkspaceOwnerUdpNatPunching(udp_conn, workspace_owner_ip, client_handler_name)
+		if err != nil {
+			logger.LOGGER.Println("Error while Performing UDP NAT Hole Punching:", err)
+			logger.LOGGER.Println("Source: HandleNotifyToPunch()")
+			udp_conn.Close()
+			return
 		}
 
 		logger.LOGGER.Println("Starting New New Server `Connection` server on local port:", local_port)
@@ -120,7 +96,7 @@ func HandleNotifyToPunchRequest(peer_public_ip, peer_public_port string, peer_pr
 	}()
 
 	// Sending Response to Server
-	return my_public_IP_only, my_public_port_only, my_private_ips, strconv.Itoa(local_port), nil
+	return my_public_IP_only, my_public_port_only, my_private_ip, strconv.Itoa(local_port), nil
 }
 
 func StartNewNewServer(udp_conn *net.UDPConn, clientHandlerName string) {

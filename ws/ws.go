@@ -33,7 +33,7 @@ func handleNotifyToPunchRequest(conn *websocket.Conn, msg models.WSMessage) {
 		return
 	}
 
-	my_public_ip, my_public_port, my_private_ips, my_private_port, err := handler.HandleNotifyToPunchRequest(noti_to_punch_req.ListenerPublicIP, noti_to_punch_req.ListenerPublicPort, noti_to_punch_req.ListenerPrivateIPList, noti_to_punch_req.ListenerPrivatePort)
+	my_public_ip, my_public_port, my_private_ip, my_private_port, err := handler.HandleNotifyToPunchRequest(noti_to_punch_req.ListenerPublicIp, noti_to_punch_req.ListenerPublicPort, noti_to_punch_req.ListenerPrivateIp, noti_to_punch_req.ListenerPrivatePort)
 	if err != nil {
 		logger.LOGGER.Println("Error while Handling NotifyToPunch:", err)
 		logger.LOGGER.Println("Source: handleNotifyToPunchRequest()")
@@ -41,11 +41,11 @@ func handleNotifyToPunchRequest(conn *websocket.Conn, msg models.WSMessage) {
 	}
 
 	noti_to_punch_res := models.NotifyToPunchResponse{
-		WorkspaceOwnerPublicIP:      my_public_ip,
-		WorkspaceOwnerPublicPort:    my_public_port,
-		ListenerUsername:            noti_to_punch_req.ListenerUsername,
-		WorkspaceOwnerPrivateIPList: my_private_ips,
-		WorkspaceOwnerPrivatePort:   my_private_port,
+		WorkspaceOwnerPublicIp:    my_public_ip,
+		WorkspaceOwnerPublicPort:  my_public_port,
+		ListenerUsername:          noti_to_punch_req.ListenerUsername,
+		WorkspaceOwnerPrivateIp:   my_private_ip,
+		WorkspaceOwnerPrivatePort: my_private_port,
 	}
 
 	res := models.WSMessage{
