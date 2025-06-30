@@ -15,7 +15,7 @@ func InitLogger() error {
 	user_config_root_dir, err := utils.GetUserConfigRootDir()
 	if err != nil {
 		fmt.Println("Error while Getting User Config of Root Dir:", err)
-		fmt.Println("Source: user_config_root_dir()")
+		fmt.Println("Source: InitLogger()")
 		return err
 	}
 

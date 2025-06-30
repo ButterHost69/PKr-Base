@@ -56,7 +56,7 @@ func GetUserConfigFilePath() (string, error) {
 	user_config_root_dir, err := GetUserConfigRootDir()
 	if err != nil {
 		fmt.Println("Error while Getting Path of Local App Data:", err)
-		fmt.Println("Source: GetMyKeysPath()")
+		fmt.Println("Source: GetUserConfigFilePath()")
 		return "", err
 	}
 	return filepath.Join(user_config_root_dir, "Config", "user-config.json"), nil

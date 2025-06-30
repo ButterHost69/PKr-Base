@@ -142,7 +142,7 @@ func loadPrivateKey() string {
 	my_keys_path, err := utils.GetMyKeysPath()
 	if err != nil {
 		fmt.Println("Error while Getting Path of My Keys:", err)
-		fmt.Println("Source; LoadPrivateKey")
+		fmt.Println("Source: LoadPrivateKey()")
 		return ""
 	}
 	private_key_path := filepath.Join(my_keys_path, "private.pem")
