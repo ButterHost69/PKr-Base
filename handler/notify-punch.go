@@ -75,20 +75,42 @@ func HandleNotifyToPunchRequest(peer_public_ip, peer_public_port string, peer_pr
 		logger.LOGGER.Println("Initializing UDP NAT Hole Punching")
 
 		if peer_public_ip == my_public_IP_only {
+			connected_via_private_ip := false
 			for _, private_ip := range peer_private_ips {
-				err = dialer.WorkspaceOwnerUdpNatPunching(udp_conn, private_ip+":"+peer_private_port, client_handler_name)
+				workspace_owner_ip := private_ip + ":" + peer_private_port
+				err = dialer.WorkspaceOwnerUdpNatPunching(udp_conn, workspace_owner_ip, client_handler_name)
 				if err != nil {
 					logger.LOGGER.Println("Error while Performing UDP NAT Hole Punching using Private Addr:", err)
 					logger.LOGGER.Println("Source: HandleNotifyToPunch()")
-					return
+					logger.LOGGER.Println("Now Trying to Connect via Another IP Addr ...")
+					continue
 				}
+				connected_via_private_ip = true
+				logger.LOGGER.Println("Connected to User via Private IP")
 				break
 			}
+
+			// Trying Public IP, if connection with Private IP fails
+			if !connected_via_private_ip {
+				logger.LOGGER.Println("Sending Request via Public IP ...")
+				workspace_owner_ip := peer_public_ip + ":" + peer_public_port
+				client_handler_name, err = dialer.WorkspaceListenerUdpNatHolePunching(udp_conn, workspace_owner_ip)
+				if err != nil {
+					logger.LOGGER.Println("Error while Punching to Public Remote Addr:", err)
+					logger.LOGGER.Println("Source: connectToAnotherUser()")
+					udp_conn.Close()
+					return
+				}
+				logger.LOGGER.Println("Connected to User via Public IP")
+			}
+
 		} else {
-			err = dialer.WorkspaceOwnerUdpNatPunching(udp_conn, peer_public_ip+":"+peer_public_port, client_handler_name)
+			workspace_owner_ip := peer_public_ip + ":" + peer_public_port
+			err = dialer.WorkspaceOwnerUdpNatPunching(udp_conn, workspace_owner_ip, client_handler_name)
 			if err != nil {
 				logger.LOGGER.Println("Error while Performing UDP NAT Hole Punching using Public Addr:", err)
 				logger.LOGGER.Println("Source: HandleNotifyToPunch()")
+				udp_conn.Close()
 				return
 			}
 		}
