@@ -307,7 +307,6 @@ func fetchAndStoreDataIntoWorkspace(workspace_owner_ip, workspace_name string, u
 
 		offset += n
 	}
-	logger.LOGGER.Println()
 	logger.LOGGER.Println("Data Transfer Completed ...")
 
 	// Flush buffer to disk at end

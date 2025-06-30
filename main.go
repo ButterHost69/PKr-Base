@@ -91,6 +91,7 @@ func main() {
 	}
 
 	defer ws_conn.Close()
+	logger.LOGGER.Println()
 	logger.LOGGER.Println("Connected to Server")
 
 	done := make(chan struct{})
