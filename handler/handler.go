@@ -22,6 +22,7 @@ var (
 	ErrInternalSeverError            = errors.New("internal server error")
 	ErrUserAlreadyHasLatestWorkspace = errors.New("you already've latest version of workspace")
 	ErrInvalidLastPushNum            = errors.New("invalid last push number")
+	ErrNoSuchWorkspaceFound          = errors.New("no such workspace found")
 )
 
 type ClientHandler struct{}
@@ -60,6 +61,11 @@ func (h *ClientHandler) InitNewWorkSpaceConnection(req models.InitWorkspaceConne
 			logger.LOGGER.Println("Error: Incorrect Credentials for Workspace")
 			logger.LOGGER.Println("Source: InitNewWorkSpaceConnection()")
 			return ErrIncorrectPassword
+		}
+		if errors.Is(err, ErrNoSuchWorkspaceFound) {
+			logger.LOGGER.Println("Error: No Such Workspace Found")
+			logger.LOGGER.Println("Source: InitNewWorkSpaceConnection()")
+			return ErrNoSuchWorkspaceFound
 		}
 		logger.LOGGER.Println("Failed to Authenticate Password of Listener:", err)
 		logger.LOGGER.Println("Source: InitNewWorkSpaceConnection()")
