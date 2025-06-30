@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/ButterHost69/PKr-Base/config"
 )
@@ -90,13 +91,16 @@ func UnzipData(src, dest string) error {
 		if file.FileInfo().IsDir() {
 			continue
 		}
-		abs_path := filepath.Join(dest, file.Name)
-		dir, _ := filepath.Split(abs_path)
+
+		var temp_file_name string
 		if runtime.GOOS == "windows" {
-			dir = filepath.FromSlash(dir)
+			temp_file_name = strings.ReplaceAll(file.Name, "/", "\\")
 		} else {
-			dir = filepath.ToSlash(dir)
+			temp_file_name = strings.ReplaceAll(file.Name, "\\", "/")
 		}
+
+		abs_path := filepath.Join(dest, temp_file_name)
+		dir, _ := filepath.Split(abs_path)
 
 		if dir != "" {
 			if err := os.MkdirAll(dir, 0700); err != nil {
@@ -175,7 +179,8 @@ func ZipUpdates(changes []config.FileChange, src_path string, dst_path string) (
 
 		zip_file_obj := returnZipFileObj(src_zip_file, change.FilePath)
 		if zip_file_obj == nil {
-			fmt.Println(filepath.Join(src_path, change.FilePath), "is nil")
+			fmt.Println("Error while Getting Zip File Obj:", filepath.Join(src_path, change.FilePath), "is nil")
+			fmt.Println("Source: ZipUpdates()")
 			return
 		}
 
@@ -185,7 +190,14 @@ func ZipUpdates(changes []config.FileChange, src_path string, dst_path string) (
 		}
 		defer zip_file_obj_reader.Close()
 
-		new_file, err := writer.Create(zip_file_obj.Name)
+		var temp_file_name string
+		if runtime.GOOS == "windows" {
+			temp_file_name = strings.ReplaceAll(zip_file_obj.Name, "/", "\\")
+		} else {
+			temp_file_name = strings.ReplaceAll(zip_file_obj.Name, "\\", "/")
+		}
+
+		new_file, err := writer.Create(temp_file_name)
 		if err != nil {
 			return err
 		}
