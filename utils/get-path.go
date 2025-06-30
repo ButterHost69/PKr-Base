@@ -29,7 +29,7 @@ func GetUserConfigRootDir() (string, error) {
 			base_dir = filepath.Join(current_user.HomeDir, ".local", "share")
 		}
 	}
-	return filepath.Join(base_dir, ".PKr"), nil
+	return filepath.Join(base_dir, "PKr"), nil
 }
 
 func GetMyKeysPath() (string, error) {
