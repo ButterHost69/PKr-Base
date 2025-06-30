@@ -7,12 +7,13 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 
 	"github.com/ButterHost69/PKr-Base/config"
 )
 
-func addFilesToZip(writer *zip.Writer, dirpath string, relativepath string) error {
-	files, err := ioutil.ReadDir(dirpath)
+func addFilesToZip(writer *zip.Writer, dir_path string, relativepath string) error {
+	files, err := ioutil.ReadDir(dir_path)
 	if err != nil {
 		fmt.Println("Error while Reading Dir:", err)
 		fmt.Println("Source: addFilesToZip()")
@@ -23,8 +24,7 @@ func addFilesToZip(writer *zip.Writer, dirpath string, relativepath string) erro
 		if file.Name() == ".PKr" || file.Name() == "PKr-Base.exe" || file.Name() == "PKr-Cli.exe" || file.Name() == "PKr-Base" || file.Name() == "PKr-Cli" {
 			continue
 		} else if !file.IsDir() {
-			content, err := os.ReadFile(filepath.Join(dirpath, file.Name()))
-
+			content, err := os.ReadFile(filepath.Join(dir_path, file.Name()))
 			if err != nil {
 				fmt.Println("Error while Reading File:", err)
 				fmt.Println("Source: addFilesToZip()")
@@ -39,28 +39,27 @@ func addFilesToZip(writer *zip.Writer, dirpath string, relativepath string) erro
 			}
 			file.Write(content)
 		} else if file.IsDir() {
-			newDirPath := filepath.Join(dirpath, file.Name()) + string(os.PathSeparator)
-			newRelativePath := filepath.Join(relativepath, file.Name()) + string(os.PathSeparator)
+			new_dir_path := filepath.Join(dir_path, file.Name()) + string(os.PathSeparator)
+			new_rel_path := filepath.Join(relativepath, file.Name()) + string(os.PathSeparator)
 
-			addFilesToZip(writer, newDirPath, newRelativePath)
+			addFilesToZip(writer, new_dir_path, new_rel_path)
 		}
 	}
 	return nil
 }
 
 func ZipData(workspace_path string, destination_path string, zip_file_name string) error {
-	zipFileName := zip_file_name + ".zip"
-	fullZipPath := filepath.Join(destination_path, zipFileName)
+	zip_file_name = zip_file_name + ".zip"
+	full_zip_path := filepath.Join(destination_path, zip_file_name)
 
 	// Ensure the destination directory exists
-	err := os.MkdirAll(destination_path, os.ModePerm)
+	err := os.MkdirAll(destination_path, 0700)
 	if err != nil {
 		fmt.Println("Error creating destination directory:", err)
 		fmt.Println("Source: ZipData()")
 		return err
 	}
-
-	zip_file, err := os.Create(fullZipPath)
+	zip_file, err := os.Create(full_zip_path)
 	if err != nil {
 		fmt.Println("Error while Creating Zip File:", err)
 		fmt.Println("Source: ZipData()")
@@ -86,38 +85,47 @@ func UnzipData(src, dest string) error {
 		return err
 	}
 	defer zipper.Close()
-	totalfiles := 0
+	total_files := 0
 	for count, file := range zipper.File {
 		if file.FileInfo().IsDir() {
 			continue
 		}
 		abs_path := filepath.Join(dest, file.Name)
 		dir, _ := filepath.Split(abs_path)
+		if runtime.GOOS == "windows" {
+			dir = filepath.FromSlash(dir)
+		} else {
+			dir = filepath.ToSlash(dir)
+		}
+
 		if dir != "" {
 			if err := os.MkdirAll(dir, 0700); err != nil {
 				return err
 			}
 		}
-		unzipfile, err := os.Create(abs_path)
+		unzip_file, err := os.Create(abs_path)
 		if err != nil {
 			return err
 		}
-		defer unzipfile.Close()
 
 		content, err := file.Open()
 		if err != nil {
 			return err
 		}
-		defer content.Close()
 
-		_, err = io.Copy(unzipfile, content)
+		_, err = io.Copy(unzip_file, content)
 		if err != nil {
 			return err
 		}
-		totalfiles += 1
+
+		// Close both after copy
+		unzip_file.Close()
+		content.Close()
+
+		total_files += 1
 		fmt.Printf("%d] File: %s\n", count, file.Name)
 	}
-	fmt.Printf("\nTotal Files Recieved: %d\n", totalfiles)
+	fmt.Printf("\nTotal Files Recieved: %d\n", total_files)
 	return nil
 }
 
@@ -187,7 +195,6 @@ func ZipUpdates(changes []config.FileChange, src_path string, dst_path string) (
 		if err != nil {
 			return err
 		}
-
 	}
 	return nil
 }
