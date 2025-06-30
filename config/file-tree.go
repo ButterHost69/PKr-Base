@@ -115,7 +115,7 @@ func WriteToFileTree(workspace_tree_path string, FileTree FileTree) error {
 		return err
 	}
 
-	err = os.WriteFile(filepath.Join(workspace_tree_path, TREE_REL_PATH), jsonData, 0600)
+	err = os.WriteFile(filepath.Join(workspace_tree_path, TREE_REL_PATH), jsonData, 0700)
 	if err != nil {
 		fmt.Println("Error while writing data in file-tree:", err)
 		fmt.Println("Source: WriteToFileTree()")

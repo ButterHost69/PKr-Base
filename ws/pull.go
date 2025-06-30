@@ -326,7 +326,7 @@ func fetchAndStoreDataIntoWorkspace(workspace_owner_ip, workspace_name string, u
 	}
 
 	unzip_dest := filepath.Join(workspace_path, ".PKr", "Contents", res.RequestPushRange)
-	err = os.MkdirAll(unzip_dest, 0600)
+	err = os.MkdirAll(unzip_dest, 0700)
 	if err != nil {
 		logger.LOGGER.Println("Error while Creating .PKr/Push Num Directory:", err)
 		logger.LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")

@@ -26,7 +26,7 @@ func CreatePKRConfigIfNotExits(workspace_name string, workspace_path string) err
 
 	// Creating WORKSPACE_PATH/.PKr/Files/Current
 	current_folder_path := filepath.Join(workspace_path, ".PKr", "Files", "Current")
-	err = os.MkdirAll(current_folder_path, 0600)
+	err = os.MkdirAll(current_folder_path, 0700)
 	if err != nil {
 		fmt.Printf("Error while Creating '%s' Dir: %v\n", current_folder_path, err)
 		fmt.Println("Source: CreatePKRConfigIfNotExits()")
@@ -35,7 +35,7 @@ func CreatePKRConfigIfNotExits(workspace_name string, workspace_path string) err
 
 	// Creating WORKSPACE_PATH/.PKr/Files/Changes
 	changes_folder_path := filepath.Join(workspace_path, ".PKr", "Files", "Changes")
-	err = os.MkdirAll(changes_folder_path, 0600)
+	err = os.MkdirAll(changes_folder_path, 0700)
 	if err != nil {
 		fmt.Printf("Error while Creating '%s' Dir: %v\n", changes_folder_path, err)
 		fmt.Println("Source: CreatePKRConfigIfNotExits()")
@@ -53,7 +53,7 @@ func CreatePKRConfigIfNotExits(workspace_name string, workspace_path string) err
 	}
 
 	// Creating Workspace Config File ...
-	err = os.WriteFile(pkr_config_file_path, conf_bytes, 0600)
+	err = os.WriteFile(pkr_config_file_path, conf_bytes, 0700)
 	if err != nil {
 		fmt.Println("Error while Writing in workspace-config:", err)
 		fmt.Println("Source: CreatePKRConfigIfNotExits()")
@@ -71,7 +71,7 @@ func StorePublicKeyOfOtherUser(username string, public_key_of_other_user []byte)
 	}
 
 	key_path := filepath.Join(other_keys_path, username+".pem")
-	err = os.WriteFile(key_path, public_key_of_other_user, 0600)
+	err = os.WriteFile(key_path, public_key_of_other_user, 0700)
 	if err != nil {
 		fmt.Println("Error while Storing Public Key of Other User:", err)
 		fmt.Println("Source: StorePublicKeyOfOtherUser()")
@@ -109,7 +109,7 @@ func writeToWorkspaceConfigFile(workspace_config_path string, newPKRConfing PKRC
 		return err
 	}
 
-	err = os.WriteFile(workspace_config_path, jsonData, 0600)
+	err = os.WriteFile(workspace_config_path, jsonData, 0700)
 	if err != nil {
 		fmt.Println("Error while writing data in workspace-config file", err)
 		fmt.Println("Source: writeToWorkspaceConfigFile()")

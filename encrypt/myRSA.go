@@ -16,12 +16,10 @@ import (
 	"github.com/ButterHost69/PKr-Base/utils"
 )
 
-var (
-	KEY_SIZE = 4096
-)
+const RSA_KEY_SIZE = 4096
 
 func GenerateRSAKeys() (*rsa.PrivateKey, *rsa.PublicKey) {
-	privateKey, err := rsa.GenerateKey(rand.Reader, KEY_SIZE)
+	privateKey, err := rsa.GenerateKey(rand.Reader, RSA_KEY_SIZE)
 	if err != nil {
 		fmt.Println("Error while Generating RSA Keys:", err)
 		fmt.Println("Source: GenerateRSAKeys()")
@@ -57,7 +55,7 @@ func StorePrivateKeyInFile(filepath string, pkey *rsa.PrivateKey) error {
 	if private_pem_key == nil {
 		return errors.New("could not convert private key to []byte")
 	}
-	return os.WriteFile(filepath, private_pem_key, 0600)
+	return os.WriteFile(filepath, private_pem_key, 0700)
 }
 
 func StorePublicKeyInFile(filepath string, pbkey *rsa.PublicKey) error {
@@ -66,7 +64,7 @@ func StorePublicKeyInFile(filepath string, pbkey *rsa.PublicKey) error {
 	if public_pem_key == nil {
 		return errors.New("could not convert public key to []byte")
 	}
-	return os.WriteFile(filepath, public_pem_key, 0600)
+	return os.WriteFile(filepath, public_pem_key, 0700)
 }
 
 func RSADecryptData(cipherText string) (string, error) {

@@ -94,7 +94,7 @@ func UnzipData(src, dest string) error {
 		abs_path := filepath.Join(dest, file.Name)
 		dir, _ := filepath.Split(abs_path)
 		if dir != "" {
-			if err := os.MkdirAll(dir, 0600); err != nil {
+			if err := os.MkdirAll(dir, 0700); err != nil {
 				return err
 			}
 		}
@@ -132,7 +132,7 @@ func returnZipFileObj(zip_file_reader *zip.ReadCloser, search_file_name string) 
 
 func ZipUpdates(changes []config.FileChange, src_path string, dst_path string) (err error) {
 	dst_dir, _ := filepath.Split(dst_path)
-	if err = os.Mkdir(dst_dir, 0600); err != nil {
+	if err = os.Mkdir(dst_dir, 0700); err != nil {
 		fmt.Println("Error Could not Create the Dir:", err)
 		fmt.Println("Source: ZipUpdates()")
 		return err

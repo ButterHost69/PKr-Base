@@ -46,7 +46,7 @@ func CreateUserConfigIfNotExists(username, password, server_ip string) error {
 	}
 
 	// Creating my_keys_path
-	err = os.MkdirAll(filepath.Join(my_keys_path), 0600)
+	err = os.MkdirAll(filepath.Join(my_keys_path), 0700)
 	if err != nil {
 		fmt.Println("Error while Creating my_keys_path Dir:", err)
 		fmt.Println("Source: CreateUserConfigIfNotExists()")
@@ -54,7 +54,7 @@ func CreateUserConfigIfNotExists(username, password, server_ip string) error {
 	}
 
 	// Creating others_keys_path
-	err = os.MkdirAll(others_keys_path, 0600)
+	err = os.MkdirAll(others_keys_path, 0700)
 	if err != nil {
 		fmt.Println("Error while Creating others_keys_path Dir:", err)
 		fmt.Println("Source: CreateUserConfigIfNotExists()")
@@ -74,7 +74,7 @@ func CreateUserConfigIfNotExists(username, password, server_ip string) error {
 		return err
 	}
 
-	err = os.WriteFile(user_config_file_path, conf_bytes, 0600)
+	err = os.WriteFile(user_config_file_path, conf_bytes, 0700)
 	if err != nil {
 		fmt.Println("Error while Writing in user-config:", err)
 		fmt.Println("Source: CreateUserConfigIfNotExists()")
@@ -143,7 +143,7 @@ func writeToUserConfigFile(new_user_conf UserConfig) error {
 		return err
 	}
 
-	err = os.WriteFile(user_config_file_path, jsonData, 0600)
+	err = os.WriteFile(user_config_file_path, jsonData, 0700)
 	if err != nil {
 		fmt.Println("Error while writing data in user-config file", err)
 		fmt.Println("Source: writeToUserConfigFile()")
