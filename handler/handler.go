@@ -57,19 +57,19 @@ func (h *ClientHandler) InitNewWorkSpaceConnection(req models.InitWorkspaceConne
 
 	_, err = config.AuthenticateWorkspaceInfo(req.WorkspaceName, password)
 	if err != nil {
-		if errors.Is(err, ErrIncorrectPassword) {
+		if err.Error() == ErrIncorrectPassword.Error() {
 			logger.LOGGER.Println("Error: Incorrect Credentials for Workspace")
 			logger.LOGGER.Println("Source: InitNewWorkSpaceConnection()")
 			return ErrIncorrectPassword
 		}
-		if errors.Is(err, ErrNoSuchWorkspaceFound) {
+		if err.Error() == ErrNoSuchWorkspaceFound.Error() {
 			logger.LOGGER.Println("Error: No Such Workspace Found")
 			logger.LOGGER.Println("Source: InitNewWorkSpaceConnection()")
 			return ErrNoSuchWorkspaceFound
 		}
 		logger.LOGGER.Println("Failed to Authenticate Password of Listener:", err)
 		logger.LOGGER.Println("Source: InitNewWorkSpaceConnection()")
-		return ErrIncorrectPassword
+		return ErrInternalSeverError
 	}
 
 	listener_public_key, err := base64.StdEncoding.DecodeString(string(req.MyPublicKey))

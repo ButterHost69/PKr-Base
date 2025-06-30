@@ -75,13 +75,14 @@ func HandleNotifyToPunchRequest(peer_public_ip, peer_public_port string, peer_pr
 		logger.LOGGER.Println("Initializing UDP NAT Hole Punching")
 
 		var workspace_owner_ip string
-		if peer_public_ip == my_public_IP_only {
-			logger.LOGGER.Println("Sending Request via Private IP ...")
-			workspace_owner_ip = peer_private_ip + ":" + peer_private_port
-		} else {
-			logger.LOGGER.Println("Sending Request via Public IP ...")
-			workspace_owner_ip = peer_public_ip + ":" + peer_public_port
-		}
+		// TODO: UNCOMMENT THIS
+		// if peer_public_ip == my_public_IP_only {
+		// 	logger.LOGGER.Println("Sending Request via Private IP ...")
+		// 	workspace_owner_ip = peer_private_ip + ":" + peer_private_port
+		// } else {
+		logger.LOGGER.Println("Sending Request via Public IP ...")
+		workspace_owner_ip = peer_public_ip + ":" + peer_public_port
+		// }
 
 		err = dialer.WorkspaceOwnerUdpNatPunching(udp_conn, workspace_owner_ip, client_handler_name)
 		if err != nil {

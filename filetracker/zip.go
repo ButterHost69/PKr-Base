@@ -20,7 +20,7 @@ func addFilesToZip(writer *zip.Writer, dirpath string, relativepath string) erro
 	}
 
 	for _, file := range files {
-		if file.Name() == ".PKr" || file.Name() == "PKr-Base.exe" || file.Name() == "PKr-Cli.exe" || file.Name() == "tmp" || file.Name() == "PKr-Base" || file.Name() == "PKr-Cli" {
+		if file.Name() == ".PKr" || file.Name() == "PKr-Base.exe" || file.Name() == "PKr-Cli.exe" || file.Name() == "PKr-Base" || file.Name() == "PKr-Cli" {
 			continue
 		} else if !file.IsDir() {
 			content, err := os.ReadFile(filepath.Join(dirpath, file.Name()))
