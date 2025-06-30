@@ -123,14 +123,13 @@ func connectToAnotherUser(workspace_owner_username string, conn *websocket.Conn)
 
 	logger.LOGGER.Println("Starting UDP NAT Hole Punching ...")
 	var workspace_owner_ip, client_handler_name string
-	// TODO: UNCOMMENT THIS
-	// if req_punch_from_receiver_response.WorkspaceOwnerPublicIp == my_public_IP_only {
-	// 	logger.LOGGER.Println("Sending Request via Private IP ...")
-	// 	workspace_owner_ip = req_punch_from_receiver_response.WorkspaceOwnerPrivateIp + ":" + req_punch_from_receiver_response.WorkspaceOwnerPrivatePort
-	// } else {
-	logger.LOGGER.Println("Sending Request via Public IP ...")
-	workspace_owner_ip = req_punch_from_receiver_response.WorkspaceOwnerPublicIp + ":" + req_punch_from_receiver_response.WorkspaceOwnerPublicPort
-	// }
+	if req_punch_from_receiver_response.WorkspaceOwnerPublicIp == my_public_IP_only {
+		logger.LOGGER.Println("Sending Request via Private IP ...")
+		workspace_owner_ip = req_punch_from_receiver_response.WorkspaceOwnerPrivateIp + ":" + req_punch_from_receiver_response.WorkspaceOwnerPrivatePort
+	} else {
+		logger.LOGGER.Println("Sending Request via Public IP ...")
+		workspace_owner_ip = req_punch_from_receiver_response.WorkspaceOwnerPublicIp + ":" + req_punch_from_receiver_response.WorkspaceOwnerPublicPort
+	}
 
 	client_handler_name, err = dialer.WorkspaceListenerUdpNatHolePunching(udp_conn, workspace_owner_ip)
 	if err != nil {
