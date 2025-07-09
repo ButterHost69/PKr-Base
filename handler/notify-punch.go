@@ -128,6 +128,7 @@ func StartNewNewServer(udp_conn *net.UDPConn, clientHandlerName string) {
 		if err != nil {
 			logger.LOGGER.Println("Error while Accepting KCP from KCP Listener:", err)
 			logger.LOGGER.Println("Source: StartNewNewServer()")
+			// TODO: Only Close KCP Listener if there's Timeout Error
 			kcp_lis.Close()
 			logger.LOGGER.Println("Closing NewNewServer with Local Port:", udp_conn.LocalAddr().String())
 			return

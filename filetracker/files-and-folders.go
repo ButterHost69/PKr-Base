@@ -44,7 +44,6 @@ func SaveDataToFile(data []byte, dest string) error {
 	defer zippedfile.Close()
 
 	zippedfile.Write(data)
-
 	return nil
 }
 

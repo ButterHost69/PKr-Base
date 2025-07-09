@@ -190,6 +190,7 @@ func fetchAndStoreDataIntoWorkspace(workspace_owner_ip, workspace_name string, u
 		logger.LOGGER.Println("Source: fetchAndStoreDataIntoWorkspace()")
 		return err
 	}
+	defer zip_file_obj.Close()
 
 	// To Write Decrypted Data in Chunks
 	writer := bufio.NewWriter(zip_file_obj)
@@ -364,6 +365,8 @@ func PullWorkspace(workspace_owner_username, workspace_name string, conn *websoc
 		logger.LOGGER.Println("Source: pullWorkspace()")
 		return err
 	}
+	defer udp_conn.Close()
+	defer kcp_conn.Close()
 
 	rpc_buff := [3]byte{'R', 'P', 'C'}
 	_, err = kcp_conn.Write(rpc_buff[:])
@@ -391,6 +394,7 @@ func PullWorkspace(workspace_owner_username, workspace_name string, conn *websoc
 
 	// Creating RPC Client
 	rpc_client := rpc.NewClient(kcp_conn)
+	defer rpc_client.Close()
 	rpcClientHandler := dialer.ClientCallHandler{}
 
 	// Get Public Key of Workspace Owner

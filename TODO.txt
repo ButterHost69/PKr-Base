@@ -1,4 +1,4 @@
-0. If ".PKr" already Exists then warn user that he's trying to clone or init on already PKr initialized directory
+0. During Data Transfers, conn is closed accidentally 
 
 1. Also add a list of "Avoid files" like ".env" or any other secret files
 

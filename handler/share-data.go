@@ -97,7 +97,6 @@ func handleClone(kcp_session *kcp.UDPSession, zip_path string, len_data_bytes in
 			}
 		}
 	}
-
 }
 
 func GetDataHandler(kcp_session *kcp.UDPSession) {
