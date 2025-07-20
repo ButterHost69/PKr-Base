@@ -1,11 +1,15 @@
-0. During Data Transfers, conn is closed accidentally 
+1. Check for new PKr-Cli & PKr-Base, if internet isn't connected then check again after 5-10 minutes
+
+2. Start Base Automatically if the User uses "Init", "Clone"
+
+3. Do not Start Base until the user-config.json isn't created in %LOCALAPPDATA%
+
+---------------------------------------------------------------
+Future Updates:
 
 1. Also add a list of "Avoid files" like ".env" or any other secret files
 
 2. Listeners can fetch workspace from other listeners
-   For that, we've to remove AllConnections from PKrConfig
-
-3. FUTURE - Wrap this shit that tracks for updates and shii
 
 ---------------------------------------------------------------
 
