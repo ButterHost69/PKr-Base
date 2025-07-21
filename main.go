@@ -1,8 +1,10 @@
 package main
 
 import (
+	"errors"
 	"log"
 	"net"
+	"net/http"
 	"net/url"
 	"os"
 	"os/signal"
@@ -52,46 +54,58 @@ func init() {
 }
 
 func main() {
+	logger.LOGGER.Println("==========================================================")
+	logger.LOGGER.Println("\t\t\t\tPKR-Base Has Started")
+	logger.LOGGER.Println("==========================================================")
+
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
 	var server_err error
-	ws_conn, _, server_err := websocket.DefaultDialer.Dial(WEBSOCKET_SERVER_ADDR_WITH_QUERY.String(), nil)
+
+	websocker_dialer := websocket.Dialer{
+		Proxy:            http.ProxyFromEnvironment,
+		HandshakeTimeout: 30 * time.Second,
+		NetDialContext: (&net.Dialer{
+			Timeout:   10 * time.Second, // TCP connection timeout
+			KeepAlive: 30 * time.Second,
+		}).DialContext,
+	}
+
+	logger.LOGGER.Println("Attempting to Connect to the Web Socket Server... | IP: ", WEBSOCKET_SERVER_ADDR_WITH_QUERY.String())
+	ws_conn, _, server_err := websocker_dialer.Dial(WEBSOCKET_SERVER_ADDR_WITH_QUERY.String(), nil)
 	for server_err != nil {
-		// Check if error is because server is offline
-		if opErr, ok := server_err.(*net.OpError); ok {
-			// Check if it's a syscall error underneath
-			if sysErr, ok := opErr.Err.(*os.SyscallError); ok {
-				if strings.Contains(sysErr.Error(), "actively refused") {
-					logger.LOGGER.Println("Server seems offline")
-					logger.LOGGER.Println("Failed to Connect to PKr-Server")
-					logger.LOGGER.Println("Will be retrying in 15 Mins")
+		logger.LOGGER.Println("WebSocket connection failed:", server_err)
 
-					ws_conn, _, server_err = websocket.DefaultDialer.Dial(WEBSOCKET_SERVER_ADDR_WITH_QUERY.String(), nil)
-					select {
-					case <-time.After(15 * time.Minute):
-						ws_conn, _, server_err = websocket.DefaultDialer.Dial(WEBSOCKET_SERVER_ADDR_WITH_QUERY.String(), nil)
-
-					case <-interrupt:
-						logger.LOGGER.Println("Interrupt received. Exiting Program...")
-						return
-					}
-					continue
-				}
+		var netErr net.Error
+		if errors.As(server_err, &netErr) && netErr.Timeout() {
+			logger.LOGGER.Println("Connection timed out. Will retry in 15 minutes.")
+		} else if opErr, ok := server_err.(*net.OpError); ok {
+			if sysErr, ok := opErr.Err.(*os.SyscallError); ok && strings.Contains(sysErr.Error(), "actively refused") {
+				logger.LOGGER.Println("Server refused the connection.")
 			} else {
-				logger.LOGGER.Println("Error while Dialing Websocket Connection to Server: ", server_err)
+				logger.LOGGER.Println("Unexpected Error - is an opError but not 'actively refused'")
+				logger.LOGGER.Println("Error while Dialing Websocket Connection to Server: ", opErr)
 				logger.LOGGER.Println("Source: main()")
-				return
 			}
 		} else {
+			logger.LOGGER.Println("Unexpected Error - Not opError or timeout")
 			logger.LOGGER.Println("Error while Dialing Websocket Connection to Server: ", server_err)
 			logger.LOGGER.Println("Source: main()")
+		}
+
+		select {
+		case <-time.After(15 * time.Minute):
+			logger.LOGGER.Println("Retrying WebSocket connection...")
+		case <-interrupt:
+			logger.LOGGER.Println("Interrupt received. Exiting.")
 			return
 		}
+
+		ws_conn, _, server_err = websocker_dialer.Dial(WEBSOCKET_SERVER_ADDR_WITH_QUERY.String(), nil)
 	}
 
 	defer ws_conn.Close()
-	logger.LOGGER.Println()
 	logger.LOGGER.Println("Connected to Server")
 
 	done := make(chan struct{})
