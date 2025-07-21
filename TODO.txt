@@ -3,11 +3,9 @@ Important Ones:
 
 2. Start Base Automatically if the User uses "Init", "Clone"
 
-3. Do not Start Base until the user-config.json isn't created in %LOCALAPPDATA%
-
 ---------------------------------------------------------------
-Future Updates:
 
+Future Updates:
 1. Also add a list of "Avoid files" like ".env" or any other secret files
 
 2. Listeners can fetch workspace from other listeners

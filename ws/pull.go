@@ -449,14 +449,6 @@ func PullWorkspace(workspace_owner_username, workspace_name string, conn *websoc
 		return err
 	}
 
-	// Play default system beep for notification
-	err = beeep.Beep(beeep.DefaultFreq, 1000)
-	if err != nil {
-		logger.LOGGER.Println("Error while Playing Beeep Sound:", err)
-		logger.LOGGER.Println("Source: pullWorkspace()")
-		// Not Return Error, else it'll pull workspace again after sometime
-	}
-
 	// Send Notification about new changes're fetched
 	noti_msg := fmt.Sprintf("New Updates of Workspace: %s from User: %s're Fetched!", workspace_name, workspace_owner_username)
 	err = beeep.Notify("Picker", noti_msg, "")
