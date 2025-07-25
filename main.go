@@ -14,6 +14,7 @@ import (
 	"github.com/ButterHost69/PKr-Base/config"
 	"github.com/ButterHost69/PKr-Base/dialer"
 	"github.com/ButterHost69/PKr-Base/logger"
+	"github.com/ButterHost69/PKr-Base/utils"
 	"github.com/ButterHost69/PKr-Base/ws"
 
 	"github.com/gorilla/websocket"
@@ -23,6 +24,15 @@ var WEBSOCKET_SERVER_ADDR_WITH_QUERY url.URL
 var USER_CONF config.UserConfig
 
 func init() {
+	args := os.Args
+	if len(args) > 2 && args[1] == "debug" {
+		for i, arg := range args {
+			if arg == "--fp" && i+1 < len(args) {
+				utils.SetUserConfigDir(args[i+1])
+			}
+		}
+	}
+
 	err := logger.InitLogger()
 	if err != nil {
 		log.Println("Error while Initializing Logger:", err)
