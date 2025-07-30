@@ -10,22 +10,14 @@ import (
 )
 
 func GenerateHashWithFilePath(file_path string) (string, error) {
-	f, err := os.Open(file_path)
+	data, err := os.ReadFile(file_path)
 	if err != nil {
 		fmt.Println("Error while Generating Hash with File Path:", err)
 		fmt.Println("Source: GenerateHashWithFilePath()")
 		return "", err
 	}
-	defer f.Close()
 
-	h := sha256.New()
-	if _, err := io.Copy(h, f); err != nil {
-		fmt.Println("Error while Copying from file object:", err)
-		fmt.Println("Source: GenerateHashWithFilePath()")
-		return "", err
-	}
-
-	hash := h.Sum(nil)
+	hash := sha256.Sum256(data)
 	return fmt.Sprintf("%x", hash), nil
 }
 
