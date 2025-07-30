@@ -37,7 +37,7 @@ func (h *ClientHandler) GetPublicKey(req models.PublicKeyRequest, res *models.Pu
 	}
 
 	res.PublicKey = []byte(keyData)
-	logger.LOGGER.Println("Get Public Successful ...")
+	logger.LOGGER.Println("Get Public Key Successful ...")
 	return nil
 }
 

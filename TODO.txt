@@ -1,8 +1,3 @@
-Important Ones:
-1. Check for new PKr-Cli & PKr-Base, if internet isn't connected then check again after 5-10 minutes
-
-2. Start Base Automatically if the User uses "Init", "Clone"
-
 ---------------------------------------------------------------
 
 Future Updates:
