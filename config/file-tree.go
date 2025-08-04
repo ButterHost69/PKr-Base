@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
+	"sync"
 
 	"github.com/ButterHost69/PKr-Base/encrypt"
 )
@@ -18,6 +20,11 @@ type FileTree struct {
 type Node struct {
 	FilePath string `json:"file_path"`
 	Hash     string `json:"hash"`
+}
+
+type FilePath struct {
+	FilePath    string
+	RelFilePath string
 }
 
 func CreateFileTreeIfNotExits(workspace_path string) error {
@@ -43,10 +50,10 @@ func CreateFileTreeIfNotExits(workspace_path string) error {
 	return nil
 }
 
-func GetNewTree(workspace_path string) (FileTree, error) {
-	var tree FileTree
+func FetchAllFilesPaths(folder_path string) ([]FilePath, error) {
+	files := []FilePath{}
 
-	err := filepath.Walk(workspace_path, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(folder_path, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err // skip files we can't read
 		}
@@ -57,34 +64,85 @@ func GetNewTree(workspace_path string) (FileTree, error) {
 			if info.Name() == "PKr-Base.exe" || info.Name() == "PKr-Cli.exe" || info.Name() == "PKr-Base" || info.Name() == "PKr-Cli" {
 				return nil
 			}
-			relPath, err := filepath.Rel(workspace_path, path)
+
+			relPath, err := filepath.Rel(folder_path, path)
 			if err != nil {
 				fmt.Println("Error while Getting Relative Path:", err)
-				fmt.Println("Source: GetNewTree()")
+				fmt.Println("Source: FetchAllFilesPaths()")
 				return err
 			}
 
-			hash, err := encrypt.GenerateHashWithFilePath(path)
-			if err != nil {
-				fmt.Println("Error while Hashing with File Path:", err)
-				fmt.Println("Source: GetNewTree()")
-				return nil
-			}
-
-			tree.Nodes = append(tree.Nodes, Node{
-				FilePath: relPath,
-				Hash:     hash,
+			files = append(files, FilePath{
+				FilePath:    path,
+				RelFilePath: relPath,
 			})
 		}
 		return nil
 	})
-
 	if err != nil {
 		fmt.Println("Error walking the path:", err)
-		fmt.Println("Source: GetNewTree()")
-		return tree, nil
+		fmt.Println("Source: FetchAllFilesPaths()")
+		return []FilePath{}, err
 	}
-	return tree, nil
+
+	return files, nil
+
+}
+
+// Fetchs all Files and Than go routines the hash computations.
+// Reason for change -- to switch and process other files while 
+// waiting for Syscalls. 
+// From personal Testing -------------
+// 		- Total Files: 2300
+// 		- Total Size: 110MB
+// 		- From 40 Sec -> 2.42 Sec (num of cpu cores - 16)
+func GetNewTree(workspace_path string) (FileTree, error) {
+	file_paths, err := FetchAllFilesPaths(workspace_path)
+	if err != nil {
+		fmt.Println("Error while Getting all File Paths from the Folder: ", err)
+		fmt.Println("Source: GetNewTree()")
+		return FileTree{}, err
+	}
+
+	numWorkers := runtime.NumCPU() * 2
+	n_files := len(file_paths)
+
+	partitionSize := (n_files + numWorkers - 1) / numWorkers // `(n_files + numWorkers - 1)` : Run Atleast once
+	nodes := make([]Node, n_files)
+	var wg sync.WaitGroup
+
+	// No i:= 0 is ok -- Please Dont make it into range ; Again Cannot Read that Shit
+	for i := 0; i < numWorkers; i++ {
+		start := i * partitionSize
+		end := (i + 1) * partitionSize
+
+		// Do Not Min() this -- I cannot Read or Understand That Shit
+		if end > n_files {
+			end = n_files
+		}
+		wg.Add(1)
+		go func(jobs []FilePath, res []Node) {
+			for j, job := range jobs {
+
+				hash, err := encrypt.GenerateHashFromFileNames_BufferedAndPooled(job.FilePath)
+				if err == nil { // I know ; and yes keep it this way -- please dont change
+					res[j] = Node{FilePath: job.RelFilePath, Hash: hash}
+				} else {
+					// Needs Proper Error Handling - Something without channels (impacts performance)
+					fmt.Println("Error while Generating Hash for files: ", err)
+					fmt.Println("Source: GetNewTree()")
+					continue
+				}
+			}
+			wg.Done()
+		}(file_paths[start:end], nodes[start:end])
+	}
+	wg.Wait()
+
+	return FileTree{
+		Nodes: nodes,
+	}, nil
+
 }
 
 func ReadFromTreeFile(workspace_tree_path string) (FileTree, error) {
