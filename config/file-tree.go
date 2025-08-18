@@ -104,8 +104,8 @@ func GetNewTree(workspace_path string) (FileTree, error) {
 		return FileTree{}, err
 	}
 
-	numWorkers := runtime.NumCPU() * 2
 	n_files := len(file_paths)
+	numWorkers := min(runtime.NumCPU() * 2, n_files)
 
 	partitionSize := (n_files + numWorkers - 1) / numWorkers // `(n_files + numWorkers - 1)` : Run Atleast once
 	nodes := make([]Node, n_files)
