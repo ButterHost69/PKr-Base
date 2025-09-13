@@ -24,7 +24,6 @@ message RegisterWorkspaceRequest {
     string username = 1;
     string password = 2;
     string workspace_name = 3;
-    int32 last_push_num = 4;
 }
 
 message RegisterWorkspaceResponse {}
@@ -46,6 +45,7 @@ message RequestPunchFromReceiverRequest {
     string listener_private_ip = 5;
     string listener_private_port = 6;
     string workspace_owner_username = 7;
+    string workspace_name = 8;
 }
 
 message RequestPunchFromReceiverResponse {
