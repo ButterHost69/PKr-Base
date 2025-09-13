@@ -1,3 +1,8 @@
+BUG:
+    STDIN in PKr-Cli use ScanLine/ReadLine instead of Scan
+    Cuz if Workspace Name has space in it then it won't be able to read whole Name
+    "Just TimePass" => "Just"
+
 ---------------------------------------------------------------
 
 Future Updates:
