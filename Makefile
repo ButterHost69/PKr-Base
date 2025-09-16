@@ -4,9 +4,9 @@ grpc-out:
 get-new-kcp:
 	go get github.com/ButterHost69/kcp-go@latest
 
-generate_icon:
+generate-icon:
 	go install github.com/akavel/rsrc@latest
 	rsrc -ico .\PKrBase.ico -o PKrBase.syso
 
-generate_exe_with_no_terminal:
+generate-exe-with-no-terminal:
 	go build -ldflags -H=windowsgui -o NoTerminal.exe
