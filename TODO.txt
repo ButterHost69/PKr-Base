@@ -3,6 +3,16 @@ BUG:
     Cuz if Workspace Name has space in it then it won't be able to read whole Name
     "Just TimePass" => "Just"
 
+BUG:
+    Init Doesn't Work for Empty Dir
+    Maybe it shouldn't work
+
+BUG:
+    If the listener Starts it's Base & Owner Pushes new Changes
+    Double Punch Request is Sent & when we try again after 5 minutes
+    At that time, Double Punch Requests're Sent as well
+    Failing to Receive New Data
+
 ---------------------------------------------------------------
 
 Future Updates:
